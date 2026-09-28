@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block search %}
+{% comment %} Hide search options when the map is not available {% endcomment %}
+{% endblock search %}
+
+{% block subhead %}
+{% comment %} Hide subhead when the map is not available {% endcomment %}
+{% endblock subhead %}
+
+{% block content %}
+<div class="content">
+  <div class="well error-panel">
+    <h3>{% trans "The map you requested is not available to all users." %}</h3>
+  </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+{% comment %} This page has no interactivity {% endcomment %}
+{% endblock scripts %}

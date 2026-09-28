@@ -1,0 +1,177 @@
+{% extends "instance_base.html" %}
+{% load i18n %}
+{% load l10n %}
+{% load image %}
+{% load util %}
+
+{% block page_title %} | {% trans "Edits" %} {{plot.pk|unlocalize}}{% endblock %}
+
+{% block activeexplore %}
+{% endblock %}
+
+{% block activerecentedits %}
+active
+{% endblock %}
+
+{% block subhead %}
+{% endblock subhead %}
+
+{% block header %}
+{% load i18n %}
+<div class="header">
+  {% block logo %}
+  {{ block.super }}
+  {% endblock logo %}
+</div> <!-- end header -->
+{% endblock header %}
+
+{% block content %}
+<div class="image-background"></div>
+<div class="container contained profile">
+  <div class="row">
+    <div class="col-md-12">
+      <h1>
+        {% trans "Edits" %}
+        <a class="btn pull-right" href="{% url 'edits' instance_url_name=request.instance.url_name %}">{% trans "Reset" %}</a>
+      </h1>
+      <div class="alert alert-info">
+          <p style="margin:0;">All edits made in the tree map are listed below, beginning with the most recent. Click a link in the Type, Object ID, or Edited By columns to sort all the edits by that entry. To go to the detail page for a tree or planting site, click the Detail button located in the far left column. Click the Reset button to view all edits.</p>
+      </div>
+
+      <table class="table table-striped">
+        <tr>
+          <th>{% trans "Details" %}</th>
+          <th>{% trans "Edit #" %}</th>
+          <th>{% trans "Type" %}</th>
+          <th>{% trans "Object ID" %}</th>
+          <th>{% trans "Field" %}</th>
+          <th>{% trans "Old Value" %}</th>
+          <th>{% trans "Current Value" %}</th>
+          <th>{% trans "Edited By" %}</th>
+          <th>{% trans "Edited On" %}</th>
+        </tr>
+        {% for audit in audits %}
+        <tr>
+          {% localize off %}
+          <td>
+            {% with link=audit|audit_detail_link %}
+            {% if link %}
+            <a href="{{ link }}">{% trans "Detail" %}</a>
+            {% endif %}
+            {% endwith %}
+          </td>
+          <td>{{ audit.pk }}</td>
+          <td>
+            {% if audit.model|is_filterable_audit_model %}
+            <a href="?models={{ audit.model }}">
+              {{ audit|display_name }}
+            </a>
+            {% else %}
+            {{ audit|display_name }}
+            {% endif %}
+          </td>
+          <td>
+            {% if audit.model|is_filterable_audit_model %}
+            <a href="?models={{ audit.model }}&model_id={{ audit.model_id }}">
+              {{ audit.model_id }}
+            </a>
+            {% else %}
+            {{ audit.model_id }}
+            {% endif %}
+          </td>
+          {% endlocalize %}
+          <td>{{ audit.field_display_name }}</td>
+
+          {% if audit.field == 'image' %}
+
+          <td>
+            {% if audit.clean_previous_value %}
+            <a href="{{ audit.clean_previous_value|image_to_url }}">
+              {% trans "View Image" %}
+            </a>
+            {% endif %}
+          </td>
+          <td>
+            {% if audit.clean_current_value %}
+            <a href="{{ audit.clean_current_value|image_to_url }}">
+              {% trans "View Image" %}
+            </a>
+            {% endif %}
+          </td>
+
+          {% elif audit.field == 'user' %}
+
+          <td>
+            {% if audit.clean_previous_value %}
+            <a href="?user={{ audit.clean_previous_value.pk|unlocalize }}">
+              {{ audit.clean_previous_value }}
+            </a>
+            {% endif %}
+          </td>
+          <td>
+            <a href="?user={{ audit.clean_current_value.pk|unlocalize }}">
+              {{ audit.clean_current_value }}
+            </a>
+          </td>
+
+          {% elif audit.field == 'plot' %}
+
+          <td>
+            {% if audit.clean_previous_value %}
+            <a href="?models=Plot&model_id={{ audit.clean_previous_value.pk|unlocalize }}">
+              Plot {{ audit.clean_previous_value }}
+            </a>
+            {% endif %}
+          </td>
+          <td>
+            <a href="?models=Plot&model_id={{ audit.clean_current_value.pk|unlocalize }}">
+              Plot {{ audit.clean_current_value|default_if_none:"" }}
+            </a>
+          </td>
+
+          {% elif audit.field == 'id' %}
+          <td>{{ audit.previous_display_value|default_if_none:""|unlocalize }}</td>
+          <td>{{ audit.current_display_value|default_if_none:""|unlocalize }}</td>
+          {% else %}
+          <td>{{ audit.previous_display_value|default_if_none:"" }}</td>
+          <td>{{ audit.current_display_value|default_if_none:"" }}</td>
+          {% endif %}
+
+          <td>
+            <a href="?user={{ audit.user.pk|unlocalize }}">
+              {{ audit.user }}
+            </a>
+          </td>
+          <td>
+            {{ audit.created }}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+
+      <ul class="pager">
+        {% if prev_page %}
+        <li class="previous">
+          <a href="{{ prev_page }}">
+        {% else %}
+        <li class="previous disabled">
+          <a>
+        {% endif %}
+          &larr; {% trans "Previous" %}</a>
+        </li>
+
+        {% if next_page %}
+        <li class="next">
+          <a href="{{ next_page }}">
+        {% else %}
+        <li class="next disabled">
+          <a>
+        {% endif %}
+          {% trans "Next" %} &rarr;</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}

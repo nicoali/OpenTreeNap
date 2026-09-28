@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+{% load i18n %}
+
+{% block page_title %} | {% trans "Register" %}{% endblock %}
+
+{% block search %}
+<!-- hide search options on the registration page -->
+{% endblock search %}
+
+{% block subhead %}
+<!-- hide search results on the registration page -->
+{% endblock subhead %}
+
+
+{% block content %}
+<div class="content login-signup">
+  <div class="well login-signup-panel">
+    <form method="POST">
+      <fieldset>
+        <!-- TODO: This photo field needs to be added to a subclassed form -->
+        <!--
+        <label>Profile Photo</label>
+        <input type="file" class="profile-photo-upload"><br><br>
+        -->
+        {% csrf_token %}
+        <legend>{% trans "Create an Account" %}
+            <a href="{% url 'auth_login' %}">{% trans "I already have an account" %}</a>
+        </legend>
+        <h5>Fields marked with an asterisk (*) are required.</h5>
+        {% for field in form %}
+            <div class="field {{ field.css_classes }} {{ field.field.widget.attrs.outer_class }}">
+                {{ field.label_tag}}
+                {{ field }}
+                {{ field.errors|safe }}
+            </div>
+            {% if field.name == "password2" %}
+            <div class='section-header'>Additional Information</div>
+            {% endif %}
+        {% endfor %}
+        {% block submit_button %}
+        <button type="submit" class="btn btn-lg btn-primary">{% trans 'Create Account' %}</button>
+        {% endblock submit_button %}
+      </fieldset>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+    {% render_bundle 'js/treemap/simpleForm' %}
+{% endblock scripts %}

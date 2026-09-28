@@ -1,0 +1,41 @@
+# OpenTreeMap modern-v3 bridge runtime
+# Target: CPython 3.8 + Django 2.2 LTS.
+# This is deliberately an intermediate compatibility stack, not the final target.
+
+Django==2.2.28
+
+# Django integrations
+# 1.5 explicitly supports Django 2.2/3.0.
+django-apptemplates==1.5
+# 2.0.0 is Python-3-only and supports the Django generation used by this bridge.
+django-contrib-comments==2.0.0
+# 0.9.x introduced Django 2.2 support.
+django-js-reverse==0.9.1
+django-queryset-csv==1.1.0
+django-recaptcha==2.0.6
+django-redis==4.12.1
+django-registration-redux==2.9
+django-storages==1.9.1
+django-threadedcomments==2.0
+django-tinsel==1.0.2
+django-webpack-loader==0.6.0
+
+# Application/runtime
+celery==4.4.7
+gunicorn==20.1.0
+hiredis==1.1.0
+jsonschema==3.2.0
+libsass==0.20.1
+modgrammar==0.10
+Pillow==8.4.0
+psycopg2-binary==2.9.9
+python-dateutil==2.8.2
+python-omgeo==5.1.0
+pytz==2021.3
+redis==3.5.3
+requests==2.25.1
+rollbar==0.16.2
+six==1.16.0
+
+# Optional S3 backend. modern-v3 moves the example away from the removed boto2 backend.
+boto3==1.17.112

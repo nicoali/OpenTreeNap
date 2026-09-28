@@ -1,0 +1,107 @@
+{% load form_extras %}
+{% load i18n %}
+{% load util %}
+
+{% with nsteps=5 %}
+<div class="sidebar-inner">
+    <a href="javascript:;" class="close cancelBtn small hidden-xs">×</a>
+    <h3>{% trans "Add a" %} {{ term.Resource.singular }}</h3>
+    <div class="add-step-container" id="add-resource-container">
+        <div class="add-step active">
+            <div class="add-step-header">
+                {% blocktrans with Resource=terms.Resource.singular %} Select {{ Resource }} Type {% endblocktrans %}
+                <a href="javascript:;" class="close cancelBtn small visible-xs-block">×</a>
+            </div>
+            <div class="add-step-content">
+                <label>{{ term.Resource.singular }} {% trans "Type" %}</label>
+                {% for cls in resource_classes %} </br>
+                    <input type="radio"
+                           name="addResourceType"
+                           value="{{ cls.feature_type }}"
+                           {% if only_one_resource_class %}
+                           checked="checked"
+                           {% endif %}
+                           id="resourceType{{ cls.feature_type }}"
+                           data-area-field-name="{{ cls.area_field_name|default_if_none:"" }}"
+                           data-is-editable="{{ cls.is_editable|default_if_none:"False" }}"
+                           data-skip-detail-form="{{ cls.skip_detail_form|default:"False" }}"
+                           data-enable-detail-next="{{ cls.enable_detail_next|default:"False" }}"
+                    /><label for="resourceType{{ cls.feature_type }}">
+                      {% with terminology=cls|terminology:request.instance %}
+                        {{ terminology.singular }}
+                      {% endwith %}
+                    </label>
+                {% endfor %}
+            </div>
+            {% include 'treemap/partials/step_controls.html' with first=True %}
+        </div>
+        {% include "treemap/partials/step_set_location.html" with feature_name=term.Resource.singular.lower %}
+        <div class="add-step with-map fixed">
+          {% if cls.area_field_name == 'roof_geometry' %}
+            <div class="add-step-header">
+                {% trans "Indicate Nearby Roof Area" %}
+                <a href="javascript:;" class="close cancelBtn small visible-xs-block">×</a>
+            </div>
+            <div class="add-step-content">
+                <div class="alert alert-info">Move the squares on the blue polygon to define the borders of the roof area that will drain into your {{ term.Resource.singular.lower }}.
+                </div>
+            </div>
+          {% else %}
+            <div class="add-step-header">
+                {% trans "Indicate Polygon Area" %}
+                <a href="javascript:;" class="close cancelBtn small visible-xs-block">×</a>
+            </div>
+            <div class="add-step-content">
+                <div class="alert alert-info">Move the squares on the blue polygon to define the borders of your {{ term.Resource.singular.lower }}.
+                </div>
+                {% trans "Area" %}:&nbsp;
+                <span class="inline js-area"></span>
+                {{ polygon_area_units }}
+            </div>
+          {% endif %}
+            {% include 'treemap/partials/step_controls.html' %}
+        </div>
+        <div class="add-step">
+            <div class="add-step-header">
+                {% trans "About this" %} {{ term.Resource.singular }}
+                <a href="javascript:;" class="close cancelBtn small visible-xs-block">×</a>
+            </div>
+            <div class="add-step-content">
+                <form id="add-resource-form" onsubmit="return false;">
+                  {# Added dynamically when resource type is chosen #}
+                </form>
+            </div>
+            {% include 'treemap/partials/step_controls.html' %}
+        </div>
+        <div class="add-step">
+            <div class="add-step-header">
+                {% trans "Finalize this" %} {{ term.Resource.singular }}
+                <a href="javascript:;" class="close cancelBtn small visible-xs-block">×</a>
+            </div>
+            <div class="add-step-content">
+                <h3 class="summaryHead"></h3>
+                <h6 class="summarySubhead">{{ term.Resource.singular }}</h6>
+                <h4 class="summaryAddress"></h4>
+                <h6>Nearby Address</h6>
+                <hr/>
+                <span>
+                    <input type="radio" name="addResourceOptions" value="new" id="addresource-addnew" /><label for="addresource-addnew">
+                        {% trans "Add another" %} {{ term.Resource.singular.lower }}
+                    </label>
+                </span>
+                <span>
+                    <input type="radio" name="addResourceOptions" value="edit" id="addresource-viewdetails" disabled class="disabled"/><label for="addresource-viewdetails">
+                        {% trans "Continue editing this" %} {{ term.Resource.singular.lower }}
+                    </label>
+                </span>
+                <span>
+                    <input type="radio" name="addResourceOptions" value="close" id="addresource-done" checked /><label for="addresource-done">
+                        {% trans "I'm done" %}
+                    </label>
+                </span>
+            </div>
+            {% include 'treemap/partials/step_controls.html' with last=True %}
+        </div>
+    </div>
+</div>
+{% endwith %}

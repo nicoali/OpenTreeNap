@@ -1,0 +1,55 @@
+{% load humanize %}
+{% load i18n %}
+
+<div class="well">
+  {% if latest_update %}
+  <h4>{% trans "Latest Update" %}</h4>
+  <p>
+    {{ latest_update.user.username }}
+    {{ latest_update.short_descr }}
+    on {{ latest_update.created|date:request.instance.date_format }}
+  </p>
+  {% endif %}
+
+  <div class="progress">
+    <div class="progress-bar" style="width: {{ progress_percent }}%;"></div>
+  </div>
+  <h5>{{ progress_percent }}% {% trans "Complete" %}</h5>
+  <ul>
+    {% for message in progress_messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% if recent_activity %}
+<div class="well">
+  <h3>{% trans "Recent Edits" %}</h3>
+  {% for user, created, audits in recent_activity %}
+  <h5>{{ user.username }}</h5>
+  <p class="text-muted">{{ created|date:request.instance.date_format }} ({{ created|naturaltime }})</p>
+  <ul>
+    {% for audit in audits %}
+      <li>{{ audit.short_descr }}</li>
+    {% endfor %}
+  </ul>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if feature.is_plot %}
+<div class="well">
+  <h3>{% trans "Nearby Trees" %}</h3>
+  {% with nearby=plot.nearby_plots %}
+  {% if nearby %}
+  </ul>
+  {% for plot in nearby %}
+  <li><a href="{% url 'map_feature_detail' instance_url_name=request.instance.url_name feature_id=plot.pk %}">{{ plot.pk }}</a></li>
+  {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted"><em>{% trans "There are no trees nearby" %}</em></p>
+  {% endif %}
+</div>
+{% endwith %}
+{% endif %}

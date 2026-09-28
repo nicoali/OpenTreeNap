@@ -1,0 +1,10 @@
+{
+    "test_page": "assets/tests/test.html",
+    "before_tests": "npm run build-test",
+    "src_files": [
+        "opentreemap/*/js/**/*.js"
+    ],
+    "serve_files": [
+        "static/test.js"
+    ]
+}

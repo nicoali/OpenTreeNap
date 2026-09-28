@@ -1,0 +1,23 @@
+{% load util %}
+{% load l10n %}
+
+<tr
+   {% if perm_level == "write" %}
+   data-value-id="{{ value.pk|unlocalize }}"
+   {% endif %}
+   >
+  {% for field in udf.datatype_dict %}
+  {% with field_value=value|get:field.name %}
+    {% if field.type == "date" %}
+    <td data-value="{{ field_value|date:"Y-m-d" }}">
+      {{ field_value|date:request.instance.short_date_format }}
+    </td>
+      {% else %}
+    <td data-value="{{ field_value }}">
+      {{ field_value }}
+    </td>
+    {% endif %}
+  {% endwith %}
+  {% endfor %}
+  <td></td>
+</tr>

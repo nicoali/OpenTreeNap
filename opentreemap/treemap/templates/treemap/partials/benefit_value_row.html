@@ -1,0 +1,27 @@
+{% load i18n %}
+{% load l10n %}
+
+{% if benefit.value or benefit.currency >= 0 %}
+<div class="benefit-value-row {% if total %}benefit-total{% endif %}">
+  {% if icon %}
+  <div class="benefit-icon"><i class="icon-{{ icon }}"></i></div>
+  {% else %}
+  <div class="benefit-icon"><i class="icon-sun-filled"></i></div>
+  {% endif %}
+  <h3 class="benefit-label">{{ benefit.label }}</h3>
+  <span class="benefit-content">
+    {% if benefit.value %}
+      {{ benefit.value }} {{ benefit.unit }}
+      {% if benefit.currency_saved %}
+        {% comment %}Translators: Money saved{% endcomment %}
+        {% trans "saved" %} {{ benefit.currency_saved }}
+      {% endif %}
+    {% else %}
+      {% if benefit.currency_saved %}
+        {% comment %}Translators: Money saved{% endcomment %}
+        {{ benefit.currency_saved }} {% trans "saved" %}
+      {% endif %}
+    {% endif %}
+  </span>
+</div>
+{% endif %}

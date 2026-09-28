@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  db:
+    image: postgis/postgis:12-3.3
+    environment:
+      POSTGRES_DB: otm
+      POSTGRES_USER: otm
+      POSTGRES_PASSWORD: otm
+    volumes:
+      - otm_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U otm -d otm"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:6.2-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.modern-v3
+    env_file:
+      - .env.modern-v3
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - otm_media:/tmp/otm/media
+      - otm_static:/tmp/otm/static
+
+volumes:
+  otm_pgdata:
+  otm_media:
+  otm_static:

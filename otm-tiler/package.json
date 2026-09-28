@@ -1,0 +1,29 @@
+{
+  "name": "otm-tiler",
+  "version": "1.0.0",
+  "description": "Wraps Windshaft to provide map tiles for OpenTreeMap 2",
+  "main": "server.js",
+  "repository": "git@github.com:OpenTreeMap/otm-tiler.git",
+  "license": "AGPL-3.0",
+  "scripts": {
+    "test": "_mocha test/*.js",
+    "coverage": "istanbul cover ./node_modules/.bin/_mocha --report lcovonly -- test/*.js",
+    "watch": "supervisor --inspect --watch .,style --extensions js,mms server.js",
+    "lint": "jshint *.js test/*.js"
+  },
+  "devDependencies": {
+    "coveralls": "^2.13.1",
+    "docco": "^0.7.0",
+    "istanbul": "^0.4.5",
+    "jshint": "^2.9.5",
+    "mocha": "^3.5.2",
+    "supervisor": "^0.12.0"
+  },
+  "dependencies": {
+    "express": "3.21.2",
+    "moment": "2.19.3",
+    "rollbar": "^2.2.7",
+    "underscore": "^1.8.3",
+    "windshaft": "^3.3.1"
+  }
+}

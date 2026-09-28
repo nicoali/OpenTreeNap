@@ -1,0 +1,49 @@
+go
+env
+*.pyc
+*.swp
+*~
+.vagrant
+.#*
+opentreemap/opentreemap/settings/local_settings.py
+/static
+.coverage
+.sass-cache
+.DS_Store
+Guardfile
+opentreemap/.idea
+node_modules/
+opentreemap/cloud_management
+opentreemap/la
+opentreemap/map_features
+opentreemap/super_admin
+opentreemap/treemap/static/js/
+opentreemap/treemap/static/css/
+prototypes/static
+
+# .mo files are compiled, binary language files created
+# by ``django-admin.py compilemessages``
+*.mo
+
+# the local directory is a place for keeping unversioned
+# scripts, etc
+local/
+
+opentreemap/treemap/management/commands/extracollect.py
+
+assets/js/shim/reverse.js
+
+# Modern OTM local configuration / secrets
+.env
+.env.*
+!.env.modern-v4.1.example
+
+# Local compatibility backups
+*.bak
+*.bak-*
+*.bak.*
+
+# Runtime/generated files
+__pycache__/
+*.log
+*.pid

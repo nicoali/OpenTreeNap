@@ -1,0 +1,22 @@
+{% load i18n %}
+{% load species_thumbprint %}
+
+<!--Species Search-->
+<div class="search-block species-search-block">
+    <div class="search-field-wrapper">
+        <label>{% trans "Search by Species" %}</label>
+        <div class="autocomplete-group">
+            <input type="text"
+                   data-class="search"
+                   id="species-typeahead"
+                   class="form-control"
+                   placeholder="Common or Scientific Name"
+                   data-thumbprint="{{ request|species_thumbprint }}"/>
+            <input name="species.id" data-search-type="IS" type="hidden" id="search-species" />
+        </div>
+    </div>
+    <div id="species-disabled" class="field-group-message" style="display: none">
+        {% trans "Disabled while missing species search is active" %}
+    </div>
+
+</div>

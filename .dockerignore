@@ -1,0 +1,12 @@
+.git
+.gitignore
+*.zip
+*.pyc
+__pycache__/
+.pytest_cache/
+node_modules/
+static/
+/tmp/
+.env
+.env.*
+!.env.modern-v4.1.example

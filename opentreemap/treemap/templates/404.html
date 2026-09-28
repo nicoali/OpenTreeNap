@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block search %}
+{% comment %} Hide search options on error pages {% endcomment %}
+{% endblock search %}
+
+{% block subhead %}
+{% comment %} Hide subhead on error pages {% endcomment %}
+{% endblock subhead %}
+
+{% block content %}
+<div class="content">
+  <div class="well error-panel">
+    <div class="error-icon error-icon-img"><img src="/static/img/404.png"></div>
+    <h2>{% trans "No trees here!" %}</h2>
+    <p>
+      {% trans "Sorry, we couldn't find the page you requested." %}
+      {% if request.instance %}
+        {% trans "Try" %}
+        <a href="{% url 'map' instance_url_name=request.instance.url_name %}">{% trans "exploring trees" %}</a>
+        {% trans "or feel free to" %}
+      {% else %}
+        {% trans "You're welcome to " %}
+      {% endif %}
+      <a href="mailto:{{ settings.SUPPORT_EMAIL_ADDRESS }}">{% trans "contact support" %}</a>
+      {% trans "if you believe you reached this page in error." %}
+    </p>
+  </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+{% comment %} This page has no interactivity {% endcomment %}
+{% endblock scripts %}

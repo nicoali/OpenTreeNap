@@ -1,0 +1,13 @@
+{
+    "indent": 4,
+    "globalstrict": true,
+    "globals": {
+        "require": false,
+        "module": true,
+        "exports": true,
+        "process": true,
+        "console": true,
+        "describe": false,
+        "it": false
+    }
+}

@@ -1,0 +1,23 @@
+{% load i18n %}
+{% if field.is_visible %}
+  <div class="tree-details-species" data-class="display" data-field="{{ field.identifier }}">
+    <h3 data-typeahead="{{ field.identifier }}"
+        data-datum="common_name">{{ field.value.common_name }}</h3>
+    <h5>
+      <em data-typeahead="{{ field.identifier }}"
+          data-datum="scientific_name">{{ field.value.scientific_name }}</em>
+    </h5>
+  </div>
+  {% if field.is_editable %}
+  <div style="display: none;" data-class="edit" data-field="{{ field.identifier }}">
+    <label>{% trans "Species" %}</label>
+    <div>
+      {% include "treemap/field/species_typeahead.html" %}
+    </div>
+    <div class="alert alert-danger text-danger"
+        style="display: none;"
+        {% include "treemap/field/attrs.html" with class="error"%}></div>
+    <hr>
+  </div>
+  {% endif %}
+{% endif %}

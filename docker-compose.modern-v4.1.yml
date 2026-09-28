@@ -1,0 +1,125 @@
+services:
+  db:
+    image: postgis/postgis:14-3.5
+    environment:
+      POSTGRES_DB: ${OTM_DB_NAME:-otm}
+      POSTGRES_USER: ${OTM_DB_USER:-otm}
+      POSTGRES_PASSWORD: ${OTM_DB_PASSWORD:-otm}
+    volumes:
+      - otm_v41_pgdata:/var/lib/postgresql/data
+      - ./docker/initdb.sql:/docker-entrypoint-initdb.d/10-otm-extensions.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${OTM_DB_USER:-otm} -d ${OTM_DB_NAME:-otm}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:6.2-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - otm_v41_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  db-tiler-init:
+    image: postgis/postgis:14-3.5
+    environment:
+      POSTGRES_DB: ${OTM_DB_NAME:-otm}
+      POSTGRES_USER: ${OTM_DB_USER:-otm}
+      PGPASSWORD: ${OTM_DB_PASSWORD:-otm}
+      OTM_DB_HOST: db
+      OTM_DB_PORT: 5432
+      OTM_TILER_DB_USER: ${OTM_TILER_DB_USER:-otm_tiler}
+      OTM_TILER_DB_PASSWORD: ${OTM_TILER_DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - otm_v41_pgdata:/var/lib/postgresql/data
+      - ./docker/configure-tiler-db.sh:/configure-tiler-db.sh:ro
+    entrypoint: ["/bin/bash", "/configure-tiler-db.sh"]
+    restart: "no"
+
+  tiler:
+    build:
+      context: ./otm-tiler
+      dockerfile: Dockerfile.otm-tiler
+    environment:
+      OTM_DB_HOST: db
+      OTM_DB_PORT: 5432
+      OTM_DB_NAME: ${OTM_DB_NAME:-otm}
+      OTM_DB_USER: ${OTM_TILER_DB_USER:-otm_tiler}
+      OTM_DB_PASSWORD: ${OTM_TILER_DB_PASSWORD}
+      OTM_CACHE_HOST: redis
+      OTM_CACHE_PORT: 6379
+    ports:
+      - "4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-tiler-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://localhost:4000/health-check',function(r){process.exit(r.statusCode===200?0:1)}).on('error',function(){process.exit(1)})"
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.modern-v4.1
+    env_file:
+      - .env.modern-v4.1
+    ports:
+      - "${OTM_HTTP_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - otm_v41_media:/tmp/otm/media
+      - otm_v41_static:/tmp/otm/static
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.modern-v4.1
+    entrypoint: ["/app/docker/worker-entrypoint.sh"]
+    command: ["celery", "-A", "opentreemap", "worker", "--loglevel=INFO"]
+    env_file:
+      - .env.modern-v4.1
+    depends_on:
+      web:
+        condition: service_healthy
+    volumes:
+      - otm_v41_media:/tmp/otm/media
+    restart: unless-stopped
+    profiles: ["tasks"]
+
+volumes:
+  otm_v41_pgdata:
+  otm_v41_redisdata:
+  otm_v41_media:
+  otm_v41_static:

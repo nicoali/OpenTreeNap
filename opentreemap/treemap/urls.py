@@ -1,0 +1,81 @@
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import division
+
+from django.urls import re_path
+
+from treemap import routes
+
+# Testing notes:
+# We want to test that every URL succeeds (200) or fails with bad data (404).
+# If you add/remove/modify a URL, please update the corresponding test(s)
+# in treemap/tests/urls.py
+
+USERNAME_PATTERN = r'(?P<username>[\w.@+-]+)'
+
+urlpatterns = [
+    re_path(r'^$', routes.index_page, name='instance_index_view'),
+    re_path(r'page/(?P<page>[a-zA-Z0-9 ]+)/$',
+        routes.static_page, name='static_page'),
+    re_path(r'^boundaries/(?P<boundary_id>\d+)/geojson/$',
+        routes.boundary_to_geojson, name='boundaries_geojson'),
+    re_path(r'^boundaries/$', routes.boundary_autocomplete, name='boundary_list'),
+    re_path(r'^edits/$', routes.edits_page, name='edits'),
+    re_path(r'^species/$', routes.species_list, name="species_list_view"),
+    re_path(r'^map/$', routes.map_page, name='map'),
+
+    re_path(r'^features/(?P<feature_id>\d+)/$',
+        routes.map_feature_detail, name='map_feature_detail'),
+    re_path(r'^features/(?P<feature_id>\d+)/detail$',
+        routes.map_feature_detail_partial, name='map_feature_detail_partial'),
+    re_path(r'^features/(?P<type>\w+)/$',
+        routes.add_map_feature, name='add_map_feature'),
+    re_path(r'^features/(?P<feature_id>\d+)/(?P<edit>edit)$',
+        routes.edit_map_feature_detail, name='map_feature_detail_edit'),
+    re_path(r'^features/(?P<feature_id>\d+)/popup$',
+        routes.map_feature_popup, name='map_feature_popup'),
+    re_path(r'^canopy-popup$', routes.canopy_popup, name='canopy_popup'),
+    re_path(r'^features/(?P<feature_id>\d+)/trees/(?P<tree_id>\d+)/$',
+        routes.delete_tree, name='delete_tree'),
+    re_path(r'^features/(?P<feature_id>\d+)/sidebar$',
+        routes.get_map_feature_sidebar, name='map_feature_sidebar'),
+    re_path(r'^features/(?P<feature_id>\d+)/photo$',
+        routes.add_map_feature_photo, name='add_photo_to_map_feature'),
+    re_path(r'^features/(?P<feature_id>\d+)/accordion$',
+        routes.map_feature_accordion, name='map_feature_accordion'),
+    re_path(r'^features/(?P<feature_id>\d+)/photo/(?P<photo_id>\d+)/detail$',
+        routes.map_feature_photo_detail, name='map_feature_photo_detail'),
+    re_path(r'^features/(?P<feature_id>\d+)/photo/(?P<photo_id>\d+)$',
+        routes.map_feature_photo, name='map_feature_photo'),
+    re_path(r'^features/(?P<feature_id>\d+)/favorite$',
+        routes.favorite_map_feature, name='favorite_map_feature'),
+    re_path(r'^features/(?P<feature_id>\d+)/unfavorite$',
+        routes.unfavorite_map_feature, name='unfavorite_map_feature'),
+
+    re_path(r'^plots/$', routes.add_map_feature, name='add_plot'),
+    re_path(r'^plots/(?P<feature_id>\d+)/trees/(?P<tree_id>\d+)/$',
+        routes.tree_detail, name='tree_detail'),
+
+    # TODO: this duplication exists in multiple places.
+    # we make two endpoints for 'plots/<id>/tree/<id>/' and 'plots/<id>/'
+    # to simplify the client, because the plot_detail page itself can
+    # have two different urls, and it makes it easier to say stuff like
+    # url = document.url = '/photos' or whatever. We can find a higher level
+    # way to handle this duplication and reduce the total number of endpoints
+    # for great good.
+    re_path(r'^plots/(?P<feature_id>\d+)/photo$',
+        routes.add_tree_photo, name='add_photo_to_plot'),
+    re_path(r'^plots/(?P<feature_id>\d+)/tree/(?P<tree_id>\d+)/photo$',
+        routes.add_tree_photo, name='add_photo_to_tree'),
+
+    re_path(r'^config/settings.js$',
+        routes.instance_settings_js, name='settings'),
+    re_path(r'^benefit/search$', routes.search_tree_benefits,
+        name='benefit_search'),
+    re_path(r'^users/%s/$' % USERNAME_PATTERN, routes.instance_user_page,
+        name="user_profile"),
+    re_path(r'^users/%s/edits/$' % USERNAME_PATTERN, routes.instance_user_audits),
+
+    re_path(r'^users/$', routes.users, name="users"),
+]

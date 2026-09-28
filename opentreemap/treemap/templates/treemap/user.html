@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+{% load auth_extras %}
+{% load form_extras %}
+{% load i18n %}
+
+{% block page_title %} | {{ user.username }}{% endblock %}
+
+{% block subhead %}
+{% endblock subhead %}
+
+{% block activeexplore %}
+{% endblock %}
+
+{% block activeuser %}
+active
+{% endblock %}
+
+{% block google_analytics_actions %}
+{# for user-specific pages, remove the username from the url for better tracking #}
+var pathname = document.location.pathname;
+pathname = pathname.replace(/users\/[\w.@+-]+\//, 'users/<username>/');
+
+ga('set', 'page', pathname);
+ga('global.set', 'page', pathname);
+{{ block.super }}
+{% endblock google_analytics_actions %}
+
+{% block header %}
+{% load i18n %}
+<div class="header">
+  {% block logo %}
+  {{ block.super }}
+  {% endblock logo %}
+</div> <!-- end header -->
+{% endblock header %}
+
+{% block content %}
+
+{% url 'user_photo' user.username as photo_url %}
+{% trans "Set a Photo" as upload_title %}
+{% include "treemap/partials/upload_file.html" with title=upload_title upload_url=photo_url %}
+<div class="image-background"></div>
+
+<div class="container contained topper profile">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="account-info">
+                <div class="user-photo-container">
+                    {% if user.photo %}
+                      <img class="user-photo" id="user-photo" src="{{ user.photo.url }}">
+                    {% else %}
+                      <img class="user-photo" id="user-photo" src="{{STATIC_URL}}img/profile.png">
+                    {% endif %}
+                    {% usercontent for user %}
+                    <button data-toggle="modal" data-target="#upload-panel"
+                      class="btn btn-xs add-photos">{% trans "Add Photo" %}</button>
+                    {% endusercontent %}
+                </div>
+                <h1>{{ user.username }}
+                    <small>{% trans "User Profile" %}</small>
+                </h1>
+            </div>
+            {% usercontent for user %}
+            <button id="edit-user" data-class="display" class="btn btn-sm btn-info">{% trans "Edit Profile" %}</button>
+            <button id="save-edit" data-class="edit" class="btn btn-sm btn-primary" style="display: none;">{% trans "Save" %}</button>
+            <button id="cancel-edit" data-class="edit" class="btn btn-sm" style="display: none;">{% trans "Cancel" %}</button>
+            <a class="btn btn-sm" href="{% url 'auth_password_change' %}">{% trans "Change Password" %}</a>
+            {% endusercontent %}
+            <form id="user-form">
+                {% for label, identifier, template in public_fields %}
+                  {% field label from identifier withtemplate template %}
+                {% endfor %}
+                {% usercontent for user %}
+                {% for label, identifier, template in private_fields %}
+                  {% field label from identifier withtemplate template %}
+                {% endfor %}
+                {% endusercontent %}
+                {% if reputation %}
+                    <label>{% trans "Reputation" %}</label>
+                    <div class="field-view">{{ reputation }}</div>
+                {% endif %}
+            </form>
+        </div>
+        <div class="col-md-9">
+            <div class="profile-tabs">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                      <a href="#maps" data-toggle="tab">
+                        <span class="number">{{ instances|length }}</span>
+                        {% blocktrans count n=instances|length %}Tree Map{% plural %}Tree Maps{% endblocktrans %}
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#favorites" data-toggle="tab">
+                        <span class="number">{{ favorites|length }}</span>
+                        {% blocktrans count n=favorites|length %}Favorite{% plural %}Favorites{% endblocktrans %}
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#edits" data-toggle="tab">
+                        <span class="number">{{ total_edits }}</span>
+                        {% blocktrans count n=total_edits %}Edit{% plural %}Edits{% endblocktrans %}
+                      </a>
+                    </li>
+                    <li class="hidden"><a href="#faves" data-toggle="tab"><span class="number">86</span> Favorites</a></li>
+                </ul>
+            </div>
+            <div class="tab-content">
+                <div class="tab-pane active" id="maps">
+                    <h3>Tree Maps</h3>
+                    {% for instance in instances %}
+                      <div>
+                        <a href="{% url 'map' instance_url_name=instance.url_name %}">{{ instance.name }}</a>
+                      </div>
+                    {% endfor %}
+                </div>
+                <div class="tab-pane" id="favorites">
+                    <h3>Favorites</h3>
+                    <ol class="favorites-list">
+                        {% if favorites %}
+                            {% for favorite in favorites %}
+                                <li>
+                                    {% include 'treemap/partials/user_favorite.html' %}
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            {% if its_me %}
+                                <h4>{% trans "You have not starred any favorites yet." %}</h4>
+                            {% else %}
+                                <h4>{% trans "This person has not starred any favorites yet." %}</h4>
+                            {% endif %}
+                        {% endif %}
+                    </ol>
+                </div>
+                <div class="tab-pane" id="edits">
+                    <h3>{% trans "Recent Edits" %}</h3>
+                    <div id="recent-user-edits-container">
+                        {% include 'treemap/recent_user_edits.html' %}
+                    </div>
+                </div>
+                <div class="tab-pane" id="faves">
+                    <h3>Favorites</h3>
+                    <!-- INSERT FAVORITES TABLE HERE -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block scripts %}
+{% render_bundle 'js/treemap/user' %}
+{% endblock scripts %}

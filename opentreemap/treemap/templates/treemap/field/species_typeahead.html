@@ -1,0 +1,27 @@
+{% load i18n %}
+{% load l10n %}
+{% load instance_config %}
+{% load species_thumbprint %}
+
+<input type="hidden"
+       data-typeahead-hidden
+       id="{{ field.label }}-hidden"
+       name="{{ field.identifier }}"
+       value="{{ field.value.id|unlocalize }}"/>
+<input type="text"
+       data-typeahead-input="{{ field.identifier }}"
+       id="{{ field.label }}-typeahead"
+       class="form-control" 
+       placeholder="Common or scientific name"
+       data-thumbprint="{{ request|species_thumbprint }}"
+       value="{{ field.value.display_name }}"/>
+<input type="hidden"
+       value="{{ field.value.id|unlocalize }}"
+       data-typeahead-restore="{{ field.identifier }}"
+       data-datum="id" />
+<p>
+  <a class="external-help-link"
+     target="_blank"
+     href="{% include "treemap/partials/treekey_url.html" with linkData=request.instance|instance_config:"linkData" %}"
+     >{% trans "Need help identifying the tree's species?" %}</a>
+</p>
