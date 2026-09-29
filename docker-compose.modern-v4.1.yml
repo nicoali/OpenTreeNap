@@ -58,7 +58,7 @@ services:
       OTM_CACHE_HOST: redis
       OTM_CACHE_PORT: 6379
     ports:
-      - "4000:4000"
+      - "${OTM_TILER_HTTP_PORT:-4000}:4000"
     depends_on:
       db:
         condition: service_healthy

@@ -8,6 +8,17 @@ DB_PORT="${OTM_DB_PORT:-5432}"
 TILER_USER="${OTM_TILER_DB_USER:-otm_tiler}"
 TILER_PASSWORD="${OTM_TILER_DB_PASSWORD:?OTM_TILER_DB_PASSWORD is required}"
 
+echo "[tiler-db] Waiting for PostgreSQL at ${DB_HOST}:${DB_PORT}..."
+
+until pg_isready \
+    --host "$DB_HOST" \
+    --port "$DB_PORT" \
+    --username "$DB_ADMIN" \
+    --dbname "$DB_NAME" >/dev/null 2>&1; do
+    sleep 2
+done
+
+echo "[tiler-db] PostgreSQL is ready."
 echo "[tiler-db] Configuring PostgreSQL role '${TILER_USER}'..."
 
 # PostgreSQL legacy clients used by OTM Tiler require an MD5 verifier.

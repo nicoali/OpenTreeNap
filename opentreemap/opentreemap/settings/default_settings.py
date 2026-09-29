@@ -2,6 +2,19 @@ import os
 from omgeo import postprocessors
 
 # Django settings for opentreemap project.
+
+# Database configuration for the modern Docker stack.
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': os.environ.get('OTM_DB_NAME', 'otm'),
+        'USER': os.environ.get('OTM_DB_USER', 'otm'),
+        'PASSWORD': os.environ.get('OTM_DB_PASSWORD', 'otm'),
+        'HOST': os.environ.get('OTM_DB_HOST', 'db'),
+        'PORT': os.environ.get('OTM_DB_PORT', '5432'),
+    }
+}
+
 OTM_VERSION = 'dev'
 API_VERSION = 'v0.1'
 
@@ -149,7 +162,7 @@ SCSS_ENTRY = 'main'
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/var/www/example.com/media/"
-MEDIA_ROOT = '/usr/local/otm/media'
+MEDIA_ROOT = os.environ.get('OTM_MEDIA_ROOT', '/usr/local/otm/media')
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -162,7 +175,7 @@ MEDIA_URL = '/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/var/www/example.com/static/"
-STATIC_ROOT = ''
+STATIC_ROOT = os.environ.get('OTM_STATIC_ROOT', '/tmp/otm/static')
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
@@ -416,3 +429,4 @@ if os.environ.get('RECAPTCHA_PUBLIC_KEY', '') != '':
     USE_RECAPTCHA = True
 else:
     USE_RECAPTCHA = False
+    SILENCED_SYSTEM_CHECKS = ['captcha.recaptcha_test_key_error']

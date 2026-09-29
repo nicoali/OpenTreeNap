@@ -133,9 +133,12 @@ Create a local administrator with:
 
 The historical OpenTreeMap renderer is integrated directly into the repository under `otm-tiler/`.
 
-For local development the browser-visible tile endpoint is configured with:
+For local development the browser-visible tile endpoint and host port are configured with:
 
     OTM_TILE_HOST=//localhost:4000
+    OTM_TILER_HTTP_PORT=4000
+
+`OTM_TILER_HTTP_PORT` controls the host port published by Docker, while the tiler continues to listen on port 4000 inside the container.
 
 The tiler uses a dedicated restricted PostgreSQL account through:
 
@@ -190,9 +193,10 @@ Technical migration notes are retained in:
 
 OpenTreeNap remains an active modernization project.
 
+The Docker development stack has been validated from completely new PostgreSQL, Redis, media, and static volumes, including automatic database initialization, Django startup, static-file collection, and OTM Tiler database/cache health checks.
+
 Areas still requiring additional work or validation include:
 
-- clean installation from completely new Docker volumes
 - production deployment configuration
 - broader application workflow testing
 - Celery/background-task validation
