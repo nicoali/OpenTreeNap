@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/opentreenap-banner.png" alt="OpenTreeNap — modernized OpenTreeMap stack born in Naples, Italy" width="100%">
+</p>
+
 # 🌳 OpenTreeNap
 
 **English** | [🇮🇹 Italiano](README_IT.md)
