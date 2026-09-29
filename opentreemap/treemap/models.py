@@ -1143,7 +1143,17 @@ class Tree(Convertible, UDFModel, PendingAuditable, ValidationMixin):
 
     def __init__(self, *args, **kwargs):
         super(Tree, self).__init__(*args, **kwargs)
-        self.populate_previous_state()
+
+        # Django may instantiate Tree with deferred fields while executing
+        # refresh_from_db().  populate_previous_state() calls as_dict(),
+        # which accesses those deferred fields and would trigger another
+        # refresh_from_db(), causing infinite recursion.
+        #
+        # Populate the audit state only when all concrete fields are loaded.
+        if not self.get_deferred_fields():
+            self.populate_previous_state()
+        else:
+            self.clear_previous_state()
 
     def dict(self):
         props = self.as_dict()
