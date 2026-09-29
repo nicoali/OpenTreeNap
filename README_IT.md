@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/opentreenap-banner.png" alt="OpenTreeNap — progetto OpenTreeMap modernizzato nato a Napoli" width="100%">
+</p>
+
 # 🌳 OpenTreeNap
 
 [🇬🇧 English](README.md) | **Italiano**
