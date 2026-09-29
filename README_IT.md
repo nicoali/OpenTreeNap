@@ -332,6 +332,6 @@ Una città può essere letta anche attraverso i suoi alberi: dove sono, quali sp
 
 Se questi dati sono aperti, leggibili e condivisibili, possono diventare uno strumento utile non solo per chi sviluppa software, ma anche per chi studia il territorio, per associazioni, scuole, cittadini e comunità locali.
 
-**Alberi aperti. Dati aperti. Napoli.**
+**Verde urbano. Dati aperti. Napoli.**
 
 Da Napoli verso qualsiasi città, mantenendo vive le radici open source di OpenTreeMap.
