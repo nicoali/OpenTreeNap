@@ -107,16 +107,17 @@ services:
       context: .
       dockerfile: Dockerfile.modern-v4.1
     entrypoint: ["/app/docker/worker-entrypoint.sh"]
-    command: ["celery", "-A", "opentreemap", "worker", "--loglevel=INFO"]
+    command: ["celery", "-A", "opentreemap", "worker", "--loglevel=INFO", "--concurrency=2"]
     env_file:
       - .env.modern-v4.1
+    environment:
+      C_FORCE_ROOT: "1"
     depends_on:
       web:
         condition: service_healthy
     volumes:
       - otm_v41_media:/tmp/otm/media
     restart: unless-stopped
-    profiles: ["tasks"]
 
 volumes:
   otm_v41_pgdata:
