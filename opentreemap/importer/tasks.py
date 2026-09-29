@@ -24,7 +24,7 @@ def _create_rows_for_event(ie, csv_file):
     # so we can show progress. Caller does manual cleanup if necessary.
     reader = utf8_file_to_csv_dictreader(csv_file)
 
-    field_names = [f.strip().decode('utf-8') for f in reader.fieldnames
+    field_names = [f.strip() for f in reader.fieldnames
                    if f.strip().lower() not in ie.ignored_fields()]
     ie.field_order = json.dumps(field_names)
     ie.save()
@@ -54,7 +54,7 @@ def _create_rows(ie, reader):
 
     for row in reader:
         data = clean_row_data(row)
-        if len(filter(None, data.values())) > 0:  # skip blank rows
+        if any(data.values()):  # skip blank rows
             data = json.dumps(data)
             rows.append(RowModel(data=data, import_event=ie, idx=idx))
 

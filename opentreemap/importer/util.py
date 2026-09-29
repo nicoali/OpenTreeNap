@@ -3,8 +3,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import division
 
-import codecs
 import csv
+import io
 
 
 def _clean_string(s):
@@ -32,8 +32,19 @@ def clean_field_name(name):
 
 
 def _as_utf8(f):
-    return codecs.EncodedFile(f, 'utf-8')
+    """
+    Python 3 compatibility:
+    csv expects a text stream, while OTM passes BytesIO/binary files.
+    Return an independent StringIO so the original stream is never closed.
+    """
+    pos = f.tell()
+    data = f.read()
+    f.seek(pos)
 
+    if isinstance(data, bytes):
+        data = data.decode('utf-8')
+
+    return io.StringIO(data)
 
 def _guess_dialect_and_reset_read_pointer(f):
     dialect = csv.Sniffer().sniff(_as_utf8(f).read(4096), delimiters=',\t')
