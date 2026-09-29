@@ -1,19 +1,23 @@
 # 🌳 OpenTreeNap
 
-**OpenTreeNap** is a modernized, Docker-based development environment derived from the original **OpenTreeMap** platform, with a focus on urban tree mapping and experimentation in Naples, Italy.
+**English** | [🇮🇹 Italiano](README_IT.md)
 
-The project preserves the historical OpenTreeMap architecture while adapting its software stack to run on a contemporary Ubuntu/Docker environment.
+**OpenTreeNap** is a modernized, Docker-based development environment derived from the original **OpenTreeMap** platform, with a focus on collaborative urban tree mapping.
+
+Born in **Naples (Napoli), Italy 🇮🇹**, the project aims to give the historical OpenTreeMap codebase a contemporary technical environment while keeping it useful for experimentation and urban-forestry projects in Naples and beyond.
 
 > **Status:** active modernization and development project.  
 > OpenTreeNap is not yet intended as a production-ready public deployment.
 
 ---
 
-## 🌋 About OpenTreeNap
+## 🌋 Why OpenTreeNap?
 
-OpenTreeNap was born from the modernization of the historical OpenTreeMap codebase and from the idea of applying open-source urban forestry tools to Naples.
+OpenTreeNap was born from two ideas: preserving and modernizing the historical OpenTreeMap platform, and exploring how open-source urban-forestry tools can support tree mapping in Naples.
 
 The name combines **OpenTreeMap** with **Napoli**.
+
+Naples is the project's home and inspiration, but OpenTreeNap is not intended to be limited to one city. The goal is to keep the platform reusable for other communities, researchers, developers and urban-forestry initiatives.
 
 The current development environment supports:
 
@@ -40,6 +44,8 @@ The complete tree-rendering path has been validated:
 **PostgreSQL/PostGIS → OpenTreeMap/Django → OTM Tiler → Windshaft/Mapnik → PNG + UTFGrid → Leaflet → interactive tree markers**
 
 Persisted trees can be rendered on the map and selected to display their details.
+
+The Docker stack has also been validated from a **fresh Git clone with completely new Docker volumes**, including PostgreSQL initialization, Redis, Django startup, static-file collection and OTM Tiler database/cache health checks.
 
 ---
 
@@ -193,8 +199,6 @@ Technical migration notes are retained in:
 
 OpenTreeNap remains an active modernization project.
 
-The Docker development stack has been validated from completely new PostgreSQL, Redis, media, and static volumes, including automatic database initialization, Django startup, static-file collection, and OTM Tiler database/cache health checks.
-
 Areas still requiring additional work or validation include:
 
 - production deployment configuration
@@ -250,4 +254,4 @@ Refer to the full `LICENSE` file for the applicable terms and copyright notices.
 
 **Open trees. Open data. Napoli.**
 
-The goal of OpenTreeNap is to give the historical OpenTreeMap platform a modern technical environment while exploring its potential for urban tree mapping in Naples and beyond.
+From Naples to anywhere: modernizing OpenTreeMap while preserving its open-source roots.
