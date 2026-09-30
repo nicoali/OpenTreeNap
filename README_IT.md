@@ -196,6 +196,157 @@ Per creare un amministratore locale:
 
 ---
 
+## 📥 Importare alberi da CSV
+
+OpenTreeNap include l'importer storico di OpenTreeMap, che permette di caricare in blocco alberi e siti di impianto da un file CSV.
+
+Per utilizzare l'importer è necessario accedere con un utente autorizzato all'istanza e aprire:
+
+```
+/<nome-istanza>/importer/
+```
+
+Ad esempio, per l'istanza di sviluppo:
+
+```
+/napoli-test/importer/
+```
+
+### Avviare il worker Celery
+
+La validazione e il commit degli import vengono eseguiti tramite task Celery.
+
+Prima di iniziare un'importazione assicurati quindi che il worker sia attivo:
+
+```bash
+./modern-v4.1.sh worker-up
+```
+
+Puoi verificare lo stato dei servizi con:
+
+```bash
+./modern-v4.1.sh status
+```
+
+### Formato CSV per gli alberi
+
+Il template dell'istanza può essere scaricato direttamente dalla pagina dell'importer.
+
+I campi attualmente supportati per l'import degli alberi sono:
+
+| Campo | Significato |
+|---|---|
+| `Point X` | Longitudine, ad esempio `14.2681` |
+| `Point Y` | Latitudine, ad esempio `40.8518` |
+| `Street Address` | Indirizzo |
+| `City` | Città |
+| `Postal Code` | CAP |
+| `Planting Site Width` | Larghezza del sito di impianto |
+| `Planting Site Length` | Lunghezza del sito di impianto |
+| `Planting Site Id` | ID interno OpenTreeMap del sito |
+| `Custom Id` | Identificativo esterno o proveniente dal dataset sorgente |
+| `Tree Id` | ID interno OpenTreeMap dell'albero |
+| `Tree Present` | `True` se il sito contiene un albero, `False` se rappresenta solo un sito di impianto |
+| `Genus` | Genere botanico |
+| `Species` | Specie |
+| `Cultivar` | Cultivar |
+| `Other Part Of Name` | Parte aggiuntiva del nome botanico |
+| `Common Name` | Nome comune |
+| `Diameter` | Diametro |
+| `Tree Height` | Altezza dell'albero |
+| `Canopy Height` | Altezza della chioma |
+| `Date Planted` | Data di impianto |
+| `Date Removed` | Data di rimozione |
+
+### Coordinate
+
+OpenTreeMap usa i nomi:
+
+```
+Point X = longitudine
+Point Y = latitudine
+```
+
+Per esempio:
+
+```csv
+Point X,Point Y,Street Address,City,Tree Present,Genus,Species,Common Name
+14.2681,40.8518,Via Esempio,Napoli,True,Platanus,acerifolia,Platano
+```
+
+Le coordinate devono essere espresse in gradi decimali.
+
+### Nuovi alberi e ID interni
+
+Quando si importano nuovi record è consigliabile lasciare vuoti:
+
+```
+Planting Site Id
+Tree Id
+```
+
+Questi identificativi appartengono al database OpenTreeMap e vengono assegnati dalla piattaforma.
+
+Se il dataset originale possiede già un proprio identificativo, è preferibile conservarlo nel campo:
+
+```
+Custom Id
+```
+
+In questo modo è possibile mantenere il collegamento con la fonte originale senza forzare gli ID interni di OpenTreeMap.
+
+### Siti senza albero
+
+Un record può rappresentare anche un sito di impianto privo di albero.
+
+In questo caso utilizzare:
+
+```
+Tree Present = False
+```
+
+Il sito verrà quindi mantenuto sulla mappa senza creare un oggetto albero associato.
+
+### Specie non completamente determinate
+
+Non è necessario inventare informazioni mancanti.
+
+Se, ad esempio, è noto soltanto il genere botanico, è possibile compilare:
+
+```csv
+Genus,Species
+Magnolia,
+```
+
+lasciando vuoto il campo `Species`.
+
+### Procedura consigliata
+
+Prima di caricare un dataset molto grande:
+
+1. prepara il CSV usando il template dell'istanza;
+2. importa inizialmente un piccolo campione, ad esempio 5–10 record;
+3. controlla sulla mappa posizione, specie e dati associati;
+4. verifica eventuali warning o errori mostrati dall'importer;
+5. solo dopo il test, importa il dataset completo.
+
+Questo approccio riduce il rischio di caricare centinaia o migliaia di record con coordinate o campi non corretti.
+
+### Import testato
+
+Il flusso di import degli alberi è stato verificato sull'istanza di sviluppo `napoli-test` sia con un piccolo campione sia con un dataset completo.
+
+Sono stati testati correttamente:
+
+- creazione dei planting site;
+- creazione degli alberi associati;
+- coordinate geografiche;
+- dati tassonomici;
+- identificativi esterni tramite `Custom Id`;
+- record con `Tree Present=False`.
+
+---
+
 ## 🗺️ OTM Tiler
 
 Il renderer storico di OpenTreeMap è integrato direttamente nel repository nella directory:
