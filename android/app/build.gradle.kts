@@ -19,7 +19,7 @@ fun quotedBuildConfig(value: String): String =
 
 android {
     namespace = "org.opentreenap.mobile"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "org.opentreenap.mobile"
