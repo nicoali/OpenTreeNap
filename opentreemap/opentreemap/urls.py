@@ -32,7 +32,8 @@ instance_pattern = r'^(?P<instance_url_name>' + URL_NAME_PATTERN + r')'
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
-    re_path(r'^healthz/    re_path(r'^robots.txt$', RedirectView.as_view(
+    re_path(r'^healthz/$', healthz, name='healthz'),
+    re_path(r'^robots.txt$', RedirectView.as_view(
         url='/static/robots.txt', permanent=True)),
     # Setting permanent=False in case we want to allow customizing favicons
     # per instance in the future
