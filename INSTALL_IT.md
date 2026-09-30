@@ -4,7 +4,7 @@ Questa guida installa **OpenTreeNap modern-v4.1** su un VPS Ubuntu nuovo.
 
 La procedura è stata collaudata dall'inizio alla fine su un VPS pulito con **Ubuntu Server 24.04 LTS x86_64, 2 vCPU, 4 GB RAM, 2 GB swap e 40 GB disco**, arrivando fino alla creazione dell'istanza, Google Maps, inserimento manuale e importazione CSV tramite Bulk Uploader/Celery.
 
-> **Importante:** la procedura è stata collaudata anche con hostname No-IP, Caddy come reverse proxy, HTTPS automatico, Tiler pubblicato tramite `/tiles/` e porte Docker applicative limitate a `127.0.0.1`. Restano da completare ulteriori aspetti production, in particolare `OTM_DEBUG=0`, backup e hardening applicativo.
+> **Importante:** la procedura è stata collaudata anche in assetto production con `OTM_DEBUG=0`, hostname No-IP, Caddy come reverse proxy, HTTPS automatico, Tiler pubblicato tramite `/tiles/`, media persistenti serviti da Caddy, cookie `Secure` e porte Docker applicative limitate a `127.0.0.1`. Restano comunque necessari backup automatici, aggiornamenti di sicurezza e manutenzione/hardening continuo.
 
 ## 1. Requisiti
 
@@ -166,17 +166,20 @@ OTM_TILER_DB_PASSWORD=<PASSWORD_TILER>
 
 Non pubblicare questi valori.
 
-Per il primo collaudo remoto configura inoltre:
+Per il deployment HTTPS configura inoltre:
 
 ```dotenv
-OTM_DEBUG=1
-OTM_ALLOWED_HOSTS=<IP_PUBBLICO_VPS>,localhost,127.0.0.1
+OTM_DEBUG=0
+OTM_TRUST_PROXY_HEADERS=1
+OTM_ALLOWED_HOSTS=<IP_PUBBLICO_VPS>,TUO_HOSTNAME,localhost,127.0.0.1
 OTM_HTTP_PORT=8000
 OTM_TILER_HTTP_PORT=4000
-OTM_TILE_HOST=//<IP_PUBBLICO_VPS>:4000
+OTM_TILE_HOST=//TUO_HOSTNAME/tiles
+OTM_MEDIA_ROOT=/tmp/otm/media
+OTM_MEDIA_HOST_PATH=/srv/opentreenap/media
 ```
 
-`OTM_TILE_HOST` è visibile al browser: su un VPS remoto non deve puntare a `localhost`.
+`OTM_TILE_HOST` è visibile al browser e deve usare lo stesso hostname HTTPS pubblicato da Caddy. `OTM_TRUST_PROXY_HEADERS=1` permette a Django di riconoscere correttamente HTTPS dietro il reverse proxy. `OTM_MEDIA_HOST_PATH` rende persistenti sul VPS gli upload che Django vede in `/tmp/otm/media`.
 
 Non condividere mai l'intero file `.env.modern-v4.1`.
 
@@ -343,29 +346,32 @@ Porte:
 ss -lntp | grep -E ':(8000|4000)\b'
 ```
 
-## 14. Firewall temporaneo per il collaudo HTTP
+## 14. Firewall e porte applicative
 
-Se UFW è attivo e consente solo SSH:
+La configurazione Compose corrente pubblica Web e Tiler solo sul loopback del VPS:
+
+```text
+127.0.0.1:8000
+127.0.0.1:4000
+```
+
+Non aprire pubblicamente le porte `8000`, `4000`, PostgreSQL `5432` o Redis `6379`. L'accesso Internet deve passare da Caddy sulle sole porte HTTP/HTTPS.
+
+Se UFW è attivo, conserva SSH e abilita:
 
 ```bash
-ufw allow 8000/tcp comment 'OpenTreeNap web'
-ufw allow 4000/tcp comment 'OpenTreeNap tiler'
+ufw allow 80/tcp comment 'Caddy HTTP'
+ufw allow 443/tcp comment 'Caddy HTTPS'
 ufw status numbered
 ```
 
-**Non aprire PostgreSQL 5432 né Redis 6379.**
+Verifica i binding locali:
 
-Se il provider ha un firewall/security group separato, può essere necessario consentire 8000/TCP e 4000/TCP anche lì.
-
-Dal PC:
-
-```text
-http://<IP_PUBBLICO_VPS>:8000/napoli/
+```bash
+ss -lntp | grep -E ':(8000|4000)\b'
 ```
 
-Queste aperture servono **solo al primo collaudo HTTP diretto**.
-
-Dopo aver configurato Caddy e HTTPS, le porte `8000` e `4000` non devono più essere raggiungibili da Internet. La configurazione Compose corrente le associa infatti a `127.0.0.1`.
+Non devono comparire `0.0.0.0:8000` o `0.0.0.0:4000`.
 
 ## 15. Google Maps
 
@@ -503,7 +509,7 @@ getent ahostsv4 TUO_HOSTNAME
 Su Ubuntu 24.04:
 
 ```bash
-apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+apt install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
   | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
 
@@ -534,10 +540,15 @@ ufw allow 443/tcp comment 'Caddy HTTPS'
 
 ### Configurare Caddy
 
-Il Tiler viene pubblicato sotto `/tiles/`, mentre tutto il resto viene inoltrato a Django:
+Il Tiler viene pubblicato sotto `/tiles/`, gli upload sotto `/media/`, mentre tutto il resto viene inoltrato a Django:
 
 ```caddy
 TUO_HOSTNAME {
+    handle_path /media/* {
+        root * /srv/opentreenap/media
+        file_server
+    }
+
     handle_path /tiles/* {
         reverse_proxy 127.0.0.1:4000
     }
@@ -556,6 +567,30 @@ systemctl reload caddy
 ```
 
 Caddy gestisce automaticamente il certificato TLS quando DNS, porte 80/443 e hostname sono configurati correttamente.
+
+### Preparare i media persistenti
+
+Prima di ricreare Web/Worker prepara la directory host:
+
+```bash
+mkdir -p /srv/opentreenap/media
+chown root:root /srv/opentreenap/media
+chmod 755 /srv/opentreenap
+chmod 755 /srv/opentreenap/media
+```
+
+Con `OTM_MEDIA_HOST_PATH=/srv/opentreenap/media`, Compose monta questa directory come `/tmp/otm/media` sia nel container Web sia nel Worker. Caddy la serve in sola lettura dal punto di vista HTTP tramite `/media/*`; non viene esposto il resto del filesystem.
+
+Dopo la modifica dell'ambiente ricrea Web e Worker:
+
+```bash
+docker compose \
+  -f docker-compose.modern-v4.1.yml \
+  --env-file .env.modern-v4.1 \
+  up -d --force-recreate --no-deps web worker
+```
+
+Puoi verificare il mount creando temporaneamente un file in `/tmp/otm/media` dal container e controllando che compaia in `/srv/opentreenap/media` sul VPS.
 
 ### Aggiornare OpenTreeNap
 
@@ -670,6 +705,8 @@ Internet
    +-- 80/443
         |
       Caddy
+        |
+        +-- /media/* --> /srv/opentreenap/media (Caddy file server)
         |
         +-- /tiles/* --> 127.0.0.1:4000 (Tiler)
         |
@@ -835,7 +872,7 @@ Per fermare normalmente lo stack usa:
 
 - Django è ancora 3.2 e il codice storico contiene alcuni `NullBooleanField` deprecati.
 - Il worker Celery gira attualmente come root nel container e può mostrare il relativo warning.
-- `OTM_DEBUG=1` è adatto al collaudo, non a un deployment pubblico definitivo.
+- Il deployment pubblico collaudato usa `OTM_DEBUG=0`; non riattivare DEBUG su Internet salvo diagnostica temporanea e controllata.
 - Google Maps può mostrare un warning sul caricamento senza `loading=async`; non blocca la mappa.
 - Il frontend storico può mostrare warning JavaScript non bloccanti.
 - OTM Tiler usa intenzionalmente una catena Node/Windshaft/Mapnik legacy isolata.
@@ -860,11 +897,11 @@ chmod 600 .env.modern-v4.1
 
 PostgreSQL e Redis non devono essere esposti pubblicamente.
 
-Reverse proxy Caddy, HTTPS e isolamento delle porte applicative sono stati collaudati. Prima di considerare OpenTreeNap completamente production-ready restano almeno una configurazione `OTM_DEBUG=0` collaudata, backup automatici, aggiornamenti di sicurezza e ulteriore hardening applicativo.
+Reverse proxy Caddy, HTTPS, `OTM_DEBUG=0`, cookie sicuri, statici WhiteNoise, media persistenti e isolamento delle porte applicative sono stati collaudati. Per un esercizio production continuativo restano essenziali backup automatici verificati, aggiornamenti di sicurezza, monitoraggio e ulteriore hardening applicativo.
 
 ## 23. Checklist finale
 
-L'installazione development/bridge è riuscita quando:
+L'installazione production di base è riuscita quando:
 
 - `doctor` passa;
 - la build termina;
@@ -875,6 +912,10 @@ L'installazione development/bridge è riuscita quando:
 - superuser e istanza vengono creati;
 - `/<istanza>/map/` funziona dal browser tramite HTTPS;
 - Caddy serve correttamente il certificato TLS;
+- Django gira con `OTM_DEBUG=0` e riconosce HTTPS dietro Caddy;
+- i cookie di sessione e CSRF sono marcati `Secure`;
+- gli statici vengono serviti correttamente con WhiteNoise;
+- gli upload persistono in `/srv/opentreenap/media` e sono raggiungibili tramite `/media/`;
 - il Tiler funziona tramite `/tiles/`;
 - le porte 8000 e 4000 ascoltano solo su `127.0.0.1`;
 - dall'esterno 443 è raggiungibile mentre 8000 e 4000 non lo sono;
