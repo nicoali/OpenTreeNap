@@ -87,6 +87,19 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+# When OpenTreeNap is deployed behind a trusted HTTPS reverse proxy such as
+# Caddy, Django must use X-Forwarded-Proto to reconstruct request security.
+# Keep this opt-in so direct/local development does not trust proxy headers.
+TRUST_PROXY_HEADERS = os.environ.get(
+    'OTM_TRUST_PROXY_HEADERS', '0').strip().lower() in (
+        '1', 'true', 'yes', 'on')
+if TRUST_PROXY_HEADERS:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Secure cookies become the default when DEBUG is disabled.
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
@@ -193,6 +206,10 @@ if WEBPACK_DEV_SERVER is not None and DEBUG:
 else:
     STATIC_URL = '/static/'
 
+# WhiteNoise serves collectstatic output when DEBUG is disabled, allowing the
+# modern Docker stack to keep static assets behind the same Caddy origin.
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
 # Root URL for the application
 SITE_ROOT = '/'
 
@@ -243,6 +260,8 @@ TEMPLATES = [
 ]
 
 MIDDLEWARE = (
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
