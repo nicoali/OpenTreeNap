@@ -1,0 +1,81 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: OpenTreeNap\n"
+"PO-Revision-Date: 2026-09-30 12:00+0000\n"
+"Last-Translator: OpenTreeNap\n"
+"Language-Team: Italian\n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "OpenTreeNap Trees"
+msgstr "Alberi OpenTreeNap"
+
+msgid "Boundaries"
+msgstr "Confini"
+
+msgid "Regional Canopy Percentages"
+msgstr "Percentuali di copertura arborea regionale"
+
+msgid "Click \"Save\" or \"Cancel\" to end your Quick Edit session."
+msgstr "Seleziona “Salva” o “Annulla” per terminare la modifica rapida."
+
+msgid "Failed to add feature"
+msgstr "Impossibile aggiungere l’elemento"
+
+msgid "Missing species"
+msgstr "Specie mancante"
+
+msgid "Empty planting site"
+msgstr "Area di impianto vuota"
+
+msgid "Could not save your favorite"
+msgstr "Impossibile salvare il preferito"
+
+msgid "Cannot delete"
+msgstr "Impossibile eliminare"
+
+msgid "Resolved"
+msgstr "Risolto"
+
+msgid "There were no results matching your search."
+msgstr "Nessun risultato corrisponde alla ricerca."
+
+msgid "There was a problem running your search."
+msgstr "Si è verificato un problema durante la ricerca."
+
+msgid "Upload failed"
+msgstr "Caricamento non riuscito"
+
+msgid "Are you sure you want to leave?"
+msgstr "Vuoi uscire dalla pagina?"
+
+msgid "Could not remove invitation"
+msgstr "Impossibile rimuovere l’invito"
+
+msgid "Cannot save empty species"
+msgstr "Non puoi salvare una specie vuota"
+
+msgid "PUBLIC"
+msgstr "PUBBLICO"
+
+msgid "PRIVATE"
+msgstr "PRIVATO"
+
+msgid "Show my location"
+msgstr "Mostra la mia posizione"
+
+msgid "meters"
+msgstr "metri"
+
+msgid "feet"
+msgstr "piedi"
+
+msgid "You are within {distance} {unit} from this point"
+msgstr "Ti trovi entro {distance} {unit} da questo punto"
+
+msgid "Your location is outside the map boundaries"
+msgstr "La tua posizione è esterna ai confini della mappa"

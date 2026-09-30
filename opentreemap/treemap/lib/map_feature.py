@@ -424,7 +424,7 @@ def _add_share_context(context, request, photos):
     elif context.get('has_tree'):
         photo_url = settings.STATIC_URL + "img/tree.png"
     else:
-        photo_url = settings.STATIC_URL + "img/otmLogo126.png"
+        photo_url = settings.STATIC_URL + "img/opentreenap-logo.png"
     photo_url = request.build_absolute_uri(photo_url)
 
     title = _("%(feature)s on %(treemap)s") % {

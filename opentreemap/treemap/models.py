@@ -105,7 +105,7 @@ class StaticPage(models.Model):
             if page_name.lower() in StaticPage.DEFAULT_CONTENT:
                 template = get_template(
                     StaticPage.DEFAULT_CONTENT[page_name.lower()])
-                content = template.render()
+                content = template.render({'settings': settings})
             else:
                 content = 'There is no content for this page yet.'
 

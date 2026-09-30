@@ -11,7 +11,7 @@
         <form method="post" action="{% url 'login' %}">
             <fieldset>
                 {% csrf_token %}
-                <legend>{% trans "Log in to OpenTreeMap" %}</legend>
+                <legend>{% trans "Log in to OpenTreeNap" %}</legend>
                 {% if form.non_field_errors %}
                 <ul class='errorlist'>
                     {% for error in form.non_field_errors %}

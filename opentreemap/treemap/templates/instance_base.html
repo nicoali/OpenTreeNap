@@ -202,16 +202,18 @@ ga('set', 'page', pathname);
 <div class="footer-inner">
   {% with linkData=request.instance|instance_config:"linkData" %}
   <ul class="list-inline pull-left">
+    <li><a href="{{ settings.PROJECT_WEBSITE_URL }}">{% trans 'Project website' %}</a></li>
     <li><a target="_blank"
            href="{% include "treemap/partials/treekey_url.html" %}"
            >{% trans "Tree ID" %}</a></li>
     {% for name in request.instance.static_page_names %}
-    <li><a href="{% url 'static_page' instance_url_name=request.instance.url_name page=name %}">{{ name }}</a></li>
+    <li><a href="{% url 'static_page' instance_url_name=request.instance.url_name page=name %}">{% trans name %}</a></li>
     {% endfor %}
     {% if 'contact' in linkData.keys and linkData.contact %}
     <li><a href="mailto:{{ linkData.contact }}">{% trans "Contact" %}</a></li>
     {% endif %}
   </ul>
+  <span class="otn-attribution">{% trans 'Based on' %} <a href="https://github.com/OpenTreeMap/otm-core">OpenTreeMap</a> · AGPLv3</span>
   {% endwith %}
 </div>
 {% endblock footer %}

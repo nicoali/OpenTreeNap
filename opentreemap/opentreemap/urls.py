@@ -38,7 +38,7 @@ urlpatterns = [
     # Setting permanent=False in case we want to allow customizing favicons
     # per instance in the future
     re_path(r'^favicon\.png$', RedirectView.as_view(
-        url='/static/img/favicon.png', permanent=False)),
+        url='/static/img/opentreenap-favicon.svg', permanent=False)),
     re_path('^comments/', include('django_comments.urls')),
     re_path(r'^', include('geocode.urls')),
     re_path(r'^stormwater/', include('stormwater.urls')),
@@ -91,7 +91,7 @@ if settings.USE_JS_I18N:
     }
 
     urlpatterns = [
-        re_path(r'^jsi18n/$', JavaScriptCatalog.as_view(**js_i18n_info_dict))
+        re_path(r'^jsi18n/$', JavaScriptCatalog.as_view(**js_i18n_info_dict), name='javascript-catalog')
     ] + urlpatterns
 
 if settings.EXTRA_URLS:

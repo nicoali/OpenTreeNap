@@ -1,5 +1,7 @@
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 var $ = require('jquery'),
     _ = require('lodash'),
     R = require('ramda'),
@@ -109,7 +111,7 @@ function updateSpeciesRow($container, $el) {
     if (R.all(R.complement(_.isEmpty), [rowData.fieldName, rowData.updatedValue])) {
         $container.load(rowData.url, {species_id: rowData.updatedValue}, popover.activateAll);
     } else {
-        toastr.error("Cannot save empty species");
+        toastr.error(gettext("Cannot save empty species"));
     }
 }
 

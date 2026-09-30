@@ -1,0 +1,65 @@
+// Shared visual identity with opentreenap.altervista.org.
+// Keep the existing map/sidebar/header dimensions intact.
+html, body { background: $light-gray-color; color: $main-text-color; }
+.header { border-bottom: 1px solid $well-color; }
+.logo .otn-app-brand {
+    display: inline-flex; align-items: center; gap: 12px; max-width: 300px;
+    text-decoration: none; color: $forest-color;
+    img { width: 62px; height: 62px; object-fit: contain; border-radius: 14px; }
+}
+.otn-app-wordmark {
+    strong { display: block; font-size: 2.2rem; font-weight: 700; letter-spacing: -0.6px; }
+    small { display: block; color: $subtext-color; font-size: 1.1rem; }
+}
+.wrapper {
+    .btn { border-radius: 999px; font-weight: 600; }
+    .btn-primary, .btn-otmprimary {
+        background: $primary-color; border-color: darken($primary-color, 5%);
+        box-shadow: 0 4px 12px rgba(47, 110, 59, .12);
+        &:hover, &:focus { background: darken($primary-color, 9%); }
+    }
+    .btn-default {
+        color: $forest-color; background: $paper; border-color: $well-color;
+        &:hover, &:focus { background: $lime-soft-color; }
+    }
+    .btn:focus, a:focus, input:focus, select:focus, textarea:focus {
+        outline: 2px solid $secondary-color; outline-offset: 2px;
+    }
+    .well, .container.contained {
+        background: $paper; border: 1px solid $well-color; border-radius: 14px;
+        box-shadow: 0 10px 26px rgba(31, 78, 50, .07);
+    }
+    .login-signup-panel { border-radius: 22px; }
+    .signup-option { background: $forest-color; }
+}
+.navbar .navbar-right {
+    .otn-project-item a { display: flex; align-items: center; gap: 5px; font-size: 1.2rem; }
+    .otn-language-item { padding: 7px 8px; }
+}
+.otn-language {
+    display: inline-flex; border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 999px; padding: 2px; margin: 0; gap: 2px;
+    button {
+        border: 0; border-radius: 999px; padding: 3px 8px; background: transparent;
+        color: $paper; font-size: 1.1rem; font-weight: 700; line-height: 17px; cursor: pointer;
+        &:hover { background: rgba(255, 255, 255, .15); }
+        &[aria-pressed="true"] { background: $lime-soft-color; color: $forest-color; }
+        &:focus { outline: 2px solid $lime-color; outline-offset: 1px; }
+    }
+}
+footer {
+    background: #4e7628; border-top-color: $lime-color;
+    a { color: $paper; &:hover, &:focus { color: $lime-soft-color; } }
+    .list-inline { margin-bottom: 0; }
+}
+.otn-attribution { float: right; font-size: 1.1rem; line-height: 25px; color: $lime-soft-color; }
+.otn-management-logo { display: block; width: 30px; height: 30px; border-radius: 7px; object-fit: contain; }
+#management .map-switcher .brand-icon { padding: 0; background: $paper; }
+.otn-management-wordmark { display: block; font-size: 1.1rem; font-weight: 700; }
+@media #{$screen-ltlg} { .otn-attribution { display: none; } }
+@media #{$screen-xs} {
+    .otn-project-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+    .navbar .navbar-right .otn-project-item a { padding-left: 8px; padding-right: 8px; }
+    .navbar .navbar-right .otn-language-item { padding-left: 2px; padding-right: 2px; }
+    .navbar .explore-map > a .visible-xs-inline { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

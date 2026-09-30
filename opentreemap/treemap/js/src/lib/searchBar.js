@@ -1,5 +1,7 @@
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 // Given a set of search input elements (text boxes) and a "search" button,
 // Return a stream of "search" events triggered by hitting "Enter" in one of
 // the input boxes or clicking the "search" button.
@@ -60,9 +62,9 @@ var showGeocodeError = function (e) {
     // If there was an error from the server the error
     // object contains standard http info
     } else if (e.status && e.status === 404) {
-        toastr.error('There were no results matching your search.');
+        toastr.error(gettext("There were no results matching your search."));
     } else {
-        toastr.error('There was a problem running your search.');
+        toastr.error(gettext("There was a problem running your search."));
     }
 };
 

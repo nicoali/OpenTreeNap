@@ -1,5 +1,7 @@
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 var $ = require('jquery'),
     _ = require('lodash'),
     R = require('ramda'),
@@ -133,7 +135,7 @@ MapManager.prototype = {
         var map = this.createMap(options);
 
         if (options.plotLayerViewOnly) {
-            this.layersControl.addOverlay(plotLayer, 'OpenTreeMap Trees');
+            this.layersControl.addOverlay(plotLayer, gettext("OpenTreeNap Trees"));
         } else {
             map.addLayer(plotLayer);
             map.addLayer(utfLayer);
@@ -184,7 +186,7 @@ MapManager.prototype = {
         if (hasBoundaries) {
             var boundariesLayer = layersLib.createBoundariesTileLayer();
             map.addLayer(boundariesLayer);
-            this.layersControl.addOverlay(boundariesLayer, 'Boundaries');
+            this.layersControl.addOverlay(boundariesLayer, gettext("Boundaries"));
         }
 
         if (config.instance.canopyEnabled) {
@@ -214,7 +216,7 @@ MapManager.prototype = {
                 }
             });
 
-            this.layersControl.addOverlay(canopyLayer, 'Regional Canopy Percentages');
+            this.layersControl.addOverlay(canopyLayer, gettext("Regional Canopy Percentages"));
         }
 
         _.each(config.instance.customLayers, _.partial(addCustomLayer, this));
@@ -234,7 +236,14 @@ MapManager.prototype = {
             basemapStorageKey = ['basemapMapping', type].join(':');
 
 	L.control.locate({
-	    icon: "icon icon-location"
+	    icon: "icon icon-location",
+            strings: {
+                title: gettext('Show my location'),
+                metersUnit: gettext('meters'),
+                feetUnit: gettext('feet'),
+                popup: gettext('You are within {distance} {unit} from this point'),
+                outsideMapBoundsMsg: gettext('Your location is outside the map boundaries')
+            }
 	}).addTo(map);
 
         layersLib.initPanes(map);

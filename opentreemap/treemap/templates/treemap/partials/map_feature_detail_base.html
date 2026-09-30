@@ -20,7 +20,7 @@
                 <img src="/static/img/googleplus_32.png">
             </a>
         </div>
-        <button class="btn share">Share</button>
+        <button class="btn share">{% trans 'Share' %}</button>
     {% endif %}
     <h2 class="common-name" id="map-feature-title">
         {{ title }}
@@ -120,7 +120,7 @@
                     <div class="comment_data">
                         {{ comment.submit_date|date:"d M Y, H:i" }}
                         {% if request.user.is_authenticated and not comment.is_removed %}
-                            | <a href="javascript:void(0);"  data-comment-id="{{ comment.id|unlocalize }}" class="comment_reply_link">Reply</a>
+                            | <a href="javascript:void(0);"  data-comment-id="{{ comment.id|unlocalize }}" class="comment_reply_link">{% trans 'Reply' %}</a>
                             | <div data-class="comment-flag">{% include "otm_comments/partials/flagging.html" %}</div>
                         {% endif %}
                     </div>

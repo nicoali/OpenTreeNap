@@ -104,7 +104,7 @@ def static_page(request, instance, page):
     static_page = StaticPage.get_or_new(instance, page)
 
     return {'content': static_page.content,
-            'title': static_page.name}
+            'title': _(static_page.name)}
 
 
 def boundary_to_geojson(request, instance, boundary_id):

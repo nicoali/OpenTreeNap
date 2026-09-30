@@ -1,5 +1,7 @@
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 var $ = require('jquery'),
     _ = require('lodash'),
     toastr = require('toastr'),
@@ -254,7 +256,7 @@ function handleFavoriteClick() {
                     updateFavoritedState(!wasFavorited);
                 })
                 .fail(function () {
-                    toastr.error('Could not save your favorite');
+                    toastr.error(gettext("Could not save your favorite"));
                 });
 
             e.preventDefault();

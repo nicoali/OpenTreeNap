@@ -1,5 +1,7 @@
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 var $ = require('jquery'),
     _ = require('lodash'),
     L = require('leaflet'),
@@ -337,7 +339,7 @@ function init(options) {
             // Show the first step that had an error
             stepControls.showStep(_.min(errorSteps));
         } else {
-            toastr.error('Failed to add feature');
+            toastr.error(gettext("Failed to add feature"));
             stepControls.enableNext(stepControls.maxStepNumber, true);
         }
     }

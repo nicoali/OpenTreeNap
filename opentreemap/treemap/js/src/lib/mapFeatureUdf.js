@@ -1,5 +1,7 @@
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 var $ = require('jquery'),
     _ = require('lodash'),
     R = require('ramda'),
@@ -26,8 +28,8 @@ exports.init = function(form) {
         var $el = $(event.target),
             $resolvedContainer = $el.closest('tr')
                 .find('td:contains("Unresolved")');
-        $resolvedContainer.text('Resolved');
-        $resolvedContainer.attr('data-value', 'Resolved');
+        $resolvedContainer.text(gettext("Resolved"));
+        $resolvedContainer.attr('data-value', gettext("Resolved"));
     }
 
     function addResolveAlertButtons() {

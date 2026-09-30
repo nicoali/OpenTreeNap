@@ -1,5 +1,7 @@
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 var $ = require('jquery'),
     _ = require('lodash'),
     toastr = require('toastr'),
@@ -41,7 +43,7 @@ function onClick(e) {
         "positionClass": "toast-bottom-left",
         "timeOut": "3000"
     };
-    toastr.info('Click "Save" or "Cancel" to end your Quick Edit session.');
+    toastr.info(gettext("Click \"Save\" or \"Cancel\" to end your Quick Edit session."));
 }
 
 function activate() {

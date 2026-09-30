@@ -1,7 +1,8 @@
+{% load i18n %}
 <div class="field-view"
-     data-bool-true-text="Yes"
+     data-bool-true-text="{% trans 'Yes' %}"
      {% if setting.should_show_eco_applies %}
-     data-bool-false-text="No"
+     data-bool-false-text="{% trans 'No' %}"
      {% else %}
      data-bool-false-text="{{ setting.should_show_eco_indicator }}"
      {% endif %}
@@ -12,9 +13,9 @@
      {% if not setting.should_show_eco_applies %}
         {{ setting.should_show_eco_indicator }}
      {% elif setting.should_show_eco %}
-        Yes
+        {% trans 'Yes' %}
      {% else %}
-        No
+        {% trans 'No' %}
      {% endif %}
 </div>
 <div class="field-edit"

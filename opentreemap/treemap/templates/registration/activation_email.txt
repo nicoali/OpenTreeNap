@@ -12,9 +12,9 @@ http://{{ site.domain }}{% url 'registration_activate' activation_key %}
 {% endif %}
 {% blocktrans %}
 
-You can use your OpenTreeMap account to sign in to the tree map you registered on as well as any other map in the OpenTreeMap system. We hope you enjoy exploring the urban forest!
+You can use your OpenTreeNap account to sign in to the tree map you registered on as well as any other map in the OpenTreeNap system. We hope you enjoy exploring the urban forest!
 
-- The OpenTreeMap Team
+- The OpenTreeNap Team
 
 If you did not request a tree map account or do not wish to finalize your account creation, please ignore this email. No additional action is required.
 

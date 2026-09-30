@@ -81,6 +81,9 @@ else
 fi
 
 log "Collecting static files..."
+log "Compiling Italian/English translation catalogs..."
+python manage.py compilemessages --locale it --locale en
+
 python manage.py collectstatic --noinput
 
 log "Running Django system checks..."

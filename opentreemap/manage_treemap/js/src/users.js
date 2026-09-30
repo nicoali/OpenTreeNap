@@ -1,5 +1,7 @@
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 var $ = require('jquery'),
     toastr = require('toastr'),
     Bacon = require('baconjs'),
@@ -216,7 +218,7 @@ $(dom.removeInvite).on('click', function() {
         $row.remove();
     })
     .fail(function() {
-        toastr.error('Could not remove invitation');
+        toastr.error(gettext("Could not remove invitation"));
     })
     .always(function() {
         $removeInviteModal.modal('hide');

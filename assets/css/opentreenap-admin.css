@@ -1,0 +1,11 @@
+:root{--primary:#557f2d;--secondary:#365d2b;--accent:#eff6d9;--link-fg:#557f2d;--link-hover-color:#365d2b;--button-bg:#557f2d;--button-hover-bg:#365d2b;--default-button-bg:#365d2b;--default-button-hover-bg:#557f2d;--body-bg:#f6f8f3;--body-fg:#26342c;--header-bg:#365d2b;--header-color:#eff6d9}
+#site-name a{display:flex;align-items:center;gap:10px;color:#fff;font-weight:600}
+#site-name img{width:36px;height:36px;border-radius:8px;object-fit:contain}
+.otn-admin-tools{display:flex;align-items:center;gap:14px;margin-left:20px}
+.otn-admin-tools>a{color:#fff}
+.otn-language{display:inline-flex;gap:2px;padding:2px;border:1px solid #dfe7dc;border-radius:999px;margin:0}
+.otn-language button{border:0;background:transparent;color:#fff;padding:5px 8px;border-radius:999px;cursor:pointer;font-weight:700}
+.otn-language button[aria-pressed=true]{background:#eff6d9;color:#365d2b}
+.otn-language button:focus-visible{outline:2px solid #a6c63a}
+.module,input[type=submit],button{border-radius:14px}
+@media(max-width:767px){.otn-admin-tools{margin:12px 0;justify-content:center}}

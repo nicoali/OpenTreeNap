@@ -83,7 +83,7 @@ module.exports.init = function (options) {
         map: mapManager.map,
         style: options.fillSearchBoundary ? {
             fillOpacity: 0.3,
-            fillColor: config.instance.secondaryColor || '#56abb2'
+            fillColor: config.instance.secondaryColor || '#4b9fbd'
         } : {
             fillOpacity: 0
         }
