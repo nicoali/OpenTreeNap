@@ -152,8 +152,6 @@ def version(request):
 
 
 @require_http_methods(["GET"])
-@instance_request
-@json_api_call
 def get_plot_list(request, instance):
     """ API Request
 
