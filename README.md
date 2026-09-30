@@ -41,7 +41,7 @@ The current development environment supports:
 
 ## 🗺️ Current milestone
 
-A real development instance has been created and tested at `/napoli-test/map/`.
+A real development instance has been created and tested at `/napoli/map/` on a fresh Ubuntu 24.04 VPS.
 
 The complete tree-rendering path has been validated:
 
@@ -49,7 +49,13 @@ The complete tree-rendering path has been validated:
 
 Persisted trees can be rendered on the map and selected to display their details.
 
-The Docker stack has also been validated from a **fresh Git clone with completely new Docker volumes**, including PostgreSQL initialization, Redis, Django startup, static-file collection and OTM Tiler database/cache health checks.
+The Docker stack has also been validated from a **fresh Ubuntu 24.04 VPS and fresh Git clone with completely new Docker volumes**, including PostgreSQL initialization, Redis, Django startup, Celery, static-file collection, OTM Tiler health checks, Google Maps configuration, manual tree creation and a 638-row Bulk Uploader import.
+
+---
+
+## 📘 Installation guide
+
+The complete, VPS-tested Italian installation procedure is available in **[INSTALL_IT.md](INSTALL_IT.md)**. It covers Ubuntu 24.04, Docker, environment configuration, Google Maps, instance creation and the Bulk Uploader.
 
 ---
 
@@ -62,7 +68,7 @@ The Docker stack has also been validated from a **fresh Git clone with completel
 | `redis` | Cache and broker services |
 | `tiler` | Historical OTM Windshaft/Mapnik tile renderer |
 | `db-tiler-init` | Configures the restricted PostgreSQL account used by the tiler |
-| `worker` | Optional Celery worker using the `tasks` profile |
+| `worker` | Celery worker for background tasks and imports; starts with the standard stack |
 
 The historical tiler intentionally runs in an isolated legacy Node.js environment because its Windshaft/Mapnik dependency chain is not directly compatible with current Node.js releases.
 
