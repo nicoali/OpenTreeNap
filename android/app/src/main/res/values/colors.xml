@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="otn_green">#246B4B</color>
+    <color name="otn_green_dark">#174B35</color>
+    <color name="otn_cream">#F6F0E3</color>
+    <color name="otn_navy">#17324D</color>
+    <color name="white">#FFFFFF</color>
+</resources>

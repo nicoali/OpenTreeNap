@@ -1,0 +1,9 @@
+# Copy this file to local.properties and fill in local-only values.
+# NEVER commit local.properties.
+
+sdk.dir=/path/to/Android/Sdk
+MAPS_API_KEY=YOUR_ANDROID_MAPS_API_KEY
+OTM_BASE_URL=https://your-opentreenap-host.example
+OTM_INSTANCE=napoli
+OTM_ACCESS_KEY=YOUR_OTM_ACCESS_KEY
+OTM_SECRET_KEY=YOUR_OTM_SECRET_KEY
