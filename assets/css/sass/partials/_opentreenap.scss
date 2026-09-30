@@ -48,8 +48,8 @@ html, body { background: $light-gray-color; color: $main-text-color; }
     }
 }
 footer {
-    background: $navbar-color; border-top-color: $navbar-color;
-    a { color: $paper; &:hover, &:focus { color: $lime-soft-color; } }
+    background: $light-gray-color; border-top-color: $well-color;
+    a { color: $forest-color; &:hover, &:focus { color: $primary-color; } }
     .footer-inner { display: flex; align-items: center; gap: 18px; padding: 4px 15px; height: 40px; }
     .list-inline { margin: 0; white-space: nowrap; }
 }
@@ -58,12 +58,12 @@ footer {
     a {
         display: inline-flex; align-items: center; justify-content: center;
         width: 30px; height: 30px; border-radius: 8px; font-size: 1.7rem;
-        color: $paper;
+        color: $forest-color;
         &:hover, &:focus { color: $forest-color; background: $lime-soft-color; }
-        &:focus { outline: 2px solid $paper; outline-offset: 1px; }
+        &:focus { outline: 2px solid $primary-color; outline-offset: 1px; }
     }
 }
-.otn-attribution { flex: 0 0 auto; font-size: 1.1rem; color: $lime-soft-color; }
+.otn-attribution { flex: 0 0 auto; font-size: 1.1rem; color: $subtext-color; }
 .otn-management-logo { display: block; width: 30px; height: 30px; border-radius: 7px; object-fit: contain; }
 #management .map-switcher .brand-icon { padding: 0; background: $paper; }
 .otn-management-wordmark { display: block; font-size: 1.1rem; font-weight: 700; }
@@ -111,13 +111,19 @@ footer {
 .navbar .navbar-nav > li > a:hover, .navbar .navbar-nav > li > a:focus { color: $paper; }
 .header .search-block .btn-group .btn { min-height: 30px; padding: 4px 10px; font-size: 1.2rem; }
 .subhead > .stats-bar {
-    background: $lime-soft-color; color: $forest-color; box-shadow: 0 1px 0 $well-color;
+    background: $light-gray-color; color: $main-text-color;
+    border-left: 3px solid $primary-color; border-bottom: 1px solid $well-color; box-shadow: none;
     @media #{$screen-gtxs} {
-        padding-top: 5px; padding-bottom: 5px;
+        padding-top: 4px; padding-bottom: 4px;
         .stats-list #tree-and-planting-site-counts { height: 32px; line-height: 32px; max-width: calc(100% - 425px); vertical-align: top; }
-        .stats-list .exportBtn { width: auto; margin-top: 0; vertical-align: top; font-size: 1.2rem; }
-        .addBtn { margin-top: -32px; }
-        .addBtn .btn { min-height: 32px; padding-top: 5px; padding-bottom: 5px; }
+        .stats-list .exportBtn {
+            width: auto; margin-top: 3px; vertical-align: top; min-height: 26px;
+            padding: 3px 9px; font-size: 1.15rem; line-height: 18px;
+            background: $paper; color: $forest-color; border-color: $well-color;
+            &:hover, &:focus { background: $lime-soft-color; color: $forest-color; border-color: $primary-color; }
+        }
+        .addBtn { margin-top: -29px; }
+        .addBtn .btn { min-height: 26px; padding: 3px 9px; font-size: 1.15rem; line-height: 18px; border-radius: 8px; }
     }
 }
 .tree-details {
@@ -130,9 +136,14 @@ footer {
     #sidebar .well { padding: 18px; }
     #comments textarea { border: 1px solid $well-color; border-radius: 10px; padding: 12px; }
 }
-#map-content .panel-heading, #map-content .panel-heading > a {
-    background: $forest-color; color: $paper; box-shadow: none;
-    &:hover, &:focus { background: darken($forest-color, 4%); }
+@media #{$screen-gtxs} {
+    #map-content .sidebar { background: $paper; }
+    #map-content .sidebar .panel-group { border-top-color: $well-color; }
+    #map-content .panel-heading, #map-content .panel-heading > a {
+        background: $light-gray-color; color: $forest-color; box-shadow: none;
+        &:hover, &:focus { background: $lime-soft-color; color: $forest-color; box-shadow: none; }
+    }
+    #map-content .panel-heading { border-bottom: 1px solid $well-color; }
 }
 @media (prefers-reduced-motion: reduce) { .wrapper .btn { transition: none; } }
 .container.contained.tree-details {
@@ -162,7 +173,10 @@ footer {
         .search-block label { font-size: 1.05rem; margin-bottom: 2px; }
         .search-block .form-control { height: 30px; }
         .search-options .btn-group .btn { min-height: 22px; padding: 1px 9px; line-height: 18px; font-size: 1.1rem; }
-        .search-options #perform-search.btn { min-height: 30px; padding: 4px 0; font-size: 1.35rem; line-height: 20px; }
+        .search-options #perform-search.btn {
+            display: block; width: auto; margin: 1px 0 0 auto; min-height: 24px;
+            padding: 2px 12px; font-size: 1.15rem; line-height: 18px; border-radius: 8px;
+        }
     }
     .subhead > .stats-bar { height: 34px; padding-top: 1px; padding-bottom: 1px; }
     .content.explore-map { top: 127px; }
