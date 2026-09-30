@@ -146,6 +146,14 @@ OpenTreeNap utilizza attualmente:
 
 ---
 
+## 📘 Guida completa di installazione
+
+Per installare OpenTreeNap partendo da un VPS Ubuntu 24.04 vuoto, inclusi Docker, configurazione `.env`, Google Maps, creazione dell'istanza e Bulk Uploader, usa la guida collaudata passo passo:
+
+**[INSTALL_IT.md](INSTALL_IT.md)**
+
+---
+
 ## 🚀 Avvio rapido
 
 Clona il repository:
@@ -200,17 +208,19 @@ Per creare un amministratore locale:
 
 OpenTreeNap include l'importer storico di OpenTreeMap, che permette di caricare in blocco alberi e siti di impianto da un file CSV.
 
-Per utilizzare l'importer è necessario accedere con un utente autorizzato all'istanza e aprire:
+Per utilizzare il Bulk Uploader è necessario accedere con un utente autorizzato all'istanza e aprire:
 
 ```
-/<nome-istanza>/importer/
+/<nome-istanza>/management/bulk-uploader/
 ```
 
-Ad esempio, per l'istanza di sviluppo:
+Ad esempio:
 
 ```
-/napoli-test/importer/
+/napoli/management/bulk-uploader/
 ```
+
+La procedura completa e verificata è documentata in [INSTALL_IT.md](INSTALL_IT.md).
 
 ### Worker Celery
 
@@ -338,7 +348,7 @@ Questo approccio riduce il rischio di caricare centinaia o migliaia di record co
 
 ### Import testato
 
-Il flusso di import degli alberi è stato verificato sull'istanza di sviluppo `napoli-test` sia con un piccolo campione sia con un dataset completo.
+Il flusso di import degli alberi è stato verificato anche su un VPS Ubuntu 24.04 installato da zero, sull'istanza `napoli`, con un dataset completo da 638 righe.
 
 Sono stati testati correttamente:
 
