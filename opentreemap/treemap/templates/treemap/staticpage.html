@@ -5,6 +5,14 @@
 {% block activeexplore %}
 {% endblock %}
 
+{# Informational pages retain navigation and branding, without map controls. #}
+{% block outermost_atts %}id="otn-information-page"{% endblock %}
+{% block search %}{% endblock %}
+{% block searchoptions %}{% endblock %}
+{% block subhead %}{% endblock %}
+{% block export %}{% endblock %}
+{% block searchscripts %}{% endblock %}
+
 {% block content %}
 <div class="image-background"></div>
 <div class="container contained static-page">

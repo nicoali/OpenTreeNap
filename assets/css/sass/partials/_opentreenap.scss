@@ -72,22 +72,22 @@ footer {
         min-height: 36px; font-weight: 600; letter-spacing: 0;
         transition: background-color .15s ease, border-color .15s ease;
     }
-    .btn-sm, .btn-small, .btn-xs { min-height: 32px; padding: 5px 11px; font-size: 1.3rem; }
-    .btn-lg { min-height: 42px; padding: 9px 18px; font-size: 1.6rem; }
-    .btn-primary, .btn-otmprimary, .btn-success {
+    .btn[class*="btn-"].btn-sm, .btn.btn-small, .btn[class*="btn-"].btn-xs { min-height: 32px; padding: 5px 11px; font-size: 1.3rem; }
+    .btn[class*="btn-"].btn-lg { min-height: 42px; padding: 9px 18px; font-size: 1.6rem; }
+    .btn.btn-primary, .btn.btn-otmprimary, .btn.btn-success {
         color: $paper; background: $primary-color; border-color: $primary-color;
         box-shadow: none;
         &:hover, &:focus, &:active { color: $paper; background: $forest-color; border-color: $forest-color; }
     }
-    .btn-info, .btn-otmsecondary, .btn-default, .btn:not([class*="btn-"]) {
+    .btn.btn-info, .btn.btn-otmsecondary, .btn.btn-default, .btn:not([class*="btn-"]) {
         color: $forest-color; background: $paper; border-color: $well-color; box-shadow: none;
         &:hover, &:focus, &:active { color: $forest-color; background: $lime-soft-color; border-color: $primary-color; }
     }
-    .btn-danger {
+    .btn.btn-danger {
         color: #953b36; background: #fff7f6; border-color: #deb5b1; box-shadow: none;
         &:hover, &:focus, &:active { color: $paper; background: #953b36; border-color: #953b36; }
     }
-    .btn-link { border-color: transparent; background: transparent; box-shadow: none; }
+    .btn.btn-link { border-color: transparent; background: transparent; box-shadow: none; }
     .btn.disabled, .btn[disabled] { opacity: .65; cursor: not-allowed; box-shadow: none; }
     .form-control { border-color: $well-color; border-radius: 8px; box-shadow: none; color: $main-text-color; }
     .form-control:focus { border-color: $primary-color; box-shadow: 0 0 0 2px rgba($primary-color, .12); }
@@ -132,3 +132,54 @@ footer {
 .tree-details #sidebar h5 { color: $forest-color; font-weight: 600; }
 .tree-details .collection-title { margin-top: 22px; line-height: 1.5; color: $forest-color; font-weight: 600; }
 .tree-details .collection-title small { color: $subtext-color; font-size: 1.2rem; }
+
+// Compact desktop shell: 45px navigation + 64px search + 36px results.
+@media #{$screen-gtxs} {
+    .header.instance-header {
+        height: 109px; padding: 51px 15px 6px;
+        .search-wrapper, .toolbar-wrapper { top: 51px; }
+        .logo .otn-app-brand img { width: 46px; height: 46px; border-radius: 10px; }
+        .otn-app-wordmark strong { font-size: 2rem; }
+        .search-block { padding-top: 3px; padding-bottom: 3px; }
+        .search-block label { font-size: 1.1rem; margin-bottom: 3px; }
+        .search-block .form-control { height: 32px; }
+        .search-options .btn-group .btn { min-height: 22px; padding: 1px 9px; line-height: 18px; font-size: 1.1rem; }
+        .search-options #perform-search.btn { min-height: 32px; padding: 5px 0; font-size: 1.4rem; line-height: 20px; }
+    }
+    .subhead > .stats-bar { height: 36px; padding-top: 2px; padding-bottom: 2px; }
+    .content.explore-map { top: 145px; }
+    .wrapper.embed {
+        .header.instance-header { height: 64px; padding-top: 6px; }
+        .header.instance-header .search-wrapper, .header.instance-header .toolbar-wrapper { top: 6px; }
+        .content.explore-map { top: 100px; }
+    }
+    #map-content .map { right: 320px; }
+    #map-content .sidebar { width: 320px; }
+}
+// Cooler, quieter card backgrounds; reserve saturated colors for actions.
+.container.contained.tree-details {
+    margin-top: 48px;
+    &.topper:before { background: mix($primary-color, $paper, 6%); }
+    .detail-header { background: transparent; }
+    .alert.alert-info { color: $forest-color; background: #f0f5ed; border-color: $well-color; }
+    @media #{$screen-xs} { margin-top: 32px; }
+}
+#otn-information-page {
+    .container.contained.static-page { margin-top: 24px; margin-bottom: 80px; padding: 24px; line-height: 1.7; }
+    .static-page h1 { color: $forest-color; font-size: 2.8rem; font-weight: 600; margin-top: 0; }
+    .static-page h2 { color: $forest-color; font-size: 2rem; font-weight: 600; margin-top: 24px; }
+    .static-page h3 { color: $forest-color; font-size: 1.7rem; font-weight: 600; }
+    .static-page p { margin-bottom: 16px; }
+    @media #{$screen-xs} {
+        .header.instance-header { height: 108px; padding-top: 51px; }
+        .header.instance-header .logo { display: inline-block; }
+        .container.contained.static-page { padding: 20px; margin-top: 16px; }
+    }
+}
+.wrapper .btn.btn-info:disabled, .wrapper .btn.btn-info.disabled,
+.wrapper .btn.btn-otmsecondary:disabled, .wrapper .btn.btn-otmsecondary.disabled {
+    color: $forest-color; background: $paper; border-color: $well-color;
+}
+.wrapper .btn.btn-danger:disabled, .wrapper .btn.btn-danger.disabled {
+    color: #953b36; background: #fff7f6; border-color: #deb5b1;
+}

@@ -21,7 +21,7 @@ Il comando prima mostra una simulazione. Aggiorna solamente colori corrispondent
 
 ## Verifiche
 
-Build Webpack di produzione completata; cataloghi gettext validati e compilati; controlli Django senza errori (sei avvisi preesistenti NullBooleanField). Nove test verificano lingua predefinita, scelta inglese, URL e redirect sicuri, catalogo JavaScript e preservazione della configurazione durante l'aggiornamento dei colori. Coprono anche etichette e plurali italiani e cache distinta per lingua e filtro.
+Build Webpack di produzione completata; cataloghi gettext validati e compilati; controlli Django senza errori (sei avvisi preesistenti NullBooleanField). Dieci test verificano lingua predefinita, scelta inglese, URL e redirect sicuri, catalogo JavaScript e preservazione della configurazione durante l'aggiornamento dei colori. Coprono anche etichette e plurali italiani e cache distinta per lingua e filtro.
 
 ```sh
 python opentreemap/manage.py test opentreemap.test_rebranding --testrunner django.test.runner.DiscoverRunner
@@ -34,3 +34,7 @@ La verifica completa della mappa e dei dati richiede l'installazione con Postgre
 Pulsanti rettangolari con angoli arrotondati, altezze coerenti e gerarchia primaria/secondaria/distruttiva. Ridotti gli spazi iniziali della scheda albero; titoli, barra risultati, avvisi informativi e progressi usano verdi coerenti. Corretti Edit, il placeholder specie, il pulsante commenti e le etichette degli interventi di cura. Gli ETag dei frammenti dipendono da lingua, URL completo e revisione dell’interfaccia, per evitare risposte obsolete dopo cambio lingua o filtro. I nomi comuni delle specie restano i dati importati.
 
 Sulla VPS, già su questo ramo, eseguire `git pull --ff-only` e ricostruire web e worker usando lo stesso file Compose e `--env-file .env.modern-v4.1` dell’installazione. Non occorre ripetere il comando di aggiornamento dei colori per queste rifiniture.
+
+## Spazio della mappa e pagine informative
+
+Su desktop, header ridotto da 153 a 109 px, barra risultati da 42 a 36 px, mappa da top 196 a 145 px: 51 px di altezza recuperati. Sidebar da 350 a 320 px: 30 px di larghezza recuperati. Geometria aggiornata anche per embed; comportamento mobile della mappa mantenuto. Le pagine FAQ/Informazioni/Risorse non ereditano ricerca, esportazione e barra risultati. Schede albero con sfondo neutro e colori dei pulsanti corretti anche rispetto alla specificità delle regole legacy.

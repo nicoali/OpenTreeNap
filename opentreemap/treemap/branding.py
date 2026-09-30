@@ -22,5 +22,5 @@ def localized_etag(value, request):
     import hashlib
     from django.utils.translation import get_language
 
-    identity = '%s:otn-ui-2:%s:%s' % (value, get_language(), request.get_full_path())
+    identity = '%s:otn-ui-3:%s:%s' % (value, get_language(), request.get_full_path())
     return hashlib.md5(identity.encode('utf-8')).hexdigest()

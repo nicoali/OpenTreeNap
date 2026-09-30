@@ -99,3 +99,12 @@ class RebrandingTests(SimpleTestCase):
             italian = map_feature_hash(request, object(), 60)
             translation.activate('en')
             self.assertNotEqual(italian, map_feature_hash(request, object(), 60))
+
+    def test_information_page_omits_map_controls(self):
+        from django.template import Context, engines
+        template = engines['django'].engine.from_string('''{% extends "treemap/staticpage.html" %}{% block topnav %}{% endblock %}{% block header %}{% endblock %}{% block footer %}{% endblock %}{% block config_scripts %}{% endblock %}{% block global_scripts %}{% endblock %}{% block templates %}{% endblock %}''')
+        html = template.render(Context({'title': 'Domande frequenti', 'content': '<h1>Domande frequenti</h1><p>Risposta</p>'}))
+        self.assertIn('otn-information-page', html)
+        self.assertIn('<p>Risposta</p>', html)
+        for marker in ['stats-bar', 'exportBtn', 'species-typeahead', 'perform-search', 'searchBar']:
+            self.assertNotIn(marker, html)
