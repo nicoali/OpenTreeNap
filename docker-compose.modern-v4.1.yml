@@ -92,7 +92,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - otm_v41_media:/tmp/otm/media
+      - "${OTM_MEDIA_HOST_PATH:-otm_v41_media}:/tmp/otm/media"
       - otm_v41_static:/tmp/otm/static
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz/ >/dev/null || exit 1"]
@@ -116,7 +116,7 @@ services:
       web:
         condition: service_healthy
     volumes:
-      - otm_v41_media:/tmp/otm/media
+      - "${OTM_MEDIA_HOST_PATH:-otm_v41_media}:/tmp/otm/media"
     restart: unless-stopped
 
 volumes:
