@@ -21,7 +21,7 @@ cards and ecosystem benefits are deferred until this read-only path is stable.
 - Android Gradle Plugin 9.4.0
 - Gradle 9.6.0
 - JDK 17
-- compileSdk 37
+- compileSdk 36
 - targetSdk 36
 - minSdk 23
 - Kotlin through AGP built-in Kotlin support
