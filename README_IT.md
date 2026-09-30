@@ -119,7 +119,7 @@ L'ambiente di sviluppo attuale supporta:
 | `redis` | Cache e broker |
 | `tiler` | Renderer storico OTM basato su Windshaft/Mapnik |
 | `db-tiler-init` | Configura l'account PostgreSQL con privilegi limitati usato dal tiler |
-| `worker` | Worker Celery opzionale tramite profilo `tasks` |
+| `worker` | Worker Celery per i task in background; viene avviato automaticamente con lo stack |
 
 Il tiler storico viene eseguito intenzionalmente in un ambiente Node.js legacy isolato, perché la sua catena di dipendenze Windshaft/Mapnik non è direttamente compatibile con le versioni moderne di Node.js.
 
@@ -212,21 +212,25 @@ Ad esempio, per l'istanza di sviluppo:
 /napoli-test/importer/
 ```
 
-### Avviare il worker Celery
+### Worker Celery
 
 La validazione e il commit degli import vengono eseguiti tramite task Celery.
 
-Prima di iniziare un'importazione assicurati quindi che il worker sia attivo:
+Nella configurazione Docker v4.1 attuale il servizio `worker` fa parte dello stack standard e viene **avviato automaticamente** insieme agli altri servizi quando esegui:
 
 ```bash
-./modern-v4.1.sh worker-up
+./modern-v4.1.sh up
 ```
 
-Puoi verificare lo stato dei servizi con:
+Non è quindi necessario avviare manualmente Celery prima di ogni importazione.
+
+Puoi verificare che il worker sia attivo insieme agli altri servizi con:
 
 ```bash
 ./modern-v4.1.sh status
 ```
+
+Il comando `./modern-v4.1.sh worker-up` resta disponibile come comando esplicito per avviare il solo servizio worker quando necessario.
 
 ### Formato CSV per gli alberi
 
@@ -419,7 +423,6 @@ Tra le aree da approfondire ci sono:
 
 - configurazione per un vero deployment di produzione
 - test più ampi dei flussi applicativi
-- validazione completa di Celery e dei task in background
 - aggiornamento delle parti Django ancora deprecate
 - revisione di alcune vecchie integrazioni di geocoding
 - configurazione dei servizi esterni eventualmente utilizzati
