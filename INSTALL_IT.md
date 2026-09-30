@@ -4,7 +4,7 @@ Questa guida installa **OpenTreeNap modern-v4.1** su un VPS Ubuntu nuovo.
 
 La procedura è stata collaudata dall'inizio alla fine su un VPS pulito con **Ubuntu Server 24.04 LTS x86_64, 2 vCPU, 4 GB RAM, 2 GB swap e 40 GB disco**, arrivando fino alla creazione dell'istanza, Google Maps, inserimento manuale e importazione CSV tramite Bulk Uploader/Celery.
 
-> **Importante:** modern-v4.1 è ancora un deployment di sviluppo/bridge. Questa guida valida lo stack applicativo, ma non sostituisce un futuro deployment production con reverse proxy, HTTPS, hardening, backup e `OTM_DEBUG=0`.
+> **Importante:** la procedura è stata collaudata anche con hostname No-IP, Caddy come reverse proxy, HTTPS automatico, Tiler pubblicato tramite `/tiles/` e porte Docker applicative limitate a `127.0.0.1`. Restano da completare ulteriori aspetti production, in particolare `OTM_DEBUG=0`, backup e hardening applicativo.
 
 ## 1. Requisiti
 
@@ -343,7 +343,7 @@ Porte:
 ss -lntp | grep -E ':(8000|4000)\b'
 ```
 
-## 14. Firewall per il collaudo
+## 14. Firewall temporaneo per il collaudo HTTP
 
 Se UFW è attivo e consente solo SSH:
 
@@ -363,7 +363,9 @@ Dal PC:
 http://<IP_PUBBLICO_VPS>:8000/napoli/
 ```
 
-Queste porte dirette servono al collaudo development/bridge. Un deployment pubblico definitivo dovrà preferire reverse proxy e HTTPS.
+Queste aperture servono **solo al primo collaudo HTTP diretto**.
+
+Dopo aver configurato Caddy e HTTPS, le porte `8000` e `4000` non devono più essere raggiungibili da Internet. La configurazione Compose corrente le associa infatti a `127.0.0.1`.
 
 ## 15. Google Maps
 
@@ -385,7 +387,21 @@ Nel progetto Google Cloud:
 http://<IP_PUBBLICO_VPS>:8000/*
 ```
 
-6. in **API restrictions** limita la chiave a **Maps JavaScript API**.
+6. dopo aver configurato HTTPS aggiungi anche:
+
+```text
+https://TUO_HOSTNAME/*
+```
+
+Esempio del deployment collaudato:
+
+```text
+https://opentreenap.ddns.net/*
+```
+
+7. in **API restrictions** limita la chiave a **Maps JavaScript API**.
+
+Quando HTTPS è stato verificato completamente, il vecchio referrer HTTP con IP e porta `8000` può essere rimosso.
 
 Non scegliere `IP addresses`: Maps JavaScript API viene eseguita nel browser e la restrizione corretta è il referrer web.
 
@@ -466,19 +482,215 @@ Errori verificati durante il collaudo:
 
 Se una API key viene pubblicata accidentalmente, revocala/ruotala.
 
-## 16. Test di inserimento manuale
+## 16. No-IP, Caddy e HTTPS
+
+Il deployment collaudato usa un hostname DNS che punta all'IPv4 pubblico del VPS.
+
+Esempio:
+
+```text
+opentreenap.ddns.net -> <IP_PUBBLICO_VPS>
+```
+
+Verifica la risoluzione:
+
+```bash
+getent ahostsv4 TUO_HOSTNAME
+```
+
+### Installare Caddy
+
+Su Ubuntu 24.04:
+
+```bash
+apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
+  | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
+  | tee /etc/apt/sources.list.d/caddy-stable.list
+
+chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+chmod o+r /etc/apt/sources.list.d/caddy-stable.list
+
+apt update
+apt install -y caddy
+```
+
+Verifica:
+
+```bash
+caddy version
+systemctl is-active caddy
+systemctl is-enabled caddy
+```
+
+### Firewall HTTP/HTTPS
+
+```bash
+ufw allow 80/tcp comment 'Caddy HTTP'
+ufw allow 443/tcp comment 'Caddy HTTPS'
+```
+
+### Configurare Caddy
+
+Il Tiler viene pubblicato sotto `/tiles/`, mentre tutto il resto viene inoltrato a Django:
+
+```caddy
+TUO_HOSTNAME {
+    handle_path /tiles/* {
+        reverse_proxy 127.0.0.1:4000
+    }
+
+    handle {
+        reverse_proxy 127.0.0.1:8000
+    }
+}
+```
+
+Sostituisci `TUO_HOSTNAME` con il dominio reale, quindi:
+
+```bash
+caddy validate --config /etc/caddy/Caddyfile
+systemctl reload caddy
+```
+
+Caddy gestisce automaticamente il certificato TLS quando DNS, porte 80/443 e hostname sono configurati correttamente.
+
+### Aggiornare OpenTreeNap
+
+In `.env.modern-v4.1` aggiungi l'hostname a `OTM_ALLOWED_HOSTS`.
+
+Esempio:
+
+```dotenv
+OTM_ALLOWED_HOSTS=<IP_PUBBLICO_VPS>,TUO_HOSTNAME,localhost,127.0.0.1
+```
+
+Imposta inoltre:
+
+```dotenv
+OTM_TILE_HOST=//TUO_HOSTNAME/tiles
+```
+
+Non usare più `//<IP_PUBBLICO_VPS>:4000` per il deployment HTTPS.
+
+Ricrea il container web affinché rilegga l'ambiente:
+
+```bash
+docker compose \
+  -f docker-compose.modern-v4.1.yml \
+  --env-file .env.modern-v4.1 \
+  up -d --force-recreate --no-deps web
+```
+
+Verifica:
+
+```bash
+docker compose \
+  -f docker-compose.modern-v4.1.yml \
+  --env-file .env.modern-v4.1 \
+  exec -T web python manage.py shell <<'PY'
+from django.conf import settings
+print("TILE_HOST:", settings.TILE_HOST)
+PY
+```
+
+Il risultato deve essere equivalente a:
+
+```text
+TILE_HOST: //TUO_HOSTNAME/tiles
+```
+
+### Verificare HTTPS e Tiler
+
+```bash
+curl -I https://TUO_HOSTNAME/napoli/map/
+curl -sS https://TUO_HOSTNAME/tiles/health-check
+```
+
+La pagina deve rispondere HTTP 200 e il Tiler deve riportare database e cache `ok`.
+
+Apri quindi:
+
+```text
+https://TUO_HOSTNAME/napoli/map/
+```
+
+e verifica che la base Google Maps e i punti degli alberi siano entrambi visibili.
+
+### Isolare le porte Docker
+
+La configurazione Compose corrente pubblica Web e Tiler esclusivamente sul loopback del VPS:
+
+```text
+127.0.0.1:8000
+127.0.0.1:4000
+```
+
+Verifica:
+
+```bash
+ss -lntp | grep -E ':(8000|4000)\b'
+```
+
+Non devono comparire binding `0.0.0.0:8000` o `0.0.0.0:4000`.
+
+Se durante il collaudo iniziale erano state aggiunte regole UFW per queste porte, rimuovile:
+
+```bash
+ufw delete allow 8000/tcp
+ufw delete allow 4000/tcp
+ufw status numbered
+```
+
+Il firewall pubblico deve consentire almeno SSH, HTTP 80 e HTTPS 443, ma non deve essere usato come unico meccanismo per nascondere le porte pubblicate da Docker.
+
+Da un computer esterno verifica:
+
+```powershell
+Test-NetConnection TUO_HOSTNAME -Port 443
+Test-NetConnection TUO_HOSTNAME -Port 8000
+Test-NetConnection TUO_HOSTNAME -Port 4000
+```
+
+Risultato atteso:
+
+```text
+443  -> True
+8000 -> False
+4000 -> False
+```
+
+Il deployment collaudato usa quindi questa catena:
+
+```text
+Internet
+   |
+   +-- 80/443
+        |
+      Caddy
+        |
+        +-- /tiles/* --> 127.0.0.1:4000 (Tiler)
+        |
+        +-- tutto il resto --> 127.0.0.1:8000 (Django)
+```
+
+PostgreSQL e Redis restano interni e non devono essere esposti pubblicamente.
+
+## 17. Test di inserimento manuale
 
 Apri:
 
 ```text
-http://<IP_PUBBLICO_VPS>:8000/napoli/map/
+https://TUO_HOSTNAME/napoli/map/
 ```
 
 Accedi con il superuser, usa **Add a Tree**, seleziona un punto dentro l'istanza e salva.
 
 Questo verifica autenticazione, permessi, scrittura PostgreSQL, aggiornamento mappa e tiler.
 
-## 17. Bulk Uploader CSV
+## 18. Bulk Uploader CSV
 
 La pagina corretta è:
 
@@ -489,7 +701,7 @@ La pagina corretta è:
 Esempio:
 
 ```text
-http://<IP_PUBBLICO_VPS>:8000/napoli/management/bulk-uploader/
+https://TUO_HOSTNAME/napoli/management/bulk-uploader/
 ```
 
 ### Template Tree: 21 colonne
@@ -577,7 +789,7 @@ Custom Id distinti: 638
 
 Sono stati verificati anche un record senza albero e record tassonomici con solo il genere valorizzato.
 
-## 18. Comandi utili
+## 19. Comandi utili
 
 ```bash
 ./modern-v4.1.sh doctor
@@ -605,7 +817,7 @@ df -h /
 docker system df
 ```
 
-## 19. Reset: attenzione
+## 20. Reset: attenzione
 
 ```bash
 ./modern-v4.1.sh reset
@@ -619,7 +831,7 @@ Per fermare normalmente lo stack usa:
 ./modern-v4.1.sh down
 ```
 
-## 20. Problemi noti
+## 21. Problemi noti
 
 - Django è ancora 3.2 e il codice storico contiene alcuni `NullBooleanField` deprecati.
 - Il worker Celery gira attualmente come root nel container e può mostrare il relativo warning.
@@ -628,7 +840,7 @@ Per fermare normalmente lo stack usa:
 - Il frontend storico può mostrare warning JavaScript non bloccanti.
 - OTM Tiler usa intenzionalmente una catena Node/Windshaft/Mapnik legacy isolata.
 
-## 21. Sicurezza
+## 22. Sicurezza
 
 Non pubblicare mai:
 
@@ -648,9 +860,9 @@ chmod 600 .env.modern-v4.1
 
 PostgreSQL e Redis non devono essere esposti pubblicamente.
 
-Prima di considerare OpenTreeNap production-ready servono ancora almeno reverse proxy, HTTPS, hardening, backup e una configurazione `OTM_DEBUG=0` collaudata.
+Reverse proxy Caddy, HTTPS e isolamento delle porte applicative sono stati collaudati. Prima di considerare OpenTreeNap completamente production-ready restano almeno una configurazione `OTM_DEBUG=0` collaudata, backup automatici, aggiornamenti di sicurezza e ulteriore hardening applicativo.
 
-## 22. Checklist finale
+## 23. Checklist finale
 
 L'installazione development/bridge è riuscita quando:
 
@@ -661,7 +873,11 @@ L'installazione development/bridge è riuscita quando:
 - db-tiler-init termina con codice 0;
 - `/healthz/` restituisce database `ok`;
 - superuser e istanza vengono creati;
-- `/<istanza>/map/` funziona dal browser;
+- `/<istanza>/map/` funziona dal browser tramite HTTPS;
+- Caddy serve correttamente il certificato TLS;
+- il Tiler funziona tramite `/tiles/`;
+- le porte 8000 e 4000 ascoltano solo su `127.0.0.1`;
+- dall'esterno 443 è raggiungibile mentre 8000 e 4000 non lo sono;
 - Google Maps non restituisce errori billing/referrer;
 - un albero può essere aggiunto manualmente;
 - Bulk Uploader raggiunge `Verification Complete`;
