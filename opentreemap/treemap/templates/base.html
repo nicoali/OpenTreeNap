@@ -200,7 +200,7 @@
     </div>
 
     {% if not embed %}
-      <footer class="hidden-xs">{% block footer %}<div class="footer-inner"><a href="{{ settings.PROJECT_WEBSITE_URL }}">OpenTreeNap</a><span class="otn-attribution">{% trans 'Based on' %} <a href="https://github.com/OpenTreeMap/otm-core">OpenTreeMap</a> · AGPLv3</span></div>{% endblock footer %}</footer>
+      <footer class="hidden-xs">{% block footer %}<div class="footer-inner"><a href="{{ settings.PROJECT_WEBSITE_URL }}">OpenTreeNap</a><nav class="otn-social-links" aria-label="Social"><a href="https://github.com/nicoali" target="_blank" rel="noopener noreferrer" aria-label="GitHub OpenTreeNap" title="GitHub"><i class="icon-github" aria-hidden="true"></i></a><a href="https://www.instagram.com/opentreenap/" target="_blank" rel="noopener noreferrer" aria-label="Instagram OpenTreeNap" title="Instagram"><i class="icon-instagramm" aria-hidden="true"></i></a><a href="https://www.facebook.com/opentreenap/" target="_blank" rel="noopener noreferrer" aria-label="Facebook OpenTreeNap" title="Facebook"><i class="icon-facebook" aria-hidden="true"></i></a></nav><span class="otn-attribution">{% trans 'Based on' %} <a href="https://github.com/OpenTreeMap/otm-core">OpenTreeMap</a> · AGPLv3</span></div>{% endblock footer %}</footer>
     {% endif %}
 
     {% block config_scripts %}

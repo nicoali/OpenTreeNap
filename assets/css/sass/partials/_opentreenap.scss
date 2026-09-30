@@ -48,11 +48,22 @@ html, body { background: $light-gray-color; color: $main-text-color; }
     }
 }
 footer {
-    background: #4e7628; border-top-color: $lime-color;
+    background: $navbar-color; border-top-color: $navbar-color;
     a { color: $paper; &:hover, &:focus { color: $lime-soft-color; } }
-    .list-inline { margin-bottom: 0; }
+    .footer-inner { display: flex; align-items: center; gap: 18px; padding: 4px 15px; height: 40px; }
+    .list-inline { margin: 0; white-space: nowrap; }
 }
-.otn-attribution { float: right; font-size: 1.1rem; line-height: 25px; color: $lime-soft-color; }
+.otn-social-links {
+    display: inline-flex; align-items: center; gap: 4px; margin-left: auto;
+    a {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 30px; height: 30px; border-radius: 8px; font-size: 1.7rem;
+        color: $paper;
+        &:hover, &:focus { color: $forest-color; background: $lime-soft-color; }
+        &:focus { outline: 2px solid $paper; outline-offset: 1px; }
+    }
+}
+.otn-attribution { flex: 0 0 auto; font-size: 1.1rem; color: $lime-soft-color; }
 .otn-management-logo { display: block; width: 30px; height: 30px; border-radius: 7px; object-fit: contain; }
 #management .map-switcher .brand-icon { padding: 0; background: $paper; }
 .otn-management-wordmark { display: block; font-size: 1.1rem; font-weight: 700; }
@@ -133,25 +144,32 @@ footer {
 .tree-details .collection-title { margin-top: 22px; line-height: 1.5; color: $forest-color; font-weight: 600; }
 .tree-details .collection-title small { color: $subtext-color; font-size: 1.2rem; }
 
-// Compact desktop shell: 45px navigation + 64px search + 36px results.
+// Compact desktop shell: 38px navigation + 55px search + 34px results.
 @media #{$screen-gtxs} {
+    .navbar { min-height: 38px; }
+    .navbar .nav, .navbar .nav > li { height: 38px; }
+    .navbar .nav > li > a { height: 38px; padding-top: 8px; padding-bottom: 8px; font-size: 1.25rem; }
+    .navbar .navbar-right .otn-project-item a { font-size: 1.2rem; }
+    .navbar .navbar-right .otn-language-item { padding-top: 4px; padding-bottom: 4px; }
+    .navbar .navbar-right .user-img { top: 4px; }
     .header.instance-header {
-        height: 109px; padding: 51px 15px 6px;
-        .search-wrapper, .toolbar-wrapper { top: 51px; }
-        .logo .otn-app-brand img { width: 46px; height: 46px; border-radius: 10px; }
-        .otn-app-wordmark strong { font-size: 2rem; }
-        .search-block { padding-top: 3px; padding-bottom: 3px; }
-        .search-block label { font-size: 1.1rem; margin-bottom: 3px; }
-        .search-block .form-control { height: 32px; }
+        height: 93px; padding: 42px 15px 4px;
+        .search-wrapper, .toolbar-wrapper { top: 42px; }
+        .logo .otn-app-brand img { width: 42px; height: 42px; border-radius: 9px; }
+        .otn-app-wordmark strong { font-size: 1.8rem; }
+        .otn-app-wordmark small { font-size: 1rem; }
+        .search-block { padding-top: 1px; padding-bottom: 1px; }
+        .search-block label { font-size: 1.05rem; margin-bottom: 2px; }
+        .search-block .form-control { height: 30px; }
         .search-options .btn-group .btn { min-height: 22px; padding: 1px 9px; line-height: 18px; font-size: 1.1rem; }
-        .search-options #perform-search.btn { min-height: 32px; padding: 5px 0; font-size: 1.4rem; line-height: 20px; }
+        .search-options #perform-search.btn { min-height: 30px; padding: 4px 0; font-size: 1.35rem; line-height: 20px; }
     }
-    .subhead > .stats-bar { height: 36px; padding-top: 2px; padding-bottom: 2px; }
-    .content.explore-map { top: 145px; }
+    .subhead > .stats-bar { height: 34px; padding-top: 1px; padding-bottom: 1px; }
+    .content.explore-map { top: 127px; }
     .wrapper.embed {
-        .header.instance-header { height: 64px; padding-top: 6px; }
+        .header.instance-header { height: 55px; padding-top: 4px; }
         .header.instance-header .search-wrapper, .header.instance-header .toolbar-wrapper { top: 6px; }
-        .content.explore-map { top: 100px; }
+        .content.explore-map { top: 89px; }
     }
     #map-content .map { right: 320px; }
     #map-content .sidebar { width: 320px; }
@@ -170,10 +188,36 @@ footer {
     .static-page h2 { color: $forest-color; font-size: 2rem; font-weight: 600; margin-top: 24px; }
     .static-page h3 { color: $forest-color; font-size: 1.7rem; font-weight: 600; }
     .static-page p { margin-bottom: 16px; }
+    .header.instance-header { height: 88px; }
+    .header.instance-header .logo { display: inline-block; }
+    .container.contained.static-page.otn-faq-page {
+        max-width: 900px; padding: 36px 42px; font-size: 1.4rem;
+        .col-md-12 { float: none; }
+        h2 {
+            margin: 0 0 24px; padding-bottom: 16px; border-bottom: 1px solid $well-color;
+            font-size: 2.7rem; line-height: 1.3; letter-spacing: -.025em;
+        }
+        h3 {
+            margin: 16px 0 0; padding: 17px 20px 4px;
+            background: $light-gray-color; border: 1px solid $well-color; border-bottom: 0;
+            border-radius: 12px 12px 0 0; font-size: 1.65rem; line-height: 1.45;
+        }
+        h3 + p {
+            margin: 0 0 16px; padding: 0 20px 18px;
+            background: $light-gray-color; border: 1px solid $well-color; border-top: 0;
+            border-radius: 0 0 12px 12px; line-height: 1.65; color: $main-text-color;
+        }
+        h3 + p + p { margin: 24px 0 0; }
+        a { color: $forest-color; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+    }
     @media #{$screen-xs} {
         .header.instance-header { height: 108px; padding-top: 51px; }
         .header.instance-header .logo { display: inline-block; }
         .container.contained.static-page { padding: 20px; margin-top: 16px; }
+        .container.contained.static-page.otn-faq-page { padding: 20px; }
+        .otn-faq-page h2 { font-size: 2.3rem; }
+        .otn-faq-page h3 { padding: 15px 16px 4px; }
+        .otn-faq-page h3 + p { padding: 0 16px 16px; }
     }
 }
 .wrapper .btn.btn-info:disabled, .wrapper .btn.btn-info.disabled,

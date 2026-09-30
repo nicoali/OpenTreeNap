@@ -15,7 +15,7 @@
 
 {% block content %}
 <div class="image-background"></div>
-<div class="container contained static-page">
+<div class="container contained static-page{% if is_faq %} otn-faq-page{% endif %}">
     <div class="row">
         <div class="col-md-12">
           {{ content|safe }}

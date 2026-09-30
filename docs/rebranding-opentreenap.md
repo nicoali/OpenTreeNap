@@ -38,3 +38,9 @@ Sulla VPS, già su questo ramo, eseguire `git pull --ff-only` e ricostruire web 
 ## Spazio della mappa e pagine informative
 
 Su desktop, header ridotto da 153 a 109 px, barra risultati da 42 a 36 px, mappa da top 196 a 145 px: 51 px di altezza recuperati. Sidebar da 350 a 320 px: 30 px di larghezza recuperati. Geometria aggiornata anche per embed; comportamento mobile della mappa mantenuto. Le pagine FAQ/Informazioni/Risorse non ereditano ricerca, esportazione e barra risultati. Schede albero con sfondo neutro e colori dei pulsanti corretti anche rispetto alla specificità delle regole legacy.
+
+## Navigazione compatta e FAQ
+
+La navigazione desktop passa da 45 a 38 px; la ricerca da 64 a 55 px e la barra risultati da 36 a 34 px. Il bordo superiore della mappa scende da 145 a 127 px: altri 18 px disponibili in altezza. La vista incorporata mantiene allineate le stesse fasce; il layout mobile non è stato compresso. Le pagine informative mostrano un header senza i controlli della mappa. La FAQ usa una larghezza di lettura più contenuta e coppie domanda/risposta con spaziatura e bordi coerenti, anche quando il testo proviene dal database.
+
+Il footer usa lo stesso verde della navigazione e mostra GitHub (`nicoali`), Instagram e Facebook (`opentreenap`) con icone accessibili. Gli indirizzi Instagram e Facebook sono predisposti per i profili da creare: verificare che appartengano al progetto prima di promuoverli come canali ufficiali.
