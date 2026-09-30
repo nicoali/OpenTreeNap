@@ -47,7 +47,7 @@ case "${1:-help}" in
     echo "docker compose -f docker-compose.modern-v4.1.yml --env-file .env.modern-v4.1 exec web python manage.py create_instance 'OTM Demo' --user YOUR_USER --url_name demo --center=-75.1652,39.9526"
     ;;
   worker-up)
-    $COMPOSE --profile tasks up -d worker
+    $COMPOSE up -d worker
     ;;
   down)
     $COMPOSE down
@@ -64,14 +64,14 @@ OpenTreeMap modern-v4.1 helper
 
   ./modern-v4.1.sh doctor     Verify Docker/Compose prerequisites
   ./modern-v4.1.sh build      Build the web image only
-  ./modern-v4.1.sh up         Build and start PostGIS, Redis and the web app
+  ./modern-v4.1.sh up         Build and start the complete OpenTreeNap stack
   ./modern-v4.1.sh logs       Follow web startup logs
   ./modern-v4.1.sh status     Show container/health status
   ./modern-v4.1.sh check      Run Django system checks
   ./modern-v4.1.sh smoke      Call the /healthz/ endpoint
   ./modern-v4.1.sh superuser  Create an admin user
   ./modern-v4.1.sh demo       Show the demo-instance command
-  ./modern-v4.1.sh worker-up  Start the optional Celery worker
+  ./modern-v4.1.sh worker-up  Start/restart the Celery worker explicitly
   ./modern-v4.1.sh down       Stop the stack
   ./modern-v4.1.sh reset      Stop and DELETE v4.1 volumes
 HELP
