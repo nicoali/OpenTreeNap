@@ -73,12 +73,19 @@ NEARBY_INSTANCE_RADIUS = 100000
 # Default nearby tree distance in meters
 NEARBY_TREE_DISTANCE = 6.096  # 20ft
 
-DEBUG = True
+# Modern Docker deployments can override these values through .env.
+# Keep legacy-friendly defaults for non-Docker/local development.
+DEBUG = os.environ.get('OTM_DEBUG', '1').strip().lower() in (
+    '1', 'true', 'yes', 'on')
 AUTH_USER_MODEL = 'treemap.User'
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.AllowAllUsersModelBackend']
 INTERNAL_IPS = ['127.0.0.1']
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get('OTM_ALLOWED_HOSTS', 'localhost').split(',')
+    if host.strip()
+]
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -208,7 +215,7 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'secret key'
+SECRET_KEY = os.environ.get('OTM_SECRET_KEY', 'secret key')
 
 # Settings for Django Templates
 TEMPLATES = [
@@ -263,6 +270,13 @@ if ROLLBAR_SERVER_ACCESS_TOKEN is not None:
         'rollbar.contrib.django.middleware.RollbarNotifierMiddleware',)
 
 STACK_COLOR = os.environ.get('OTM_STACK_COLOR', 'Black')
+
+# The modern Docker stack uses Redis as the Celery broker and result backend.
+# A result backend is required by importer workflows which use Celery chords.
+CELERY_BROKER_URL = os.environ.get(
+    'OTM_REDIS_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get(
+    'OTM_REDIS_URL', 'redis://redis:6379/0')
 
 CELERY_TASK_DEFAULT_QUEUE = STACK_COLOR
 CELERY_TASK_DEFAULT_ROUTING_KEY = "task.%s" % STACK_COLOR
