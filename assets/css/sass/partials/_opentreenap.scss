@@ -63,3 +63,72 @@ footer {
     .navbar .navbar-right .otn-language-item { padding-left: 2px; padding-right: 2px; }
     .navbar .explore-map > a .visible-xs-inline { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
+
+// Refined controls: compact rounded rectangles, with clear action hierarchy.
+.wrapper {
+    .btn {
+        border-radius: 10px; border-width: 1px; border-style: solid;
+        font-size: 1.4rem; line-height: 20px; padding: 7px 14px;
+        min-height: 36px; font-weight: 600; letter-spacing: 0;
+        transition: background-color .15s ease, border-color .15s ease;
+    }
+    .btn-sm, .btn-small, .btn-xs { min-height: 32px; padding: 5px 11px; font-size: 1.3rem; }
+    .btn-lg { min-height: 42px; padding: 9px 18px; font-size: 1.6rem; }
+    .btn-primary, .btn-otmprimary, .btn-success {
+        color: $paper; background: $primary-color; border-color: $primary-color;
+        box-shadow: none;
+        &:hover, &:focus, &:active { color: $paper; background: $forest-color; border-color: $forest-color; }
+    }
+    .btn-info, .btn-otmsecondary, .btn-default, .btn:not([class*="btn-"]) {
+        color: $forest-color; background: $paper; border-color: $well-color; box-shadow: none;
+        &:hover, &:focus, &:active { color: $forest-color; background: $lime-soft-color; border-color: $primary-color; }
+    }
+    .btn-danger {
+        color: #953b36; background: #fff7f6; border-color: #deb5b1; box-shadow: none;
+        &:hover, &:focus, &:active { color: $paper; background: #953b36; border-color: #953b36; }
+    }
+    .btn-link { border-color: transparent; background: transparent; box-shadow: none; }
+    .btn.disabled, .btn[disabled] { opacity: .65; cursor: not-allowed; box-shadow: none; }
+    .form-control { border-color: $well-color; border-radius: 8px; box-shadow: none; color: $main-text-color; }
+    .form-control:focus { border-color: $primary-color; box-shadow: 0 0 0 2px rgba($primary-color, .12); }
+    .form-control::placeholder { color: $subtext-color; opacity: 1; }
+    .progress { background: $light-gray-color; border: 1px solid $well-color; box-shadow: none; border-radius: 8px; }
+    .progress-bar { background-color: $primary-color; box-shadow: none; }
+    .alert-info { color: $forest-color; background: $lime-soft-color; border-color: $well-color; border-radius: 10px; }
+}
+.navbar .navbar-nav > li > a { color: rgba(255, 255, 255, .9); }
+.navbar .navbar-nav > li > a:hover, .navbar .navbar-nav > li > a:focus { color: $paper; }
+.header .search-block .btn-group .btn { min-height: 30px; padding: 4px 10px; font-size: 1.2rem; }
+.subhead > .stats-bar {
+    background: $lime-soft-color; color: $forest-color; box-shadow: 0 1px 0 $well-color;
+    @media #{$screen-gtxs} {
+        padding-top: 5px; padding-bottom: 5px;
+        .stats-list #tree-and-planting-site-counts { height: 32px; line-height: 32px; max-width: calc(100% - 425px); vertical-align: top; }
+        .stats-list .exportBtn { width: auto; margin-top: 0; vertical-align: top; font-size: 1.2rem; }
+        .addBtn { margin-top: -32px; }
+        .addBtn .btn { min-height: 32px; padding-top: 5px; padding-bottom: 5px; }
+    }
+}
+.tree-details {
+    h3 { color: $forest-color; font-size: 2rem; line-height: 2.8rem; font-weight: 600; margin-top: 24px; margin-bottom: 14px; }
+    .detail-header { background: $lime-soft-color; }
+    .detail-header .common-name { font-size: 2.6rem; line-height: 3.2rem; font-weight: 600; }
+    .table > tbody > tr > td { padding-top: 10px; padding-bottom: 10px; border-color: $well-color; }
+    #map-feature-form > .btn { margin-right: 6px; }
+    #sidebar h3, #sidebar .well h3 { color: $forest-color; }
+    #sidebar .well { padding: 18px; }
+    #comments textarea { border: 1px solid $well-color; border-radius: 10px; padding: 12px; }
+}
+#map-content .panel-heading, #map-content .panel-heading > a {
+    background: $forest-color; color: $paper; box-shadow: none;
+    &:hover, &:focus { background: darken($forest-color, 4%); }
+}
+@media (prefers-reduced-motion: reduce) { .wrapper .btn { transition: none; } }
+.container.contained.tree-details {
+    margin-top: 64px; margin-bottom: 64px;
+    &.topper:before { background: $lime-soft-color; border-radius: 14px 14px 0 0; }
+    @media #{$screen-xs} { margin-top: 36px; margin-bottom: 72px; }
+}
+.tree-details #sidebar h5 { color: $forest-color; font-weight: 600; }
+.tree-details .collection-title { margin-top: 22px; line-height: 1.5; color: $forest-color; font-weight: 600; }
+.tree-details .collection-title small { color: $subtext-color; font-size: 1.2rem; }

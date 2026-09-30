@@ -3184,7 +3184,7 @@ msgstr "Pianifica"
 
 #: opentreemap/treemap/templates/instance_base.html:81
 msgid "View Edits"
-msgstr "Mostra Editing"
+msgstr "Cronologia modifiche"
 
 #: opentreemap/treemap/templates/instance_base.html:94
 #: opentreemap/treemap/templates/instance_base.html:99
@@ -3511,8 +3511,8 @@ msgstr "L’eliminazione delle foto non è consentita a tutti gli utenti"
 #: opentreemap/treemap/templates/treemap/partials/form_buttons.html:8
 #: opentreemap/treemap/templates/treemap/partials/map_feature_detail_base.html:59
 #: opentreemap/treemap/templates/treemap/partials/map_feature_popup.html:29
-msgid "Edit"
-msgid_plural "Edits"
+msgid "Edit record"
+msgid_plural "Edit records"
 msgstr[0] "Modifica"
 msgstr[1] "Modifiche"
 
@@ -3809,7 +3809,7 @@ msgstr ""
 
 #: opentreemap/treemap/templates/treemap/map-browse-trees.html:20
 msgid "Quick Edit"
-msgstr "Editing rapido"
+msgstr "Modifica rapida"
 
 #: opentreemap/treemap/templates/treemap/map-browse-trees.html:32
 #: opentreemap/treemap/templates/treemap/map-browse-trees.html:39
@@ -4505,7 +4505,7 @@ msgstr "numero"
 
 #: opentreemap/treemap/templates/treemap/partials/resource_detail.html:51
 msgid "Ecosystem Services"
-msgstr "Servizi dell'Ecosistema"
+msgstr "Servizi ecosistemici"
 
 #: opentreemap/treemap/templates/treemap/partials/resource_detail.html:68
 msgid "Associated Trees"
@@ -4538,7 +4538,7 @@ msgstr ""
 
 #: opentreemap/treemap/templates/treemap/partials/plot_detail.html:21
 msgid "Yearly Ecosystem Services"
-msgstr "Ecosystem Services Annuali"
+msgstr "Servizi ecosistemici annuali"
 
 #: opentreemap/treemap/templates/treemap/partials/plot_detail.html:27
 msgid ""
@@ -4772,3 +4772,22 @@ msgstr "Mortalità annua (%) per tutti gli alberi"
 
 msgid "%"
 msgstr "%"
+
+msgid "Edit"
+msgstr "Modifica"
+
+msgid "Common or Scientific Name"
+msgstr "Nome comune o scientifico"
+
+msgid "Post comment"
+msgstr "Pubblica commento"
+
+msgid "Stewardship"
+msgstr "Interventi di cura"
+
+msgid ""
+"Ecosystem benefit estimates are not available for this location. The current"
+" calculation models cover the United States."
+msgstr ""
+"Le stime dei benefici ecosistemici non sono disponibili per questa località."
+" I modelli di calcolo attuali coprono gli Stati Uniti."

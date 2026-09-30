@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from __future__ import division
 
 import json
-import hashlib
 from functools import wraps
 
 from django.http import HttpResponse
@@ -20,6 +19,7 @@ from opentreemap.util import dotted_split
 from treemap.lib.hide_at_zoom import (update_hide_at_zoom_after_move,
                                       update_hide_at_zoom_after_delete)
 
+from treemap.branding import localized_etag
 from treemap.units import Convertible
 from treemap.models import (Tree, Species, MapFeature,
                             MapFeaturePhoto, TreePhoto, Favorite)
@@ -373,7 +373,7 @@ def map_feature_hash(request, instance, feature_id, edit=False, tree_id=None):
     if request.user:
         pk = request.user.pk or ''
 
-    return hashlib.md5(feature.hash + ':' + str(pk)).hexdigest()
+    return localized_etag(feature.hash + ':' + str(pk), request)
 
 
 @get_photo_context_and_errors

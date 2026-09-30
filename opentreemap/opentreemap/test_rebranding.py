@@ -54,3 +54,48 @@ class RebrandingTests(SimpleTestCase):
         self.assertEqual(updated['map'], config['map'])
         self.assertEqual(config['scss_variables']['primary-color'], '#8baa3d')
         self.assertEqual(upgrade_legacy_colors(updated), updated)
+
+    def test_visible_labels_and_plural_counts(self):
+        translation.activate('it')
+        expected = {'Edit': 'Modifica', 'Common or Scientific Name': 'Nome comune o scientifico', 'Post comment': 'Pubblica commento', 'Yearly Ecosystem Services': 'Servizi ecosistemici annuali', 'Quick Edit': 'Modifica rapida', 'Stewardship': 'Interventi di cura'}
+        for source, label in expected.items():
+            self.assertEqual(translation.gettext(source), label)
+        self.assertEqual(translation.ngettext('tree', 'trees', 637), 'alberi')
+        self.assertEqual(translation.ngettext('Edit record', 'Edit records', 2), 'Modifiche')
+        translation.activate('en')
+        self.assertEqual(translation.gettext('Edit'), 'Edit')
+
+    def test_translated_fragment_cache_varies_by_language_and_filter(self):
+        from treemap.branding import localized_etag
+        request = RequestFactory().get('/napoli/benefit/search?q=oak')
+        translation.activate('it')
+        italian = localized_etag('same-data-revision', request)
+        self.assertEqual(italian, localized_etag('same-data-revision', request))
+        translation.activate('en')
+        self.assertNotEqual(italian, localized_etag('same-data-revision', request))
+        translation.activate('it')
+        different_filter = RequestFactory().get('/napoli/benefit/search?q=pine')
+        self.assertNotEqual(italian, localized_etag('same-data-revision', different_filter))
+
+    def test_benefit_view_translates_real_count_labels(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from treemap.views.tree import search_tree_benefits
+        instance = SimpleNamespace(has_resources=False)
+        with patch('treemap.views.tree.Filter'), patch('treemap.views.tree.get_cached_plot_count', return_value=638), patch('treemap.views.tree.get_benefits_for_filter', return_value=({}, {'plot': {'n_total': 637}})), patch('treemap.views.tree.format_benefits', return_value={}):
+            translation.activate('it')
+            context = search_tree_benefits(RequestFactory().get('/napoli/benefit/search'), instance)
+        self.assertEqual(context['tree_count_label'], 'alberi,')
+        self.assertEqual(context['empty_plot_count_label'], 'area di impianto vuota')
+
+    def test_detail_etag_works_and_separates_languages(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from treemap.views.map_feature import map_feature_hash
+        request = RequestFactory().get('/napoli/features/60/')
+        request.user = SimpleNamespace(pk=1)
+        with patch('treemap.views.map_feature.get_map_feature_or_404', return_value=SimpleNamespace(hash='feature-revision')):
+            translation.activate('it')
+            italian = map_feature_hash(request, object(), 60)
+            translation.activate('en')
+            self.assertNotEqual(italian, map_feature_hash(request, object(), 60))

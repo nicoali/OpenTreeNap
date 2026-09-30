@@ -15,3 +15,12 @@ def upgrade_legacy_colors(config):
             if isinstance(value, str) and value.lstrip('#').upper() == legacy:
                 colors[field] = OPENTREENAP_COLORS[field]
     return updated
+
+
+def localized_etag(value, request):
+    """Keep translated fragments distinct across language, URL and UI changes."""
+    import hashlib
+    from django.utils.translation import get_language
+
+    identity = '%s:otn-ui-2:%s:%s' % (value, get_language(), request.get_full_path())
+    return hashlib.md5(identity.encode('utf-8')).hexdigest()
