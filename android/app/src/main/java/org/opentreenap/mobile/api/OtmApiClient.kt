@@ -19,38 +19,32 @@ class OtmApiClient(
     private val baseUrl = baseUrl.trimEnd('/')
     private val signer = HmacSigner(secretKey)
 
-    fun fetchTrees(size: Int = 10000): List<TreeMarker> {
-        require(baseUrl.startsWith("https://")) {
-            "OTM_BASE_URL deve usare HTTPS"
-        }
+    fun fetchTrees(size: Int = 100, offset: Int = 0): List<TreeMarker> {
+        require(baseUrl.startsWith("https://")) { "OTM_BASE_URL deve usare HTTPS" }
         require(instance.isNotBlank()) { "OTM_INSTANCE mancante" }
         require(accessKey.isNotBlank()) { "OTM_ACCESS_KEY mancante" }
 
         val timestamp = utcTimestamp()
         val requestUrl =
             baseUrl + "/api/v4/instance/" + instance + "/plots" +
-                "?offset=0&size=" + size + "&timestamp=" + timestamp + "&access_key=" + accessKey
+                "?offset=" + offset + "&size=" + size +
+                "&timestamp=" + timestamp + "&access_key=" + accessKey
         val signature = signer.sign("GET", requestUrl)
 
         val connection = (URL(requestUrl).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = 12_000
-            readTimeout = 20_000
+            readTimeout = 30_000
             setRequestProperty("Accept", "application/json")
             setRequestProperty("X-Signature", signature)
-            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.1.0")
+            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.2.0")
         }
 
         try {
             val status = connection.responseCode
-            val stream =
-                if (status in 200..299) connection.inputStream else connection.errorStream
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
             val body = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-
-            if (status !in 200..299) {
-                error("API HTTP " + status + ": " + body.take(300))
-            }
-
+            if (status !in 200..299) error("API HTTP " + status + ": " + body.take(300))
             return parsePlots(body)
         } finally {
             connection.disconnect()
@@ -65,7 +59,6 @@ class OtmApiClient(
             val item = array.optJSONObject(index) ?: continue
             val plot = item.optJSONObject("plot") ?: continue
             val geometry = plot.optJSONObject("geom") ?: continue
-
             val latitude = geometry.optDouble("y", Double.NaN)
             val longitude = geometry.optDouble("x", Double.NaN)
             if (!latitude.isFinite() || !longitude.isFinite()) continue
@@ -76,11 +69,19 @@ class OtmApiClient(
 
             val plotId = plot.optInt("id", -1)
             val treeId = tree?.optInt("id", -1)?.takeIf { it >= 0 }
+            val species = tree?.optJSONObject("species")
+            val commonName = species?.optString("common_name")?.trim().orEmpty()
+            val genus = species?.optString("genus")?.trim().orEmpty()
+            val speciesName = species?.optString("species")?.trim().orEmpty()
+            val scientificName = listOf(genus, speciesName).filter { it.isNotBlank() }.joinToString(" ")
+            val address = item.optString("address_full").trim()
             val apiTitle = item.optString("title").trim()
-            val title =
-                apiTitle.takeIf { it.isNotBlank() }
-                    ?: treeId?.let { "Albero #" + it }
-                    ?: "Albero"
+
+            val title = commonName.takeIf { it.isNotBlank() }
+                ?: scientificName.takeIf { it.isNotBlank() }
+                ?: apiTitle.takeIf { it.isNotBlank() }
+                ?: treeId?.let { "Albero #$it" }
+                ?: "Albero"
 
             markers += TreeMarker(
                 plotId = plotId,
@@ -88,37 +89,56 @@ class OtmApiClient(
                 latitude = latitude,
                 longitude = longitude,
                 title = title,
-                snippet = buildSnippet(item, tree, plotId)
+                snippet = buildSnippet(commonName, scientificName, address, plotId),
+                commonName = commonName.takeIf { it.isNotBlank() },
+                scientificName = scientificName.takeIf { it.isNotBlank() },
+                address = address.takeIf { it.isNotBlank() },
+                isMonumental = hasMonumentalFlag(item, tree)
             )
         }
-
         return markers
     }
 
     private fun buildSnippet(
-        item: JSONObject,
-        tree: JSONObject?,
+        commonName: String,
+        scientificName: String,
+        address: String,
         plotId: Int
     ): String? {
         val parts = mutableListOf<String>()
-
-        tree?.optJSONObject("species")?.let { species ->
-            val commonName = species.optString("common_name").trim()
-            val genus = species.optString("genus").trim()
-            val speciesName = species.optString("species").trim()
-            val scientific = listOf(genus, speciesName)
-                .filter { it.isNotBlank() }
-                .joinToString(" ")
-
-            if (commonName.isNotBlank()) parts += commonName
-            if (scientific.isNotBlank() && scientific != commonName) parts += scientific
-        }
-
-        val address = item.optString("address_full").trim()
+        if (commonName.isNotBlank()) parts += commonName
+        if (scientificName.isNotBlank() && scientificName != commonName) parts += scientificName
         if (address.isNotBlank()) parts += address
-        if (plotId >= 0) parts += "Sito #" + plotId
-
+        if (plotId >= 0) parts += "Sito #$plotId"
         return parts.takeIf { it.isNotEmpty() }?.joinToString(" · ")
+    }
+
+    private fun hasMonumentalFlag(item: JSONObject, tree: JSONObject?): Boolean =
+        jsonHasMonumentalFlag(item) || (tree?.let { jsonHasMonumentalFlag(it) } == true)
+
+    private fun jsonHasMonumentalFlag(obj: JSONObject, depth: Int = 0): Boolean {
+        if (depth > 4) return false
+        val keys = obj.keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            val value = obj.opt(key)
+            val normalized = key.lowercase(Locale.ROOT)
+            val relevant = normalized.contains("monument") ||
+                normalized.contains("centenar") ||
+                normalized.contains("heritage")
+            if (relevant && isTruthy(value)) return true
+            if (value is JSONObject && jsonHasMonumentalFlag(value, depth + 1)) return true
+        }
+        return false
+    }
+
+    private fun isTruthy(value: Any?): Boolean = when (value) {
+        is Boolean -> value
+        is Number -> value.toInt() != 0
+        is String -> value.trim().lowercase(Locale.ROOT) in setOf(
+            "1", "true", "yes", "si", "sì", "monumentale", "centenario", "centenaria", "heritage"
+        )
+        else -> false
     }
 
     private fun utcTimestamp(): String {

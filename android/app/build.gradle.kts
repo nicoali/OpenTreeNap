@@ -6,9 +6,7 @@ plugins {
 
 val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
-    if (file.exists()) {
-        file.inputStream().use { load(it) }
-    }
+    if (file.exists()) file.inputStream().use { load(it) }
 }
 
 fun localProperty(name: String, defaultValue: String = ""): String =
@@ -25,20 +23,17 @@ android {
         applicationId = "org.opentreenap.mobile"
         minSdk = 23
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
 
         manifestPlaceholders["MAPS_API_KEY"] = localProperty("MAPS_API_KEY")
-
         buildConfigField("String", "OTM_BASE_URL", quotedBuildConfig(localProperty("OTM_BASE_URL")))
         buildConfigField("String", "OTM_INSTANCE", quotedBuildConfig(localProperty("OTM_INSTANCE", "napoli")))
         buildConfigField("String", "OTM_ACCESS_KEY", quotedBuildConfig(localProperty("OTM_ACCESS_KEY")))
         buildConfigField("String", "OTM_SECRET_KEY", quotedBuildConfig(localProperty("OTM_SECRET_KEY")))
     }
 
-    buildFeatures {
-        buildConfig = true
-    }
+    buildFeatures { buildConfig = true }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

@@ -1,8 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OpenTreeNap</string>
-    <string name="status_ready">OpenTreeNap · Napoli</string>
+    <string name="status_ready">Napoli · mappa civica degli alberi</string>
     <string name="status_loading">Caricamento alberi…</string>
+    <string name="status_loaded">%1$d alberi · %2$s</string>
+    <string name="status_monumental">%1$d alberi monumentali</string>
+    <string name="status_no_results">Nessun albero in questo filtro</string>
+    <string name="status_error">Errore API: %1$s</string>
     <string name="refresh">Aggiorna</string>
     <string name="config_missing">Configura local.properties per collegare l’istanza OpenTreeNap.</string>
+    <string name="filter_all">Tutti</string>
+    <string name="filter_monumental">Monumentali</string>
+    <string name="filter_monumental_count">Monumentali · %1$d</string>
+    <string name="no_monumental_loaded">Nessun albero monumentale riconosciuto nei dati caricati.</string>
+    <string name="badge_tree">Albero</string>
+    <string name="badge_monumental">Monumentale</string>
+    <string name="details_missing">Dettagli botanici non ancora disponibili.</string>
+    <string name="close">Chiudi</string>
+    <string name="layers">Cambia tipo di mappa</string>
+    <string name="my_location">La mia posizione</string>
+    <string name="location_searching">Cerco la tua posizione…</string>
+    <string name="location_denied">Permesso posizione non concesso.</string>
+    <string name="map_satellite">Vista satellite</string>
+    <string name="map_standard">Vista mappa</string>
 </resources>

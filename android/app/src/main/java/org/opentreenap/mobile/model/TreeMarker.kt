@@ -6,5 +6,9 @@ data class TreeMarker(
     val latitude: Double,
     val longitude: Double,
     val title: String,
-    val snippet: String?
+    val snippet: String?,
+    val commonName: String? = null,
+    val scientificName: String? = null,
+    val address: String? = null,
+    val isMonumental: Boolean = false
 )

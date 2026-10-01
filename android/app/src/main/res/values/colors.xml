@@ -2,7 +2,12 @@
 <resources>
     <color name="otn_green">#246B4B</color>
     <color name="otn_green_dark">#174B35</color>
+    <color name="otn_green_legacy">#8BAA3D</color>
+    <color name="otn_teal_legacy">#56ABB2</color>
+    <color name="otn_gold">#B88A2B</color>
     <color name="otn_cream">#F6F0E3</color>
     <color name="otn_navy">#17324D</color>
+    <color name="otn_text">#33434F</color>
+    <color name="otn_text_muted">#70808B</color>
     <color name="white">#FFFFFF</color>
 </resources>
