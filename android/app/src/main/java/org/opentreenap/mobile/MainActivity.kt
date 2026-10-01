@@ -33,6 +33,7 @@ import kotlin.math.roundToInt
 
 class MainActivity : Activity(), OnMapReadyCallback {
     private lateinit var rootView: View
+    private lateinit var statusBarScrim: View
     private lateinit var topPanel: View
     private lateinit var filterBar: View
     private lateinit var mapView: MapView
@@ -71,6 +72,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
         configureSystemBars()
         setContentView(R.layout.activity_main)
         rootView = findViewById(R.id.root)
+        statusBarScrim = findViewById(R.id.statusBarScrim)
         topPanel = findViewById(R.id.topPanel)
         filterBar = findViewById(R.id.filterBar)
         mapView = findViewById(R.id.map)
@@ -341,7 +343,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
         }
 
     private fun createTreeMarker(monumental: Boolean, selected: Boolean): BitmapDescriptor {
-        val size = dp(if (selected) 42 else 36)
+        val size = dp(if (selected) 38 else 32)
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -375,7 +377,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
     }
 
     private fun clusterIcon(count: Int): BitmapDescriptor {
-        val size = dp(46)
+        val size = dp(42)
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -385,7 +387,13 @@ class MainActivity : Activity(), OnMapReadyCallback {
         canvas.drawCircle(center + dp(1), center + dp(2), size * 0.41f, paint)
         paint.color = Color.parseColor("#FFF9ED")
         canvas.drawCircle(center, center, size * 0.41f, paint)
-        paint.color = Color.parseColor("#246B4B")
+        paint.color = Color.parseColor(
+            when {
+                count < 10 -> "#8BAA3D"
+                count < 40 -> "#246B4B"
+                else -> "#174B35"
+            }
+        )
         canvas.drawCircle(center, center, size * 0.34f, paint)
 
         paint.color = Color.WHITE
@@ -484,13 +492,17 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 systemBottomInset = insets.systemWindowInsetBottom
             }
 
+            statusBarScrim.layoutParams = statusBarScrim.layoutParams.also { params ->
+                params.height = systemTopInset
+            }
+
             (topPanel.layoutParams as FrameLayout.LayoutParams).also { params ->
                 params.topMargin = systemTopInset
                 topPanel.layoutParams = params
             }
 
             (filterBar.layoutParams as FrameLayout.LayoutParams).also { params ->
-                params.topMargin = systemTopInset + dp(72)
+                params.topMargin = systemTopInset + dp(64)
                 filterBar.layoutParams = params
             }
 
@@ -511,7 +523,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
     }
 
     private fun updateMapPadding() {
-        val topPadding = systemTopInset + dp(118)
+        val topPadding = systemTopInset + dp(108)
         val bottomPadding =
             if (::treeCard.isInitialized && treeCard.visibility == View.VISIBLE) {
                 systemBottomInset + dp(220)
