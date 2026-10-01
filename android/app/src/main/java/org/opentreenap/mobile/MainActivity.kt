@@ -1,12 +1,15 @@
 package org.opentreenap.mobile
 
 import android.app.Activity
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapView
+import com.google.android.gms.maps.MapsInitializer
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
@@ -25,6 +28,20 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        logMapsDiagnostics()
+
+        val mapsInitResult = runCatching {
+            MapsInitializer.initialize(applicationContext)
+        }
+        mapsInitResult
+            .onSuccess { result ->
+                Log.i(MAPS_LOG_TAG, "MapsInitializer.initialize result=$result")
+            }
+            .onFailure { error ->
+                Log.e(MAPS_LOG_TAG, "MapsInitializer.initialize failed", error)
+            }
+
         setContentView(R.layout.activity_main)
 
         mapView = findViewById(R.id.map)
@@ -32,32 +49,65 @@ class MainActivity : Activity(), OnMapReadyCallback {
         refreshButton = findViewById(R.id.refresh)
 
         mapView.onCreate(savedInstanceState)
+        Log.i(MAPS_LOG_TAG, "MapView.onCreate completed; requesting map")
         mapView.getMapAsync(this)
 
         refreshButton.setOnClickListener {
+            Log.i(MAPS_LOG_TAG, "Refresh pressed")
             loadTrees()
         }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
+        Log.i(MAPS_LOG_TAG, "onMapReady received")
         map = googleMap
 
         googleMap.uiSettings.apply {
             isCompassEnabled = true
             isMapToolbarEnabled = false
             isZoomControlsEnabled = false
+            isZoomGesturesEnabled = true
+            isScrollGesturesEnabled = true
+            isRotateGesturesEnabled = true
+            isTiltGesturesEnabled = true
+        }
+
+        googleMap.setOnMapLoadedCallback {
+            Log.i(MAPS_LOG_TAG, "onMapLoaded fired: Google base map finished loading")
+        }
+
+        googleMap.setOnCameraMoveStartedListener { reason ->
+            Log.i(MAPS_LOG_TAG, "cameraMoveStarted reason=$reason")
+        }
+
+        googleMap.setOnCameraIdleListener {
+            val position = googleMap.cameraPosition
+            Log.i(
+                MAPS_LOG_TAG,
+                "cameraIdle lat=${position.target.latitude} lon=${position.target.longitude} zoom=${position.zoom}"
+            )
+        }
+
+        googleMap.setOnMapClickListener { point ->
+            Log.i(MAPS_LOG_TAG, "mapClick lat=${point.latitude} lon=${point.longitude}")
         }
 
         val naples = LatLng(40.8518, 14.2681)
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(naples, 12.3f))
+        Log.i(MAPS_LOG_TAG, "Initial camera moved to Naples")
 
         loadTrees()
     }
 
     private fun loadTrees() {
-        val googleMap = map ?: return
+        val googleMap = map
+        if (googleMap == null) {
+            Log.w(MAPS_LOG_TAG, "loadTrees skipped: GoogleMap is null")
+            return
+        }
 
         if (!isConfigured()) {
+            Log.e(MAPS_LOG_TAG, "OTM configuration missing")
             statusView.setText(R.string.config_missing)
             return
         }
@@ -79,8 +129,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 refreshButton.isEnabled = true
 
                 result.onSuccess { trees ->
+                    Log.i(MAPS_LOG_TAG, "OTM trees loaded count=${trees.size}")
                     renderTrees(googleMap, trees)
                 }.onFailure { error ->
+                    Log.e(MAPS_LOG_TAG, "OTM API failure", error)
                     statusView.text =
                         "Errore API: " + (error.message ?: error.javaClass.simpleName)
                 }
@@ -104,8 +156,32 @@ class MainActivity : Activity(), OnMapReadyCallback {
             )
         }
 
+        Log.i(MAPS_LOG_TAG, "Markers rendered count=${trees.size}")
+
         statusView.text =
             trees.size.toString() + " alberi caricati · " + BuildConfig.OTM_INSTANCE
+    }
+
+    private fun logMapsDiagnostics() {
+        val mapsKey = runCatching {
+            val appInfo = packageManager.getApplicationInfo(
+                packageName,
+                PackageManager.GET_META_DATA
+            )
+            appInfo.metaData?.getString(MAPS_API_KEY_METADATA)
+        }.getOrElse { error ->
+            Log.e(MAPS_LOG_TAG, "Unable to read Maps API key metadata", error)
+            null
+        }
+
+        Log.i(
+            MAPS_LOG_TAG,
+            "Maps API key metadata present=${!mapsKey.isNullOrBlank()} length=${mapsKey?.length ?: 0}"
+        )
+        Log.i(
+            MAPS_LOG_TAG,
+            "package=$packageName sdk=${android.os.Build.VERSION.SDK_INT}"
+        )
     }
 
     private fun isConfigured(): Boolean =
@@ -143,5 +219,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
     override fun onLowMemory() {
         super.onLowMemory()
         mapView.onLowMemory()
+    }
+
+    companion object {
+        private const val MAPS_LOG_TAG = "OTN-MAPS"
+        private const val MAPS_API_KEY_METADATA = "com.google.android.geo.API_KEY"
     }
 }
