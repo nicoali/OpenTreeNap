@@ -5,8 +5,9 @@
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:colorAccent">@color/otn_green</item>
         <item name="android:statusBarColor">@color/otn_green_dark</item>
-        <item name="android:navigationBarColor">@color/otn_green_dark</item>
+        <item name="android:navigationBarColor">@color/otn_cream</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowBackground">@color/otn_cream</item>
     </style>
 </resources>
