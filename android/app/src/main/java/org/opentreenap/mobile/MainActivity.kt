@@ -10,6 +10,8 @@ import android.graphics.Paint
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.WindowInsets
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -30,6 +32,9 @@ import java.util.concurrent.Executors
 import kotlin.math.roundToInt
 
 class MainActivity : Activity(), OnMapReadyCallback {
+    private lateinit var rootView: View
+    private lateinit var topPanel: View
+    private lateinit var filterBar: View
     private lateinit var mapView: MapView
     private lateinit var statusView: TextView
     private lateinit var refreshButton: ImageButton
@@ -44,6 +49,8 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private lateinit var treeMeta: TextView
 
     private var map: GoogleMap? = null
+    private var systemTopInset = 0
+    private var systemBottomInset = 0
     private var allTrees: List<TreeMarker> = emptyList()
     private var monumentalOnly = false
     private var selectedMarker: Marker? = null
@@ -61,7 +68,11 @@ class MainActivity : Activity(), OnMapReadyCallback {
         runCatching { MapsInitializer.initialize(applicationContext) }
             .onFailure { Log.e(MAPS_LOG_TAG, "Maps init failed", it) }
 
+        configureSystemBars()
         setContentView(R.layout.activity_main)
+        rootView = findViewById(R.id.root)
+        topPanel = findViewById(R.id.topPanel)
+        filterBar = findViewById(R.id.filterBar)
         mapView = findViewById(R.id.map)
         statusView = findViewById(R.id.status)
         refreshButton = findViewById(R.id.refresh)
@@ -75,6 +86,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
         treeDetails = findViewById(R.id.treeDetails)
         treeMeta = findViewById(R.id.treeMeta)
 
+        applySystemInsets()
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this)
 
@@ -117,7 +129,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
             googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map_style))
         }.onFailure { Log.w(MAPS_LOG_TAG, "Custom map style unavailable", it) }
 
-        googleMap.setPadding(0, dp(92), 0, dp(20))
+        updateMapPadding()
         googleMap.setOnCameraIdleListener { renderClusters() }
         googleMap.setOnMapClickListener { hideTreeCard() }
         googleMap.setOnMarkerClickListener { marker ->
@@ -268,14 +280,14 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
         treeCard.visibility = View.VISIBLE
         mapControls.visibility = View.GONE
-        map?.setPadding(0, dp(92), 0, dp(190))
+        updateMapPadding()
     }
 
     private fun hideTreeCard() {
         restoreSelectedMarker()
         treeCard.visibility = View.GONE
         mapControls.visibility = View.VISIBLE
-        map?.setPadding(0, dp(92), 0, dp(20))
+        updateMapPadding()
     }
 
     private fun restoreSelectedMarker() {
@@ -448,6 +460,70 @@ class MainActivity : Activity(), OnMapReadyCallback {
             if (hasLocationPermission()) enableLocationAndCenter()
             else Toast.makeText(this, R.string.location_denied, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun configureSystemBars() {
+        window.statusBarColor = getColor(R.color.otn_green_dark)
+        window.navigationBarColor = getColor(R.color.otn_cream)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            window.decorView.systemUiVisibility =
+                window.decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        }
+    }
+
+    private fun applySystemInsets() {
+        rootView.setOnApplyWindowInsetsListener { _, insets ->
+            val bars =
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                    insets.getInsets(WindowInsets.Type.systemBars())
+                } else {
+                    android.graphics.Insets.of(
+                        insets.systemWindowInsetLeft,
+                        insets.systemWindowInsetTop,
+                        insets.systemWindowInsetRight,
+                        insets.systemWindowInsetBottom
+                    )
+                }
+
+            systemTopInset = bars.top
+            systemBottomInset = bars.bottom
+
+            (topPanel.layoutParams as FrameLayout.LayoutParams).also { params ->
+                params.topMargin = systemTopInset
+                topPanel.layoutParams = params
+            }
+
+            (filterBar.layoutParams as FrameLayout.LayoutParams).also { params ->
+                params.topMargin = systemTopInset + dp(72)
+                filterBar.layoutParams = params
+            }
+
+            (mapControls.layoutParams as FrameLayout.LayoutParams).also { params ->
+                params.bottomMargin = systemBottomInset + dp(18)
+                mapControls.layoutParams = params
+            }
+
+            (treeCard.layoutParams as FrameLayout.LayoutParams).also { params ->
+                params.bottomMargin = systemBottomInset + dp(10)
+                treeCard.layoutParams = params
+            }
+
+            updateMapPadding()
+            insets
+        }
+        rootView.requestApplyInsets()
+    }
+
+    private fun updateMapPadding() {
+        val topPadding = systemTopInset + dp(118)
+        val bottomPadding =
+            if (::treeCard.isInitialized && treeCard.visibility == View.VISIBLE) {
+                systemBottomInset + dp(220)
+            } else {
+                systemBottomInset + dp(24)
+            }
+
+        map?.setPadding(0, topPadding, 0, bottomPadding)
     }
 
     private fun logMapsDiagnostics() {
