@@ -2,7 +2,6 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.views.decorators.cache import cache_page
-from django.db.models import Count
 from django.utils import timezone
 
 from treemap.instance import Instance
@@ -15,6 +14,21 @@ def _cors(response):
     response['Access-Control-Allow-Headers'] = 'Accept, Content-Type'
     response['Cache-Control'] = 'public, max-age=300'
     return response
+
+
+def _as_bool(value):
+    """Normalize the Monumentale UDF without assuming one exact import format."""
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    if isinstance(value, (int, float)):
+        return value != 0
+
+    text = str(value).strip().lower()
+    if text in ('', '0', 'false', 'no', 'n', 'none', 'null', 'non', 'non monumentale'):
+        return False
+    return True
 
 
 @require_GET
@@ -37,6 +51,7 @@ def napoli_trees(request):
 
     rows = []
     species_ids = set()
+    monumental_count = 0
 
     for tree in qs:
         plot = tree.plot
@@ -45,6 +60,13 @@ def napoli_trees(request):
 
         if species is not None:
             species_ids.add(species.id)
+
+        raw_monumental = tree.udfs.get(
+            'Monumentale', None, do_not_clean=True
+        )
+        is_monumental = _as_bool(raw_monumental)
+        if is_monumental:
+            monumental_count += 1
 
         address_parts = [
             part for part in (
@@ -69,6 +91,8 @@ def napoli_trees(request):
             'scientific_name': species.scientific_name if species else '',
             'genus': species.genus if species else '',
             'species': species.species if species else '',
+            'monumental': is_monumental,
+            'monumental_value': '' if raw_monumental is None else str(raw_monumental),
             'feature_url': '/napoli/features/%s/' % plot.id,
         })
 
@@ -82,6 +106,7 @@ def napoli_trees(request):
         'stats': {
             'trees': len(rows),
             'species': len(species_ids),
+            'monumental_trees': monumental_count,
         },
         'trees': rows,
     })
