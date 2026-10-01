@@ -473,20 +473,16 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
     private fun applySystemInsets() {
         rootView.setOnApplyWindowInsetsListener { _, insets ->
-            val bars =
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                    insets.getInsets(WindowInsets.Type.systemBars())
-                } else {
-                    android.graphics.Insets.of(
-                        insets.systemWindowInsetLeft,
-                        insets.systemWindowInsetTop,
-                        insets.systemWindowInsetRight,
-                        insets.systemWindowInsetBottom
-                    )
-                }
-
-            systemTopInset = bars.top
-            systemBottomInset = bars.bottom
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                val bars = insets.getInsets(WindowInsets.Type.systemBars())
+                systemTopInset = bars.top
+                systemBottomInset = bars.bottom
+            } else {
+                @Suppress("DEPRECATION")
+                systemTopInset = insets.systemWindowInsetTop
+                @Suppress("DEPRECATION")
+                systemBottomInset = insets.systemWindowInsetBottom
+            }
 
             (topPanel.layoutParams as FrameLayout.LayoutParams).also { params ->
                 params.topMargin = systemTopInset
