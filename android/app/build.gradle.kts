@@ -23,14 +23,24 @@ android {
         applicationId = "org.opentreenap.mobile"
         minSdk = 23
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.5.0"
+        versionCode = 9
+        versionName = "0.5.1"
 
         manifestPlaceholders["MAPS_API_KEY"] = localProperty("MAPS_API_KEY")
         buildConfigField("String", "OTM_BASE_URL", quotedBuildConfig(localProperty("OTM_BASE_URL")))
         buildConfigField("String", "OTM_INSTANCE", quotedBuildConfig(localProperty("OTM_INSTANCE", "napoli")))
         buildConfigField("String", "OTM_ACCESS_KEY", quotedBuildConfig(localProperty("OTM_ACCESS_KEY")))
         buildConfigField("String", "OTM_SECRET_KEY", quotedBuildConfig(localProperty("OTM_SECRET_KEY")))
+        buildConfigField(
+            "String",
+            "BOTANICAL_MANIFEST_URL",
+            quotedBuildConfig(
+                localProperty(
+                    "BOTANICAL_MANIFEST_URL",
+                    "https://opentreenap.altervista.org/wp-json/opentreenap/v1/botanical-images"
+                )
+            )
+        )
     }
 
     buildFeatures { buildConfig = true }
