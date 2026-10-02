@@ -2220,6 +2220,22 @@ class MainActivity : Activity(), OnMapReadyCallback {
             )
         }
 
+        tree.extraFields
+            .firstOrNull {
+                it.label.equals(
+                    "Circonferenza 1,30 m",
+                    ignoreCase = true
+                )
+            }
+            ?.value
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                values += getString(
+                    R.string.measure_current_circumference,
+                    it
+                )
+            }
+
         content.findViewById<TextView>(
             R.id.measureCurrentValues
         ).text =
