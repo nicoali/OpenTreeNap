@@ -70,6 +70,8 @@ Obiettivo: eliminare i dialog Android standard e dare all'app un'identità coere
 
 Obiettivo: usare una sola fonte di immagini/specie in app e OTN.
 
+**Implementazione attiva:** `feature/android-sprint3-botanical-images` + backend `rebrand/opentreenap-it-en`. Manifest condiviso specie→immagine, fallback OTN web, priorità foto reale e hero Android 0.5.0 sono implementati; test reale in attesa. Dettagli: [android/BOTANICAL_IMAGES.md](android/BOTANICAL_IMAGES.md).
+
 - [ ] Definire un manifest condiviso specie -> immagine botanica.
 - [ ] Associare `species_id`, nome scientifico, nome comune e URL immagine.
 - [ ] Usare come fallback la scheda botanica della specie se l'albero non ha foto.
