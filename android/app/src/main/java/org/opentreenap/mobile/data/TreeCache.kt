@@ -71,6 +71,7 @@ class TreeCache(
             .put("diameter", diameter ?: JSONObject.NULL)
             .put("height", height ?: JSONObject.NULL)
             .put("customId", customId ?: JSONObject.NULL)
+            .put("photoUrl", photoUrl ?: JSONObject.NULL)
             .put("isMonumental", isMonumental)
 
     private fun JSONObject.toTreeMarker(): TreeMarker =
@@ -88,6 +89,7 @@ class TreeCache(
             diameter = optNullableDouble("diameter"),
             height = optNullableDouble("height"),
             customId = optNullableString("customId"),
+            photoUrl = optNullableString("photoUrl"),
             isMonumental = optBoolean("isMonumental", false)
         )
 
