@@ -58,7 +58,11 @@ def _check_signature(view_f, require_login):
 
             expires = timestamp + datetime.timedelta(minutes=15)
 
-            if expires < datetime.datetime.now():
+            # API timestamps are UTC (mobile clients and legacy OTM apps send
+            # yyyy-MM-dd'T'HH:mm:ss in UTC). Compare against UTC as well.
+            # Using local server time here makes every valid request appear
+            # expired when the container runs in Europe/Rome (UTC+1/+2).
+            if expires < datetime.datetime.utcnow():
                 return _bad_request
 
         except ValueError:
