@@ -57,47 +57,25 @@ Quando un albero non ha foto reali:
 - OpenGraph/social sharing usa la stessa immagine;
 - se la specie non è presente nel manifest resta il placeholder storico.
 
-## Aggiornamento futuro
+## Aggiornamento automatico da WordPress
 
-Quando viene pubblicata una nuova immagine rappresentativa sul sito:
+La fonte master è ora direttamente `opentreenap.altervista.org`.
 
-1. aggiungere/aggiornare una sola voce in `botanical-images.json`;
-2. effettuare il deploy OTN;
-3. app Android e OTN useranno automaticamente la nuova associazione.
+Endpoint canonico:
 
-Non è necessario pubblicare una nuova APK per aggiungere una specie al manifest.
+`https://opentreenap.altervista.org/wp-json/opentreenap/v1/botanical-images`
+
+Il plugin WordPress genera il manifest dalla Media Library usando il naming `<specie>-immagine-rappresentativa`.
+
+OTN consuma il manifest remoto con cache resiliente. Android 0.5.1 consuma lo stesso endpoint con ETag e cache locale.
+
+Quindi una nuova immagine rappresentativa diventa disponibile in sito, OTN e app senza nuova APK.
 
 ## Test Sprint 3
 
-1. Deploy OTN con manifest e template aggiornati.
-2. Aprire un `Pinus pinea` senza foto reale: deve apparire l'immagine rappresentativa.
-3. Aprire un `Quercus ilex` senza foto reale: stessa verifica.
-4. Aprire un albero con foto reale OTN: la foto reale deve avere precedenza.
-5. Aprire una specie non ancora nel manifest: placeholder generico.
-6. Verificare lo stesso comportamento nella pagina dettaglio OTN.
-7. Riavviare l'app: manifest e immagini già viste devono beneficiare della cache.
-
-
-## Verifica parziale su dispositivo
-
-Test reale del 2026-10-02:
-
-- `Quercus ilex` senza foto reale carica correttamente l'immagine rappresentativa WordPress;
-- badge `Immagine specie` visibile;
-- dopo la correzione del re-layout, immagine, nome comune, nome scientifico, indirizzo, ID e azioni restano tutti visibili;
-- quando l'utente non è autenticato, `Modifica` resta correttamente nascosto e `Scheda botanica` occupa tutta la larghezza;
-- il comportamento con foto reale OTN e il popolamento completo del manifest restano da verificare.
-
-
-## Verifica resa hero
-
-Test visivo su dispositivo del 2026-10-02:
-
-- la stessa immagine rappresentativa di `Quercus ilex` usata dal sito viene mostrata anche nell'app;
-- foreground in fit-center: chioma e tronco restano interamente visibili;
-- backdrop ricavato dalla stessa identica immagine, senza introdurre una seconda sorgente;
-- nessuna deformazione dell'immagine;
-- badge `Immagine specie` leggibile e non invasivo;
-- il resto della scheda (nome, specie, indirizzo, ID, azioni) rimane visibile.
-
-Questa presentazione viene considerata il layout di riferimento per le immagini botaniche nell'app.
+1. Attivare il plugin WordPress su `opentreenap.altervista.org`.
+2. Aprire l'endpoint REST e verificare le specie rilevate.
+3. Deploy OTN per attivare il consumo remoto.
+4. Aprire `Pinus pinea` e `Quercus ilex` nell'app.
+5. Sostituire una rappresentativa su WordPress e verificare l'aggiornamento dopo refresh/cache TTL.
+6. Verificare una foto reale OTN: deve avere precedenza sull'immagine specie.
