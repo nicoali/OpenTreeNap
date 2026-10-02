@@ -28,7 +28,7 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="16dp"
-        android:paddingEnd="12dp">
+        android:paddingEnd="10dp">
 
         <FrameLayout
             android:layout_width="38dp"
@@ -69,6 +69,17 @@
                 android:textColor="@color/otn_header_subtitle"
                 android:textSize="12sp" />
         </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/account"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/round_icon_button_header"
+            android:contentDescription="@string/account"
+            android:padding="9dp"
+            android:src="@drawable/ic_account"
+            android:tint="@color/white" />
 
         <ImageButton
             android:id="@+id/refresh"
@@ -131,9 +142,21 @@
         android:orientation="vertical">
 
         <ImageButton
+            android:id="@+id/addTree"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="@drawable/round_icon_button"
+            android:contentDescription="@string/add_tree"
+            android:elevation="7dp"
+            android:padding="11dp"
+            android:src="@drawable/ic_add"
+            android:tint="@color/otn_green" />
+
+        <ImageButton
             android:id="@+id/layers"
             android:layout_width="46dp"
             android:layout_height="46dp"
+            android:layout_marginTop="9dp"
             android:background="@drawable/round_icon_button"
             android:contentDescription="@string/layers"
             android:elevation="7dp"
@@ -167,7 +190,7 @@
         android:paddingStart="16dp"
         android:paddingTop="8dp"
         android:paddingEnd="12dp"
-        android:paddingBottom="16dp"
+        android:paddingBottom="14dp"
         android:visibility="gone">
 
         <View
@@ -203,12 +226,13 @@
                 android:layout_marginStart="10dp"
                 android:background="@drawable/chip_active"
                 android:gravity="center"
-                android:paddingStart="11dp"
-                android:paddingEnd="11dp"
+                android:maxLines="1"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
                 android:text="@string/badge_tree"
                 android:textAllCaps="true"
                 android:textColor="@color/white"
-                android:textSize="10sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
 
             <View
@@ -260,8 +284,42 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="9dp"
+            android:maxLines="2"
             android:textColor="@color/otn_text_muted"
             android:textSize="11sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/botanicalCard"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:backgroundTint="@color/otn_green"
+                android:minWidth="0dp"
+                android:text="@string/open_botanical_card"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/editTree"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="@color/otn_gold"
+                android:minWidth="0dp"
+                android:text="@string/edit_tree"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:visibility="gone" />
+        </LinearLayout>
     </LinearLayout>
 
 </FrameLayout>
