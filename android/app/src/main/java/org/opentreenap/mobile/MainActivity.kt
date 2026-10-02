@@ -36,6 +36,7 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import org.opentreenap.mobile.api.OtmApiClient
 import org.opentreenap.mobile.model.ApiUser
+import org.opentreenap.mobile.model.InstancePermissions
 import org.opentreenap.mobile.model.SpeciesItem
 import org.opentreenap.mobile.model.TreeMarker
 import java.text.Normalizer
@@ -77,6 +78,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private val executor = Executors.newSingleThreadExecutor()
 
     private var sessionUser: ApiUser? = null
+    private var sessionPermissions: InstancePermissions? = null
     private var sessionUsername: String? = null
     private var sessionPassword: String? = null
 
@@ -127,7 +129,17 @@ class MainActivity : Activity(), OnMapReadyCallback {
             if (addingTree) {
                 cancelAddMode()
             } else {
-                requireLoginThen { enterAddMode() }
+                requireLoginThen {
+                    if (sessionPermissions?.canAddTree == true) {
+                        enterAddMode()
+                    } else {
+                        Toast.makeText(
+                            this,
+                            R.string.permission_add_denied,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
             }
         }
 
@@ -431,7 +443,14 @@ class MainActivity : Activity(), OnMapReadyCallback {
             if (scientific.isNotBlank()) 1f else 0.45f
 
         editTreeButton.visibility =
-            if (sessionUser != null) View.VISIBLE else View.GONE
+            if (
+                sessionUser != null &&
+                sessionPermissions?.canEditTree == true
+            ) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
 
         treeCard.visibility = View.VISIBLE
         mapControls.visibility = View.GONE
@@ -588,6 +607,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
             )
             .setPositiveButton(R.string.logout) { _, _ ->
                 sessionUser = null
+                sessionPermissions = null
                 sessionUsername = null
                 sessionPassword = null
                 updateSessionUi()
@@ -656,10 +676,17 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     executor.execute {
                         val result =
                             runCatching {
-                                apiClient().login(
+                                val client = apiClient()
+                                val user = client.login(
                                     username,
                                     password
                                 )
+                                val permissions =
+                                    client.fetchInstancePermissions(
+                                        username,
+                                        password
+                                    )
+                                user to permissions
                             }
 
                         runOnUiThread {
@@ -667,8 +694,11 @@ class MainActivity : Activity(), OnMapReadyCallback {
                                 AlertDialog.BUTTON_POSITIVE
                             ).isEnabled = true
 
-                            result.onSuccess { user ->
+                            result.onSuccess { loginResult ->
+                                val user = loginResult.first
+                                val permissions = loginResult.second
                                 sessionUser = user
+                                sessionPermissions = permissions
                                 sessionUsername = username
                                 sessionPassword = password
                                 updateSessionUi()
@@ -723,6 +753,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
     private fun updateSessionUi() {
         val loggedIn = sessionUser != null
+        val canAdd = sessionPermissions?.canAddTree == true
 
         accountButton.imageTintList =
             ColorStateList.valueOf(
@@ -735,10 +766,14 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 )
             )
 
+        addTreeButton.alpha =
+            if (!loggedIn || canAdd) 1f else 0.45f
+
         if (::editTreeButton.isInitialized) {
             editTreeButton.visibility =
                 if (
                     loggedIn &&
+                    sessionPermissions?.canEditTree == true &&
                     treeCard.visibility == View.VISIBLE
                 ) {
                     View.VISIBLE
