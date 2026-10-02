@@ -1,3 +1,5 @@
+> **Branch superseded**: il riconoscimento assistito è stato spostato allo Sprint 6. Lo Sprint 5 è ora dedicato alle misurazioni dendrometriche da smartphone. Usare `feature/android-sprint5-measurements` per lo sviluppo corrente.
+
 # OpenTreeNap Roadmap
 
 Questa roadmap raccoglie il lavoro approvato per portare OpenTreeNap da prototipo funzionante a piattaforma completa e coerente tra:
