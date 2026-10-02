@@ -15,7 +15,7 @@ class TreeCache(
     context: Context
 ) {
     private val cacheFile =
-        File(context.filesDir, "trees-cache-v1.json")
+        File(context.filesDir, "trees-cache-v2.json")
 
     fun load(): TreeCacheSnapshot? {
         if (!cacheFile.exists()) return null
