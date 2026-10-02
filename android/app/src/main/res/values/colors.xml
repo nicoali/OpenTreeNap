@@ -11,4 +11,11 @@
     <color name="otn_text_muted">#70808B</color>
     <color name="otn_header_subtitle">#CDE5D8</color>
     <color name="white">#FFFFFF</color>
+    <color name="otn_surface">#FFFDF8</color>
+    <color name="otn_surface_alt">#EEF5F0</color>
+    <color name="otn_border">#D7E2DB</color>
+    <color name="otn_success">#2F7D57</color>
+    <color name="otn_error">#A63C3C</color>
+    <color name="otn_gold_soft">#F5E9C8</color>
+    <color name="otn_scrim">#660F1F19</color>
 </resources>
