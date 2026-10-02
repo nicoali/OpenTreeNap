@@ -70,18 +70,18 @@ Obiettivo: eliminare i dialog Android standard e dare all'app un'identità coere
 
 Obiettivo: usare una sola fonte di immagini/specie in app e OTN.
 
-**Implementazione attiva:** `feature/android-sprint3-botanical-images` + backend `rebrand/opentreenap-it-en`. Manifest condiviso specie→immagine, fallback OTN web, priorità foto reale e hero Android 0.5.0 sono implementati; test reale in attesa. Dettagli: [android/BOTANICAL_IMAGES.md](android/BOTANICAL_IMAGES.md).
+**Implementazione Sprint 3 pronta:** WordPress è la fonte master tramite endpoint REST automatico; OTN usa cache resiliente e Android 0.5.1 usa ETag/cache locale. Resta da attivare il plugin WordPress e verificare il flusso end-to-end prima della chiusura definitiva. Dettagli: [android/BOTANICAL_IMAGES.md](android/BOTANICAL_IMAGES.md).
 
-- [ ] Definire un manifest condiviso specie -> immagine botanica.
-- [ ] Associare `species_id`, nome scientifico, nome comune e URL immagine.
-- [ ] Usare come fallback la scheda botanica della specie se l'albero non ha foto.
-- [ ] Usare foto reale dell'albero quando disponibile.
-- [ ] Fallback finale con icona OpenTreeNap generica.
-- [ ] Integrare la stessa immagine di default nella scheda OTN web.
-- [ ] Integrare la stessa immagine nella scheda Android.
-- [ ] Precaricamento e cache immagini.
-- [ ] WebP ottimizzati e responsive.
-- [ ] Gestire versionamento/invalidazione cache immagini.
+- [x] Definire un manifest condiviso specie -> immagine botanica.
+- [x] Associare nome scientifico, URL immagine e pagina botanica tramite manifest WordPress; `species_id` resta risolto lato OTN/app.
+- [x] Usare come fallback l'immagine botanica rappresentativa della specie se l'albero non ha foto.
+- [x] Usare foto reale dell'albero quando disponibile.
+- [x] Fallback finale con icona OpenTreeNap generica.
+- [x] Integrare la stessa immagine di default nella scheda OTN web.
+- [x] Integrare la stessa immagine nella scheda Android.
+- [x] Precaricamento e cache immagini.
+- [x] WebP ottimizzati e responsive tramite Media Library/WordPress e rendering adattivo nell'app.
+- [x] Gestire versionamento/invalidazione cache immagini con timestamp URL, ETag e TTL.
 
 # Sprint 4 — Scheda albero completa
 
