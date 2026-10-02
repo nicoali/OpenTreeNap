@@ -60,7 +60,7 @@
             app:boxCornerRadiusTopEnd="14dp"
             app:boxCornerRadiusTopStart="14dp">
 
-            <AutoCompleteTextView
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
                 android:id="@+id/editorSpecies"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
