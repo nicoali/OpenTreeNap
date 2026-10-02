@@ -39,16 +39,16 @@ Obiettivo: rendere l'app veloce anche con migliaia di alberi.
 
 **Implementazione attiva:** `feature/android-sprint1-performance`. Cache-first, refresh in background, caricamento progressivo, ClusterManager/renderer OTN e dettaglio lazy sono implementati; le checkbox verranno chiuse dopo il test sul dispositivo. Piano tecnico e checklist: [android/PERFORMANCE.md](android/PERFORMANCE.md).
 
-- [ ] Mostrare rapidamente dati già disponibili/cached all'avvio.
-- [ ] Aggiornamento dati in background senza bloccare la UI.
-- [ ] Evitare refresh completo della mappa ad ogni piccola interazione.
-- [ ] Migrare dal clustering artigianale a Google Maps Utility Library / ClusterManager.
-- [ ] Renderer cluster personalizzato OpenTreeNap.
-- [ ] Differenziare cluster normali e monumentali.
-- [ ] Caricare il dettaglio completo di un albero solo al tap.
-- [ ] Preparare una strategia di caricamento per area visibile / bounding box.
-- [ ] Valutare cache locale strutturata.
-- [ ] Stato di caricamento discreto e non invasivo.
+- [x] Mostrare rapidamente dati già disponibili/cached all'avvio.
+- [x] Aggiornamento dati in background senza bloccare la UI.
+- [x] Evitare refresh completo della mappa ad ogni piccola interazione.
+- [x] Migrare dal clustering artigianale a Google Maps Utility Library / ClusterManager.
+- [x] Renderer cluster personalizzato OpenTreeNap.
+- [x] Differenziare cluster normali e monumentali.
+- [x] Caricare il dettaglio completo di un albero solo al tap.
+- [x] Preparare una strategia di caricamento per area visibile / bounding box.
+- [x] Valutare cache locale strutturata (JSON atomica ora; Room/DB rimandato a inventari molto più grandi).
+- [x] Stato di caricamento discreto e non invasivo.
 
 # Sprint 2 — UI/UX professionale OTN
 
