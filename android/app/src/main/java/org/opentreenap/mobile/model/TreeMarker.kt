@@ -9,6 +9,10 @@ data class TreeMarker(
     val snippet: String?,
     val commonName: String? = null,
     val scientificName: String? = null,
+    val speciesId: Int? = null,
     val address: String? = null,
+    val diameter: Double? = null,
+    val height: Double? = null,
+    val customId: String? = null,
     val isMonumental: Boolean = false
 )
