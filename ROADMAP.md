@@ -70,7 +70,7 @@ Obiettivo: eliminare i dialog Android standard e dare all'app un'identità coere
 
 Obiettivo: usare una sola fonte di immagini/specie in app e OTN.
 
-**Sprint 3 — flusso WordPress→Android verificato:** il manifest REST automatico è attivo e Android 0.5.1 ha caricato automaticamente la rappresentativa di `Platanus occidentalis` dalla Media Library senza manifest statico né nuova APK. Resta solo la verifica priorità foto reale OTN prima della chiusura definitiva. Dettagli: [android/BOTANICAL_IMAGES.md](android/BOTANICAL_IMAGES.md).
+**Sprint 3 completato e verificato (2026-10-02):** il manifest REST automatico WordPress è attivo e Android 0.5.1 carica automaticamente le immagini rappresentative dalla Media Library senza nuova APK. La priorità delle foto reali OTN è implementata ma il test reale è rinviato al primo albero con foto disponibile. Dettagli: [android/BOTANICAL_IMAGES.md](android/BOTANICAL_IMAGES.md).
 
 - [x] Definire un manifest condiviso specie -> immagine botanica.
 - [x] Associare nome scientifico, URL immagine e pagina botanica tramite manifest WordPress; `species_id` resta risolto lato OTN/app.
@@ -83,24 +83,28 @@ Obiettivo: usare una sola fonte di immagini/specie in app e OTN.
 - [x] WebP ottimizzati e responsive tramite Media Library/WordPress e rendering adattivo nell'app.
 - [x] Gestire versionamento/invalidazione cache immagini con timestamp URL, ETag e TTL.
 
+### Nota foto reali OTN
+
+- [ ] Appena sarà disponibile almeno una foto reale caricata su un albero OTN, verificare la priorità `foto reale albero > immagine rappresentativa specie > placeholder`. Questo test resta aperto e va ripreso negli Sprint 4/5 senza bloccare lo Sprint 3.
+
 # Sprint 4 — Scheda albero completa
 
 Obiettivo: trasformare il dettaglio albero in una vera scheda informativa.
 
-- [ ] Foto.
-- [ ] Nome comune.
-- [ ] Nome scientifico.
-- [ ] Indirizzo.
-- [ ] DBH / diametro.
-- [ ] Altezza.
-- [ ] Custom ID / MASAF quando presente.
-- [ ] ID OTN.
-- [ ] Stato monumentale.
+- [x] Foto rappresentativa specie nella scheda; foto reale OTN già supportata ma da verificare appena disponibile.
+- [x] Nome comune.
+- [x] Nome scientifico.
+- [x] Indirizzo.
+- [x] DBH / diametro.
+- [x] Altezza.
+- [x] Custom ID visualizzato quando presente; mapping MASAF esteso da verificare.
+- [x] ID OTN.
+- [x] Stato monumentale.
 - [ ] Dati UDF rilevanti.
 - [ ] Ultimo aggiornamento.
 - [ ] Autore/utente dell'ultima modifica, quando disponibile.
-- [ ] Pulsante Scheda botanica.
-- [ ] Pulsante Modifica.
+- [x] Pulsante Scheda botanica.
+- [x] Pulsante Modifica.
 - [ ] Pulsante Foto.
 - [ ] Condivisione.
 - [ ] Indicazioni stradali.
