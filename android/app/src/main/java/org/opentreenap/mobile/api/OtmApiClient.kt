@@ -6,6 +6,7 @@ import org.json.JSONObject
 import org.opentreenap.mobile.model.ApiUser
 import org.opentreenap.mobile.model.InstancePermissions
 import org.opentreenap.mobile.model.SpeciesItem
+import org.opentreenap.mobile.model.TreeExtraField
 import org.opentreenap.mobile.model.TreeMarker
 import java.net.HttpURLConnection
 import java.net.URL
@@ -50,7 +51,7 @@ class OtmApiClient(
                 setRequestProperty("X-Signature", signature)
                 setRequestProperty(
                     "platform-ver-build",
-                    "OpenTreeNap-Android/0.5.1"
+                    "OpenTreeNap-Android/0.6.0"
                 )
             }
 
@@ -290,7 +291,7 @@ class OtmApiClient(
             readTimeout = 30_000
             setRequestProperty("Accept", "application/json")
             setRequestProperty("X-Signature", signature)
-            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.5.1")
+            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.6.0")
 
             if (username != null && password != null) {
                 val credentials = "$username:$password"
@@ -406,6 +407,31 @@ class OtmApiClient(
                 }
                 ?.let { absoluteUrl(it) }
 
+        val mobileMeta =
+            item.optJSONObject("mobile_meta")
+
+        val updatedAt =
+            mobileMeta
+                ?.optString("updated_at")
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+
+        val updatedBy =
+            mobileMeta
+                ?.optJSONObject("updated_by")
+                ?.optString("username")
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+
+        val detailUrl =
+            mobileMeta
+                ?.optString("detail_url")
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+
+        val extraFields =
+            parseExtraFields(mobileMeta)
+
         return TreeMarker(
             plotId = plotId,
             treeId = treeId,
@@ -421,8 +447,183 @@ class OtmApiClient(
             height = height,
             customId = customId,
             photoUrl = photoUrl,
-            isMonumental = hasMonumentalFlag(item, tree)
+            isMonumental = hasMonumentalFlag(item, tree),
+            updatedAt = updatedAt,
+            updatedBy = updatedBy,
+            detailUrl = detailUrl,
+            extraFields = extraFields
         )
+    }
+
+    private fun parseExtraFields(
+        mobileMeta: JSONObject?
+    ): List<TreeExtraField> {
+        if (mobileMeta == null) {
+            return emptyList()
+        }
+
+        val values =
+            LinkedHashMap<String, TreeExtraField>()
+
+        fun appendObject(
+            obj: JSONObject?
+        ) {
+            if (obj == null) return
+
+            val keys = obj.keys()
+
+            while (keys.hasNext()) {
+                val rawKey =
+                    keys.next().trim()
+
+                if (
+                    rawKey.isBlank() ||
+                    rawKey.startsWith("_") ||
+                    rawKey.lowercase(Locale.ROOT) in
+                    setOf(
+                        "monumentale",
+                        "monumental"
+                    )
+                ) {
+                    continue
+                }
+
+                val value =
+                    readableJsonValue(
+                        obj.opt(rawKey)
+                    )
+                        ?.takeIf {
+                            it.isNotBlank()
+                        }
+                        ?: continue
+
+                val dedupeKey =
+                    rawKey.lowercase(Locale.ROOT)
+
+                if (!values.containsKey(dedupeKey)) {
+                    values[dedupeKey] =
+                        TreeExtraField(
+                            label =
+                                formatUdfLabel(rawKey),
+                            value = value
+                        )
+                }
+            }
+        }
+
+        // Tree values are more specific and win if the same label exists on
+        // both tree and plot.
+        appendObject(
+            mobileMeta.optJSONObject(
+                "tree_udfs"
+            )
+        )
+        appendObject(
+            mobileMeta.optJSONObject(
+                "plot_udfs"
+            )
+        )
+
+        return values.values
+            .sortedWith(
+                compareBy<TreeExtraField> {
+                    udfPriority(it.label)
+                }.thenBy {
+                    it.label.lowercase(
+                        Locale.ROOT
+                    )
+                }
+            )
+    }
+
+    private fun readableJsonValue(
+        value: Any?
+    ): String? =
+        when (value) {
+            null,
+            JSONObject.NULL -> null
+
+            is Boolean ->
+                if (value) "Sì" else "No"
+
+            is Number ->
+                value.toString()
+
+            is String ->
+                value.trim()
+                    .takeIf {
+                        it.isNotBlank() &&
+                            !it.equals(
+                                "null",
+                                ignoreCase = true
+                            )
+                    }
+
+            is JSONArray ->
+                buildList {
+                    for (
+                        index in
+                        0 until value.length()
+                    ) {
+                        readableJsonValue(
+                            value.opt(index)
+                        )?.let { add(it) }
+                    }
+                }
+                    .takeIf { it.isNotEmpty() }
+                    ?.joinToString(", ")
+
+            else ->
+                value.toString()
+                    .trim()
+                    .takeIf {
+                        it.isNotBlank()
+                    }
+        }
+
+    private fun formatUdfLabel(
+        raw: String
+    ): String {
+        val cleaned =
+            raw.replace('_', ' ')
+                .replace(
+                    "\\s+".toRegex(),
+                    " "
+                )
+                .trim()
+
+        if (
+            cleaned.equals(
+                "masaf",
+                ignoreCase = true
+            )
+        ) {
+            return "MASAF"
+        }
+
+        return cleaned.replaceFirstChar {
+            if (it.isLowerCase()) {
+                it.titlecase(Locale.ITALY)
+            } else {
+                it.toString()
+            }
+        }
+    }
+
+    private fun udfPriority(
+        label: String
+    ): Int {
+        val value =
+            label.lowercase(Locale.ROOT)
+
+        return when {
+            "masaf" in value -> 0
+            "centenar" in value -> 1
+            "circonfer" in value -> 2
+            "anno" in value -> 3
+            "stato" in value -> 4
+            else -> 10
+        }
     }
 
     private fun absoluteUrl(
