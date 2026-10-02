@@ -116,11 +116,11 @@ Obiettivo: trasformare il dettaglio albero in una vera scheda informativa.
 
 Obiettivo: misurare in modo guidato e validabile altezza e circonferenza del fusto direttamente sul campo.
 
-**Implementazione attiva:** `feature/android-sprint5-measurements`. Metodo primario ARCore/Depth, standard circonferenza a 1,30 m e validazione obbligatoria contro strumenti di riferimento prima dell'uso ufficiale. Dettagli: [android/SPRINT5_MEASUREMENTS.md](android/SPRINT5_MEASUREMENTS.md).
+**Implementazione attiva:** `feature/android-sprint5-measurements`, Android `0.7.0`. Il prototipo 5A include inserimento manuale, stato `Da misurare`, clinometro CameraX/sensori con 3 misure e salvataggio OTN. ARCore è già opzionale/rilevato; distanza automatica con anchor e scansione Depth della circonferenza restano i prossimi passi. Dettagli: [android/SPRINT5_MEASUREMENTS.md](android/SPRINT5_MEASUREMENTS.md).
 
 - [ ] `Misura altezza` con anchor alla base e puntamento della cima.
-- [ ] Tre misure consecutive + mediana e dispersione.
-- [ ] Fallback clinometro per dispositivi senza ARCore.
+- [x] Tre misure consecutive + mediana e dispersione nel prototipo clinometro.
+- [x] Fallback clinometro con fotocamera/sensori e distanza inserita.
 - [ ] `Misura circonferenza` con quota guidata a 1,30 m.
 - [ ] Scansione Depth/point cloud e fit robusto della sezione.
 - [ ] DBH equivalente derivato quando appropriato.
@@ -128,8 +128,8 @@ Obiettivo: misurare in modo guidato e validabile altezza e circonferenza del fus
 - [ ] Validazione altezza su almeno 30 alberi contro clinometro/laser.
 - [ ] Validazione circonferenza su almeno 50 alberi contro nastro dendrometrico.
 - [ ] Scrittura nei campi OTN/UDF solo dopo conferma utente.
-- [ ] Per altezza/circonferenza: scelta `Inserisci misura` / `Misura con smartphone` / `Da misurare`.
-- [ ] Salvare metodo, data, autore e qualità/errore della misura.
+- [x] Per altezza/circonferenza: scelta `Inserisci misura` / `Misura con smartphone` / `Da misurare`.
+- [x] Schema OTN predisposto per metodo, data, stato e qualità; errore validato resta da definire dopo i test sul campo.
 - [ ] Pagina pubblica `Come misurare un albero` su opentreenap.altervista.org, con procedure manuali e smartphone.
 
 # Sprint 6 — Riconoscimento assistito specie
