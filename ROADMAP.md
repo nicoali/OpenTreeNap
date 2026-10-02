@@ -91,7 +91,7 @@ Obiettivo: usare una sola fonte di immagini/specie in app e OTN.
 
 Obiettivo: trasformare il dettaglio albero in una vera scheda informativa.
 
-**Implementazione attiva:** Android `0.6.0` su `feature/android-sprint4-tree-detail` + metadata API sul backend `rebrand/opentreenap-it-en`. Ultimo aggiornamento/autore, UDF, pannello Dati, indicazioni, condivisione e QR sono implementati e in attesa di verifica su dispositivo. Checklist: [android/TREE_DETAIL_SPRINT4.md](android/TREE_DETAIL_SPRINT4.md).
+**Implementazione attiva:** Android `0.6.0` su `feature/android-sprint4-tree-detail` + metadata API sul backend `rebrand/opentreenap-it-en`. Test dispositivo 2026-10-02 superato per scheda, ultimo aggiornamento/autore, indicazioni, condivisione e QR. Le UDF aggiuntive restano da verificare su un albero che le esponga; il test foto reale resta rinviato. Checklist: [android/TREE_DETAIL_SPRINT4.md](android/TREE_DETAIL_SPRINT4.md).
 
 - [x] Foto rappresentativa specie nella scheda; foto reale OTN già supportata ma da verificare appena disponibile.
 - [x] Nome comune.
@@ -103,14 +103,14 @@ Obiettivo: trasformare il dettaglio albero in una vera scheda informativa.
 - [x] ID OTN.
 - [x] Stato monumentale.
 - [ ] Dati UDF rilevanti.
-- [ ] Ultimo aggiornamento.
-- [ ] Autore/utente dell'ultima modifica, quando disponibile.
+- [x] Ultimo aggiornamento (mostrato quando disponibile nel dato OTN).
+- [x] Autore/utente dell'ultima modifica, quando disponibile.
 - [x] Pulsante Scheda botanica.
 - [x] Pulsante Modifica.
 - [ ] Pulsante Foto.
-- [ ] Condivisione.
-- [ ] Indicazioni stradali.
-- [ ] QR dedicato.
+- [x] Condivisione.
+- [x] Indicazioni stradali.
+- [x] QR dedicato.
 
 # Sprint 5 — Contributi utenti
 
