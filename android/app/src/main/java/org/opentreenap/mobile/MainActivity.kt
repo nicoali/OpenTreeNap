@@ -2242,11 +2242,8 @@ class MainActivity : Activity(), OnMapReadyCallback {
         content.findViewById<MaterialButton>(
             R.id.measureManual
         ).setOnClickListener {
-            showOtnMessage(
-                getString(
-                    R.string.measure_manual_coming
-                )
-            )
+            dialog.dismiss()
+            showManualMeasurementSheet(tree)
         }
 
         content.findViewById<MaterialButton>(
@@ -2270,11 +2267,19 @@ class MainActivity : Activity(), OnMapReadyCallback {
             R.id.measureDeferred
         ).setOnClickListener {
             dialog.dismiss()
-            showOtnMessage(
-                getString(
-                    R.string.measure_marked_deferred
+
+            requireLoginThen {
+                saveTreeMeasurements(
+                    tree = tree,
+                    height = null,
+                    circumferenceCm = null,
+                    heightMethod = null,
+                    circumferenceMethod = null,
+                    heightStatus = "Da misurare",
+                    circumferenceStatus = "Da misurare",
+                    quality = null
                 )
-            )
+            }
         }
 
         content.findViewById<TextView>(
@@ -2346,24 +2351,223 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 ?: selectedTree
                 ?: return
 
-        showOtnMessage(
-            getString(
-                R.string.measure_saved_height,
-                height
+        val method =
+            data?.getStringExtra(
+                MeasureHeightActivity.EXTRA_METHOD
             )
-        )
+                ?.takeIf { it.isNotBlank() }
+                ?: "smartphone clinometro"
+
+        val repeatability =
+            data?.getDoubleExtra(
+                MeasureHeightActivity
+                    .EXTRA_REPEATABILITY_M,
+                Double.NaN
+            )
+                ?: Double.NaN
+
+        val quality =
+            repeatability
+                .takeIf { it.isFinite() }
+                ?.let {
+                    getString(
+                        R.string.measure_quality_clinometer,
+                        it
+                    )
+                }
 
         requireLoginThen {
-            saveMeasuredHeight(
-                tree,
-                height
+            saveTreeMeasurements(
+                tree = tree,
+                height = height,
+                circumferenceCm = null,
+                heightMethod = method,
+                circumferenceMethod = null,
+                heightStatus = "Misurato",
+                circumferenceStatus = null,
+                quality = quality
             )
         }
     }
 
-    private fun saveMeasuredHeight(
+    private fun showManualMeasurementSheet(
+        tree: TreeMarker
+    ) {
+        val content =
+            layoutInflater.inflate(
+                R.layout.sheet_measure_manual,
+                null
+            )
+
+        content.findViewById<TextView>(
+            R.id.manualTreeName
+        ).text =
+            tree.commonName
+                ?.takeIf { it.isNotBlank() }
+                ?: tree.title
+
+        val heightInput =
+            content.findViewById<TextInputEditText>(
+                R.id.manualHeight
+            )
+        val circumferenceInput =
+            content.findViewById<TextInputEditText>(
+                R.id.manualCircumference
+            )
+        val errorView =
+            content.findViewById<TextView>(
+                R.id.manualMeasureError
+            )
+
+        tree.height?.let {
+            heightInput.setText(
+                formatNumber(it)
+            )
+        }
+
+        val dialog =
+            BottomSheetDialog(this)
+
+        dialog.setContentView(content)
+        dialog.setOnShowListener {
+            dialog.behavior.skipCollapsed = true
+            dialog.behavior.state =
+                BottomSheetBehavior.STATE_EXPANDED
+        }
+
+        content.findViewById<TextView>(
+            R.id.manualMeasureHowTo
+        ).setOnClickListener {
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse(
+                        getString(
+                            R.string.measure_help_url
+                        )
+                    )
+                )
+            )
+        }
+
+        content.findViewById<MaterialButton>(
+            R.id.manualMeasureCancel
+        ).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        content.findViewById<MaterialButton>(
+            R.id.manualMeasureSave
+        ).setOnClickListener {
+            val height =
+                parseDecimal(
+                    heightInput.text
+                        ?.toString()
+                        .orEmpty()
+                )
+            val circumference =
+                parseDecimal(
+                    circumferenceInput.text
+                        ?.toString()
+                        .orEmpty()
+                )
+
+            val rawHeight =
+                heightInput.text
+                    ?.toString()
+                    ?.trim()
+                    .orEmpty()
+            val rawCircumference =
+                circumferenceInput.text
+                    ?.toString()
+                    ?.trim()
+                    .orEmpty()
+
+            errorView.visibility =
+                View.GONE
+
+            if (
+                rawHeight.isBlank() &&
+                rawCircumference.isBlank()
+            ) {
+                errorView.text =
+                    getString(
+                        R.string.measure_manual_required
+                    )
+                errorView.visibility =
+                    View.VISIBLE
+                return@setOnClickListener
+            }
+
+            if (
+                (
+                    rawHeight.isNotBlank() &&
+                    (
+                        height == null ||
+                        height <= 0.0 ||
+                        height > 100.0
+                    )
+                ) ||
+                (
+                    rawCircumference.isNotBlank() &&
+                    (
+                        circumference == null ||
+                        circumference <= 0.0 ||
+                        circumference > 3000.0
+                    )
+                )
+            ) {
+                errorView.text =
+                    getString(
+                        R.string.measure_manual_invalid
+                    )
+                errorView.visibility =
+                    View.VISIBLE
+                return@setOnClickListener
+            }
+
+            dialog.dismiss()
+
+            requireLoginThen {
+                saveTreeMeasurements(
+                    tree = tree,
+                    height = height,
+                    circumferenceCm =
+                        circumference,
+                    heightMethod =
+                        height?.let {
+                            "manuale"
+                        },
+                    circumferenceMethod =
+                        circumference?.let {
+                            "manuale"
+                        },
+                    heightStatus =
+                        height?.let {
+                            "Misurato"
+                        },
+                    circumferenceStatus =
+                        circumference?.let {
+                            "Misurato"
+                        },
+                    quality =
+                        "misura dichiarata dall'utente"
+                )
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun saveTreeMeasurements(
         tree: TreeMarker,
-        height: Double
+        height: Double?,
+        circumferenceCm: Double?,
+        heightMethod: String?,
+        circumferenceMethod: String?,
+        heightStatus: String?,
+        circumferenceStatus: String?,
+        quality: String?
     ) {
         val username =
             sessionUsername
@@ -2379,11 +2583,20 @@ class MainActivity : Activity(), OnMapReadyCallback {
         executor.execute {
             val result =
                 runCatching {
-                    apiClient().updateTree(
+                    apiClient().updateMeasurements(
                         plotId = tree.plotId,
-                        speciesId = null,
-                        diameter = null,
                         height = height,
+                        circumferenceCm =
+                            circumferenceCm,
+                        heightMethod =
+                            heightMethod,
+                        circumferenceMethod =
+                            circumferenceMethod,
+                        heightStatus =
+                            heightStatus,
+                        circumferenceStatus =
+                            circumferenceStatus,
+                        quality = quality,
                         username = username,
                         password = password
                     )
@@ -2418,7 +2631,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
                     showOtnMessage(
                         getString(
-                            R.string.saved_successfully
+                            R.string.measure_saved
                         )
                     )
                 }.onFailure { error ->
