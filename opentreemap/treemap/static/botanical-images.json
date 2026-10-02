@@ -1,17 +1,25 @@
 {
-  "version": 1,
+  "schema_version": 2,
+  "version": "fallback-2026-10-02",
   "source": "https://opentreenap.altervista.org",
-  "updated": "2026-10-02",
+  "updated": "2026-10-02T00:00:00Z",
+  "cache_ttl_seconds": 300,
   "species": {
     "pinus pinea": {
       "scientific_name": "Pinus pinea",
+      "slug": "pinus-pinea",
+      "representative_image": "https://opentreenap.altervista.org/wp-content/uploads/2026/10/pinus-pinea-immagine-rappresentativa-1-960x727.webp",
       "image_url": "https://opentreenap.altervista.org/wp-content/uploads/2026/10/pinus-pinea-immagine-rappresentativa-1-960x727.webp",
-      "page_url": "https://opentreenap.altervista.org/specie/pinus-pinea/"
+      "page_url": "https://opentreenap.altervista.org/specie/pinus-pinea/",
+      "gallery": []
     },
     "quercus ilex": {
       "scientific_name": "Quercus ilex",
+      "slug": "quercus-ilex",
+      "representative_image": "https://opentreenap.altervista.org/wp-content/uploads/2026/10/quercus-ilex-immagine-rappresentativa-960x1200.webp",
       "image_url": "https://opentreenap.altervista.org/wp-content/uploads/2026/10/quercus-ilex-immagine-rappresentativa-960x1200.webp",
-      "page_url": "https://opentreenap.altervista.org/specie/quercus-ilex/"
+      "page_url": "https://opentreenap.altervista.org/specie/quercus-ilex/",
+      "gallery": []
     }
   }
 }
