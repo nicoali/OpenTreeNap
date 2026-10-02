@@ -53,4 +53,5 @@
 
     <string name="open_botanical_card">Scheda botanica</string>
     <string name="botanical_card_missing">Scheda botanica non disponibile per questa specie.</string>
+    <string name="permission_add_denied">Il tuo account non ha il permesso di aggiungere alberi in questa mappa.</string>
 </resources>
