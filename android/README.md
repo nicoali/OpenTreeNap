@@ -1,110 +1,77 @@
-# OpenTreeNap Android — V0.1
+# OpenTreeNap Android — V0.3
 
-Experimental modern Android client for the OpenTreeNap instance in Naples.
+V0.3 porta il client Android oltre la sola consultazione della mappa e lo
+allinea alle funzioni introdotte nell'ecosistema OpenTreeNap.
 
-## V0.1 scope
+## Funzioni V0.3
 
-The first milestone focuses on the smallest end-to-end path:
+- caricamento paginato dell'intero inventario OTN, senza richieste da 10.000 record;
+- marker e filtro dedicati agli alberi monumentali;
+- badge "Albero Monumentale d'Italia";
+- scheda albero con nome comune, nome scientifico, indirizzo, DBH, altezza,
+  Custom ID/MASAF e identificativi OTN quando disponibili;
+- pulsante "Scheda botanica" collegato alle pagine
+  `https://opentreenap.altervista.org/specie/{slug}/`;
+- login con il proprio account OTN tramite autenticazione Basic abbinata alla
+  firma HMAC richiesta dall'API;
+- lettura dei permessi dell'istanza (`can_add_tree`, `can_edit_tree`,
+  `can_edit_tree_photo`);
+- aggiunta di un nuovo albero direttamente dalla mappa;
+- scelta specie dall'elenco reale dell'istanza;
+- inserimento opzionale di DBH e altezza;
+- modifica di specie, DBH e altezza di un albero esistente;
+- logout;
+- password mantenuta solo in memoria durante la sessione e non salvata su disco.
 
-1. build with a current Android toolchain;
-2. open Google Maps centered on Naples;
-3. sign an OpenTreeMap API v4 request with HMAC-SHA256;
-4. call `/api/v4/instance/<instance>/plots`;
-5. parse tree coordinates;
-6. show the returned trees as markers.
+## Flusso aggiunta albero
 
-Editing, login, photos, geolocation, search, monumental-tree pins, botanical
-cards and ecosystem benefits are deferred until this read-only path is stable.
+1. Accedere dal pulsante Account.
+2. Premere il pulsante + sulla mappa.
+3. Toccare il punto geografico del nuovo albero.
+4. Selezionare la specie dall'elenco OTN.
+5. Inserire DBH e altezza se disponibili.
+6. Salvare.
 
-## Toolchain
+L'API OTM applica i permessi dell'account anche lato server.
 
-- Android Gradle Plugin 9.4.0
-- Gradle 9.6.0
-- JDK 17
-- compileSdk 36
-- targetSdk 36
-- minSdk 23
-- Kotlin through AGP built-in Kotlin support
-- Google Maps SDK for Android 20.0.0
+## Flusso modifica
 
-## Configure locally
+1. Toccare un albero.
+2. Se l'account ha il permesso `can_edit_tree`, compare il pulsante Modifica.
+3. Aggiornare specie, DBH o altezza.
+4. Salvare e ricaricare la mappa.
 
-From the `android/` directory:
+## Configurazione locale
 
-```bash
-cp local.properties.example local.properties
-```
-
-Edit `local.properties`:
+Il file `local.properties` resta privato e non deve essere committato.
 
 ```properties
-sdk.dir=/absolute/path/to/Android/Sdk
 MAPS_API_KEY=...
-OTM_BASE_URL=https://...
+OTM_BASE_URL=https://opentreenap.ddns.net
 OTM_INSTANCE=napoli
 OTM_ACCESS_KEY=...
 OTM_SECRET_KEY=...
 ```
 
-Do not commit `local.properties`.
+## Sicurezza prima della pubblicazione
 
-Restrict the Maps API key in Google Cloud to Android package
-`org.opentreenap.mobile` and the certificate fingerprint(s) used to sign the
-app.
+La V0.3 continua a usare il modello legacy OTM previsto per i client mobili:
+firma HMAC dell'app + credenziali personali Basic per le operazioni autenticare.
+È adatto allo sviluppo e ai test controllati.
 
-### Create a development OTM API credential
+Prima della distribuzione pubblica sul Play Store, il secret HMAC non dovrà
+rimanere dentro l'APK: la firma va spostata dietro un piccolo servizio backend
+OpenTreeNap oppure sostituita con un flusso di autenticazione client-safe.
 
-On the OpenTreeNap server:
+## Prossimi moduli
 
-```bash
-docker compose \
-  -f docker-compose.modern-v4.1.yml \
-  --env-file .env.modern-v4.1 \
-  exec -T web python manage.py shell <<'PY'
-from api.models import APIAccessCredential
-
-key = APIAccessCredential.create()
-print("ACCESS_KEY =", key.access_key)
-print("SECRET_KEY =", key.secret_key)
-PY
-```
-
-Use a dedicated development credential. The secret is compiled into a debug
-APK, therefore this legacy shared-secret model is not appropriate for a public
-release. Before Play Store distribution, move HMAC signing behind a small
-OpenTreeNap mobile API/proxy or replace it with a modern client-safe auth flow.
-
-## Build
-
-```bash
-./gradlew assembleDebug
-```
-
-APK:
-
-```text
-app/build/outputs/apk/debug/app-debug.apk
-```
-
-Install:
-
-```bash
-adb install -r app/build/outputs/apk/debug/app-debug.apk
-```
-
-## Expected result
-
-The app opens a map centered on Naples. With valid API configuration it loads
-the current trees from OpenTreeNap and shows them as green markers.
-
-## Next milestone
-
-V0.2:
-
-- marker clustering;
-- tree detail bottom sheet;
-- current-position permission and nearby trees;
-- distinct monumental/centenarian tree markers;
-- species/common/scientific name normalization;
-- API error diagnostics;
-- CI debug APK build.
+- foto alberi;
+- registrazione e recupero password;
+- ricerca;
+- segnalazioni;
+- scheda botanica nativa;
+- QR;
+- percorsi botanici;
+- benefici ecosistemici;
+- modalità bambini;
+- strumenti dedicati a Capodimonte e agli alberi monumentali.
