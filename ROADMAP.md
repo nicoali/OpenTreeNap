@@ -91,6 +91,8 @@ Obiettivo: usare una sola fonte di immagini/specie in app e OTN.
 
 Obiettivo: trasformare il dettaglio albero in una vera scheda informativa.
 
+**Implementazione attiva:** Android `0.6.0` su `feature/android-sprint4-tree-detail` + metadata API sul backend `rebrand/opentreenap-it-en`. Ultimo aggiornamento/autore, UDF, pannello Dati, indicazioni, condivisione e QR sono implementati e in attesa di verifica su dispositivo. Checklist: [android/TREE_DETAIL_SPRINT4.md](android/TREE_DETAIL_SPRINT4.md).
+
 - [x] Foto rappresentativa specie nella scheda; foto reale OTN già supportata ma da verificare appena disponibile.
 - [x] Nome comune.
 - [x] Nome scientifico.
