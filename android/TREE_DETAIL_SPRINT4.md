@@ -72,3 +72,21 @@ Resta aperto il test della priorità:
 `foto reale OTN > immagine rappresentativa specie > placeholder`
 
 da eseguire appena sarà disponibile almeno una foto reale.
+
+
+## Esito test su dispositivo — 2026-10-02
+
+Verifica reale su Android 0.6.0:
+
+- scheda principale completa e leggibile;
+- ultimo aggiornamento + autore mostrati correttamente quando il backend dispone del dato (es. Celtis australis);
+- per record storici/importati senza metadata disponibili viene mostrato “Ultimo aggiornamento non disponibile”;
+- pannello Dati funzionante;
+- “Vai” apre correttamente il navigatore verso le coordinate dell’albero;
+- “Condividi” condivide il link pubblico diretto della scheda OTN;
+- QR generato correttamente e associato allo stesso URL pubblico.
+
+Da verificare ancora:
+- visualizzazione di UDF aggiuntive su un record che le contenga;
+- priorità foto reale OTN appena sarà disponibile almeno una foto;
+- upload/gestione foto nello Sprint 5.
