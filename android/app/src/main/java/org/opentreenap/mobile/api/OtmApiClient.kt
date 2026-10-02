@@ -80,8 +80,9 @@ class OtmApiClient(
     }
 
     fun fetchAllTrees(
-        pageSize: Int = 100,
-        maxTrees: Int = 5000
+        pageSize: Int = 150,
+        maxTrees: Int = 5000,
+        onProgress: ((List<TreeMarker>) -> Unit)? = null
     ): List<TreeMarker> {
         val all = mutableListOf<TreeMarker>()
         var offset = 0
@@ -101,6 +102,7 @@ class OtmApiClient(
                 }
 
             all += page
+            onProgress?.invoke(all.toList())
 
             if (page.size < pageSize) {
                 break
