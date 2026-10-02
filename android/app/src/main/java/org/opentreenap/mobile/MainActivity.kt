@@ -19,6 +19,7 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -34,6 +35,7 @@ import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.maps.android.clustering.ClusterManager
+import coil.load
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -43,6 +45,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import org.opentreenap.mobile.api.OtmApiClient
+import org.opentreenap.mobile.data.BotanicalImageRepository
 import org.opentreenap.mobile.data.TreeCache
 import org.opentreenap.mobile.map.OtnClusterRenderer
 import org.opentreenap.mobile.map.TreeClusterItem
@@ -74,6 +77,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private lateinit var treeTitle: TextView
     private lateinit var treeScientific: TextView
     private lateinit var treeDetails: TextView
+    private lateinit var treeImageContainer: View
+    private lateinit var treeHeroImage: ImageView
+    private lateinit var treeHeroPlaceholder: ImageView
+    private lateinit var treeImageSource: TextView
     private lateinit var treeMeta: TextView
     private lateinit var treeStats: View
     private lateinit var treeCustomId: TextView
@@ -86,6 +93,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private var clusterManager: ClusterManager<TreeClusterItem>? = null
     private var clusterRenderer: OtnClusterRenderer? = null
     private lateinit var treeCache: TreeCache
+    private lateinit var botanicalImages: BotanicalImageRepository
     private var systemTopInset = 0
     private var systemBottomInset = 0
     private var allTrees: List<TreeMarker> = emptyList()
@@ -95,6 +103,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private var selectedMarker: Marker? = null
     private var selectedTree: TreeMarker? = null
     private val executor = Executors.newSingleThreadExecutor()
+    private val assetExecutor = Executors.newSingleThreadExecutor()
 
     private var sessionUser: ApiUser? = null
     private var sessionPermissions: InstancePermissions? = null
@@ -116,6 +125,11 @@ class MainActivity : Activity(), OnMapReadyCallback {
         configureSystemBars()
         setContentView(R.layout.activity_main)
         treeCache = TreeCache(applicationContext)
+        botanicalImages =
+            BotanicalImageRepository(
+                applicationContext,
+                BuildConfig.OTM_BASE_URL
+            )
 
         rootView = findViewById(R.id.root)
         statusBarScrim = findViewById(R.id.statusBarScrim)
@@ -134,6 +148,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
         treeTitle = findViewById(R.id.treeTitle)
         treeScientific = findViewById(R.id.treeScientific)
         treeDetails = findViewById(R.id.treeDetails)
+        treeImageContainer = findViewById(R.id.treeImageContainer)
+        treeHeroImage = findViewById(R.id.treeHeroImage)
+        treeHeroPlaceholder = findViewById(R.id.treeHeroPlaceholder)
+        treeImageSource = findViewById(R.id.treeImageSource)
         treeMeta = findViewById(R.id.treeMeta)
         treeStats = findViewById(R.id.treeStats)
         treeCustomId = findViewById(R.id.treeCustomId)
@@ -212,6 +230,8 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 ).show()
             }
         }
+
+        refreshBotanicalManifest()
     }
 
     private fun setupTreeSheet() {
@@ -605,6 +625,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
         treeDetails.visibility =
             if (address != null) View.VISIBLE else View.GONE
 
+        bindTreeImage(tree)
         bindTreeStats(tree)
         treeMeta.text = buildTreeMeta(tree)
 
@@ -663,6 +684,72 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     }
                 }
             }
+        }
+    }
+
+    private fun refreshBotanicalManifest() {
+        assetExecutor.execute {
+            val result =
+                runCatching {
+                    botanicalImages.refresh()
+                }
+
+            if (result.isSuccess) {
+                runOnUiThread {
+                    selectedTree?.let {
+                        bindTreeImage(it)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun bindTreeImage(
+        tree: TreeMarker
+    ) {
+        val realPhoto =
+            tree.photoUrl
+                ?.takeIf { it.isNotBlank() }
+
+        val botanicalPhoto =
+            botanicalImages.imageUrl(
+                tree.scientificName
+            )
+
+        val imageUrl =
+            realPhoto ?: botanicalPhoto
+
+        treeHeroImage.setImageDrawable(null)
+        treeHeroPlaceholder.visibility = View.VISIBLE
+        treeImageSource.visibility = View.GONE
+
+        if (imageUrl == null) {
+            treeImageContainer.visibility = View.VISIBLE
+            return
+        }
+
+        treeImageContainer.visibility = View.VISIBLE
+        treeImageSource.text =
+            getString(
+                if (realPhoto != null) {
+                    R.string.tree_image_real
+                } else {
+                    R.string.tree_image_species
+                }
+            )
+        treeImageSource.visibility = View.VISIBLE
+
+        treeHeroImage.load(imageUrl) {
+            crossfade(true)
+            listener(
+                onSuccess = { _, _ ->
+                    treeHeroPlaceholder.visibility = View.GONE
+                },
+                onError = { _, _ ->
+                    treeHeroPlaceholder.visibility = View.VISIBLE
+                    treeImageSource.visibility = View.GONE
+                }
+            )
         }
     }
 
@@ -1483,7 +1570,8 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
         val slug = slugify(scientificName)
         val url =
-            "$BOTANICAL_BASE_URL/specie/$slug/"
+            botanicalImages.pageUrl(scientificName)
+                ?: "$BOTANICAL_BASE_URL/specie/$slug/"
 
         startActivity(
             Intent(
@@ -2131,6 +2219,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
     override fun onDestroy() {
         executor.shutdownNow()
+        assetExecutor.shutdownNow()
         mapView.onDestroy()
         super.onDestroy()
     }
