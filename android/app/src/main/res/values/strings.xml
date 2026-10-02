@@ -60,4 +60,21 @@
     <string name="open_botanical_card">Scheda botanica</string>
     <string name="botanical_card_missing">Scheda botanica non disponibile per questa specie.</string>
     <string name="permission_add_denied">Il tuo account non ha il permesso di aggiungere alberi in questa mappa.</string>
+    <string name="login_subtitle">Accedi con il tuo account OTN per contribuire alla mappa di Napoli.</string>
+    <string name="login_in_progress">Accesso…</string>
+    <string name="login_required_fields">Inserisci nome utente e password.</string>
+    <string name="account_email_missing">Email non disponibile</string>
+    <string name="account_permissions_view">Accesso in consultazione</string>
+    <string name="account_permission_add">Aggiunta alberi</string>
+    <string name="account_permission_edit">Modifica alberi</string>
+    <string name="account_permission_photo">Gestione foto</string>
+    <string name="add_tree_step">Nuovo albero · Passo 2 di 2</string>
+    <string name="edit_tree_step">Aggiorna i dati</string>
+    <string name="add_tree_complete_title">Completa la scheda</string>
+    <string name="selected_position">Posizione · %1$.5f, %2$.5f</string>
+    <string name="save_in_progress">Salvataggio…</string>
+    <string name="species_search_hint">Cerca o seleziona una specie</string>
+    <string name="add_tree_map_step">Passo 1 di 2 · Tocca sulla mappa il punto esatto del nuovo albero.</string>
+    <string name="generic_error_title">Qualcosa non ha funzionato</string>
+    <string name="saved_successfully">Modifiche salvate su OpenTreeNap</string>
 </resources>
