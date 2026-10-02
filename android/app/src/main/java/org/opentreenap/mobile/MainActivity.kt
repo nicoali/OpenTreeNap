@@ -281,7 +281,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
         executor.execute {
             val result = runCatching {
-                apiClient().fetchTrees()
+                apiClient().fetchAllTrees()
             }
 
             runOnUiThread {
