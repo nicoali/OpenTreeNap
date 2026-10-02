@@ -5,5 +5,9 @@
     <stroke
         android:width="1dp"
         android:color="@color/otn_border" />
-    <corners android:radius="26dp" />
+    <corners
+        android:topLeftRadius="30dp"
+        android:topRightRadius="30dp"
+        android:bottomLeftRadius="22dp"
+        android:bottomRightRadius="22dp" />
 </shape>
