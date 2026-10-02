@@ -36,6 +36,36 @@ class OtmApiClient(
         return parsePlots(body)
     }
 
+    fun fetchAllTrees(
+        pageSize: Int = 100,
+        maxTrees: Int = 5000
+    ): List<TreeMarker> {
+        val all = mutableListOf<TreeMarker>()
+        var offset = 0
+
+        while (offset < maxTrees) {
+            val raw = request(
+                method = "GET",
+                path = "/api/v4/instance/$instance/plots",
+                query = linkedMapOf(
+                    "offset" to offset.toString(),
+                    "size" to pageSize.toString()
+                )
+            )
+
+            val rawArray = JSONArray(raw)
+            all += parsePlots(raw)
+
+            if (rawArray.length() < pageSize) {
+                break
+            }
+
+            offset += pageSize
+        }
+
+        return all
+    }
+
     fun fetchPlot(plotId: Int): TreeMarker {
         val raw = request(
             method = "GET",
