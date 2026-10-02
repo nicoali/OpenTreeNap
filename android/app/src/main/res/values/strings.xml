@@ -79,4 +79,8 @@
     <string name="add_tree_map_step">Passo 1 di 2 · Tocca sulla mappa il punto esatto del nuovo albero.</string>
     <string name="generic_error_title">Qualcosa non ha funzionato</string>
     <string name="saved_successfully">Modifiche salvate su OpenTreeNap</string>
+    <string name="tree_image">Immagine dell’albero o della specie</string>
+    <string name="tree_image_placeholder">Immagine non disponibile</string>
+    <string name="tree_image_real">Foto albero</string>
+    <string name="tree_image_species">Immagine specie</string>
 </resources>
