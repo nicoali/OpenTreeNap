@@ -7,6 +7,8 @@
     <string name="status_monumental">%1$d alberi monumentali</string>
     <string name="status_no_results">Nessun albero in questo filtro</string>
     <string name="status_error">Errore API: %1$s</string>
+    <string name="status_error_short">Errore API · tocca Aggiorna per riprovare</string>
+    <string name="api_error_title">Errore API</string>
     <string name="status_logged_in">Connesso come %1$s</string>
     <string name="status_add_mode">Tocca sulla mappa il punto del nuovo albero</string>
     <string name="status_saving">Salvataggio in corso…</string>
