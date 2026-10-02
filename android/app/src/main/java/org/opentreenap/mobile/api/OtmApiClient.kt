@@ -401,8 +401,30 @@ class OtmApiClient(
         is Number -> value.toInt() != 0
         is String -> value.trim().lowercase(Locale.ROOT) in setOf(
             "1", "true", "yes", "si", "sì",
-            "monumentale", "centenario", "centenaria", "heritage"
+            "monumentale", "albero monumentale d'italia",
+            "centenario", "centenaria", "heritage"
         )
+        is JSONArray -> {
+            var found = false
+            for (index in 0 until value.length()) {
+                if (isTruthy(value.opt(index))) {
+                    found = true
+                    break
+                }
+            }
+            found
+        }
+        is JSONObject -> {
+            val keys = value.keys()
+            var found = false
+            while (keys.hasNext()) {
+                if (isTruthy(value.opt(keys.next()))) {
+                    found = true
+                    break
+                }
+            }
+            found
+        }
         else -> false
     }
 
