@@ -241,6 +241,20 @@ def update_map_feature(request_dict, user, feature):
         return False
 
     def set_attr_on_model(model, attr, val):
+        # UDFs are not Django model fields, so handle them before asking
+        # _meta.get_field(). This keeps the documented "udf:" update path
+        # working for API/mobile clients.
+        if attr.startswith('udf:'):
+            udf_name = attr[4:]
+
+            if udf_name in [field.name
+                            for field
+                            in model.get_user_defined_fields()]:
+                model.udfs[udf_name] = val
+                return
+            else:
+                raise KeyError('Invalid UDF %s' % attr)
+
         field_classname = \
             model._meta.get_field(attr).__class__.__name__
 
@@ -260,15 +274,6 @@ def update_map_feature(request_dict, user, feature):
         elif attr == 'id':
             if val != model.pk:
                 raise Exception("Can't update id attribute")
-        elif attr.startswith('udf:'):
-            udf_name = attr[4:]
-
-            if udf_name in [field.name
-                            for field
-                            in model.get_user_defined_fields()]:
-                model.udfs[udf_name] = val
-            else:
-                raise KeyError('Invalid UDF %s' % attr)
         elif attr in model.fields():
             model.apply_change(attr, val)
         else:
@@ -330,6 +335,10 @@ def update_map_feature(request_dict, user, feature):
 
         if not value_is_redundant(model, field, value):
             set_attr_on_model(model, field, value)
+
+        if field.startswith('udf:'):
+            # Scalar UDF updates participate in the universal revision only.
+            continue
 
         field_class = model._meta.get_field(field)
         if isinstance(field_class, GeometryField):
