@@ -75,6 +75,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private lateinit var treeScientific: TextView
     private lateinit var treeDetails: TextView
     private lateinit var treeMeta: TextView
+    private lateinit var treeStats: View
+    private lateinit var treeCustomId: TextView
+    private lateinit var treeDbh: TextView
+    private lateinit var treeHeight: TextView
     private lateinit var botanicalCardButton: Button
     private lateinit var editTreeButton: Button
 
@@ -131,6 +135,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
         treeScientific = findViewById(R.id.treeScientific)
         treeDetails = findViewById(R.id.treeDetails)
         treeMeta = findViewById(R.id.treeMeta)
+        treeStats = findViewById(R.id.treeStats)
+        treeCustomId = findViewById(R.id.treeCustomId)
+        treeDbh = findViewById(R.id.treeDbh)
+        treeHeight = findViewById(R.id.treeHeight)
         botanicalCardButton = findViewById(R.id.botanicalCard)
         editTreeButton = findViewById(R.id.editTree)
 
@@ -589,15 +597,15 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 View.VISIBLE
             }
 
-        treeDetails.text =
-            tree.address
-                ?.takeIf { it.isNotBlank() }
-                ?: tree.snippet
-                    ?.takeIf { it.isNotBlank() }
-                ?: getString(
-                    R.string.details_missing
-                )
+        val address =
+            tree.address?.takeIf { it.isNotBlank() }
 
+        treeDetails.text =
+            address ?: getString(R.string.details_missing)
+        treeDetails.visibility =
+            if (address != null) View.VISIBLE else View.GONE
+
+        bindTreeStats(tree)
         treeMeta.text = buildTreeMeta(tree)
 
         botanicalCardButton.isEnabled =
@@ -658,20 +666,45 @@ class MainActivity : Activity(), OnMapReadyCallback {
         }
     }
 
+    private fun bindTreeStats(
+        tree: TreeMarker
+    ) {
+        val customId =
+            tree.customId?.takeIf { it.isNotBlank() }
+
+        treeCustomId.visibility =
+            if (customId != null) View.VISIBLE else View.GONE
+        treeCustomId.text =
+            customId?.let { "ID $it" }.orEmpty()
+
+        treeDbh.visibility =
+            if (tree.diameter != null) View.VISIBLE else View.GONE
+        treeDbh.text =
+            tree.diameter
+                ?.let { "DBH ${formatNumber(it)} cm" }
+                .orEmpty()
+
+        treeHeight.visibility =
+            if (tree.height != null) View.VISIBLE else View.GONE
+        treeHeight.text =
+            tree.height
+                ?.let { "H ${formatNumber(it)} m" }
+                .orEmpty()
+
+        treeStats.visibility =
+            if (
+                customId != null ||
+                tree.diameter != null ||
+                tree.height != null
+            ) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+    }
+
     private fun buildTreeMeta(tree: TreeMarker): String {
         val parts = mutableListOf<String>()
-
-        tree.customId?.takeIf { it.isNotBlank() }?.let {
-            parts += "ID $it"
-        }
-
-        tree.diameter?.let {
-            parts += "DBH ${formatNumber(it)} cm"
-        }
-
-        tree.height?.let {
-            parts += "H ${formatNumber(it)} m"
-        }
 
         if (tree.plotId >= 0) {
             parts += "Sito #${tree.plotId}"
