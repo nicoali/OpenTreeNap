@@ -195,59 +195,73 @@ def get_plot_list(request, instance):
     mobile = request.GET.get("mobile", "").lower() in ("1", "true", "yes")
 
     if mobile:
-        # Page planting sites which actually contain at least one tree.  This
-        # preserves the legacy Plot.current_tree() semantics while avoiding
-        # historical/replacement Tree rows being returned as separate markers.
-        #
-        # Prefetch species in two compact queries instead of executing the
-        # expensive context_dict_for_plot() graph for every marker.
-        plots = Plot.objects\
-            .filter(instance=instance, tree__isnull=False)\
-            .distinct()\
+        # The web map and tiler count Tree rows, so the mobile inventory must
+        # expose the same population.  Keep this as a compact values() query:
+        # no photos, audits, containing polygons or sharing metadata.
+        rows = Tree.objects\
+            .filter(instance=instance)\
             .order_by('id')\
-            .prefetch_related('tree_set__species')[start:end]
+            .values(
+                'id',
+                'plot_id',
+                'plot__geom',
+                'plot__owner_orig_id',
+                'plot__address_street',
+                'plot__address_city',
+                'plot__address_zip',
+                'diameter',
+                'height',
+                'udfs',
+                'species_id',
+                'species__common_name',
+                'species__genus',
+                'species__species',
+                'species__cultivar',
+                'species__other_part_of_name',
+            )[start:end]
 
         results = []
 
-        for plot in plots:
-            trees = list(plot.tree_set.all())
-            if not trees:
-                continue
+        for row in rows:
+            geom = row['plot__geom']
 
-            # Match Plot.current_tree(): OTM currently treats the first related
-            # tree as the current tree for API compatibility.
-            tree = trees[0]
-            species_obj = tree.species
+            # OTM stores map geometry in EPSG:3857.  Transform a clone so the
+            # database object is untouched and Android receives WGS84.
+            latlon = geom.clone()
+            latlon.transform(4326)
 
             species = None
-            common_name = ''
-            scientific_name = ''
+            common_name = row['species__common_name'] or ''
+            genus = row['species__genus'] or ''
+            species_name = row['species__species'] or ''
+            cultivar = row['species__cultivar'] or ''
+            other = row['species__other_part_of_name'] or ''
 
-            if species_obj is not None:
-                common_name = species_obj.common_name or ''
-                scientific_name = species_obj.scientific_name or ''
+            scientific_parts = [genus, species_name, other]
+            scientific_name = ' '.join(
+                part for part in scientific_parts if part)
+            if cultivar:
+                scientific_name = ("%s '%s'" %
+                                   (scientific_name, cultivar)).strip()
+
+            if row['species_id']:
                 species = {
-                    'id': species_obj.id,
+                    'id': row['species_id'],
                     'common_name': common_name,
-                    'genus': species_obj.genus or '',
-                    'species': species_obj.species or '',
-                    'cultivar': species_obj.cultivar or '',
-                    'other_part_of_name':
-                        species_obj.other_part_of_name or '',
+                    'genus': genus,
+                    'species': species_name,
+                    'cultivar': cultivar,
+                    'other_part_of_name': other,
                     'scientific_name': scientific_name,
                 }
 
             title = common_name or scientific_name or (
-                'Albero #%s' % tree.id)
-
-            # Geometry is stored internally in EPSG:3857.  Android/Google Maps
-            # requires WGS84 latitude/longitude.
-            latlon = plot.latlon
+                'Albero #%s' % row['id'])
 
             address_parts = [
-                plot.address_street or '',
-                plot.address_city or '',
-                plot.address_zip or '',
+                row['plot__address_street'] or '',
+                row['plot__address_city'] or '',
+                row['plot__address_zip'] or '',
             ]
             address_full = ', '.join(
                 part for part in address_parts if part)
@@ -257,8 +271,8 @@ def get_plot_list(request, instance):
                 'title': title,
                 'address_full': address_full,
                 'plot': {
-                    'id': plot.id,
-                    'owner_orig_id': plot.owner_orig_id,
+                    'id': row['plot_id'],
+                    'owner_orig_id': row['plot__owner_orig_id'],
                     'geom': {
                         'srid': 4326,
                         'x': latlon.x,
@@ -266,10 +280,10 @@ def get_plot_list(request, instance):
                     },
                 },
                 'tree': {
-                    'id': tree.id,
-                    'diameter': tree.diameter,
-                    'height': tree.height,
-                    'udfs': dict(tree.udfs or {}),
+                    'id': row['id'],
+                    'diameter': row['diameter'],
+                    'height': row['height'],
+                    'udfs': dict(row['udfs'] or {}),
                     'species': species,
                 },
             })
