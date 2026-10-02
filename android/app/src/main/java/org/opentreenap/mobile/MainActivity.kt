@@ -1006,11 +1006,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
                         sessionPassword = password
                         updateSessionUi()
 
-                        statusView.text =
-                            getString(
-                                R.string.status_logged_in,
-                                user.username
-                            )
+                        restoreMapStatus()
 
                         dialog.dismiss()
                         showOtnMessage(
@@ -1196,6 +1192,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
             content.findViewById<AutoCompleteTextView>(
                 R.id.editorSpecies
             )
+        val speciesScientific =
+            content.findViewById<TextView>(
+                R.id.editorSpeciesScientific
+            )
         val diameterInput =
             content.findViewById<TextInputEditText>(
                 R.id.editorDiameter
@@ -1261,9 +1261,44 @@ class MainActivity : Activity(), OnMapReadyCallback {
         )
         speciesInput.threshold = 0
 
-        selectedSpecies?.let {
-            speciesInput.setText(it.value, false)
+        fun bindSelectedSpecies(
+            selected: SpeciesItem?
+        ) {
+            if (selected == null) {
+                speciesScientific.visibility = View.GONE
+                speciesScientific.text = ""
+                return
+            }
+
+            val primary =
+                selected.commonName
+                    .takeIf { it.isNotBlank() }
+                    ?: selected.scientificName
+                        .takeIf { it.isNotBlank() }
+                    ?: selected.value
+
+            speciesInput.setText(primary, false)
+
+            val scientific =
+                selected.scientificName
+                    .takeIf {
+                        it.isNotBlank() &&
+                            !it.equals(
+                                primary,
+                                ignoreCase = true
+                            )
+                    }
+
+            speciesScientific.text = scientific.orEmpty()
+            speciesScientific.visibility =
+                if (scientific != null) {
+                    View.VISIBLE
+                } else {
+                    View.GONE
+                }
         }
+
+        bindSelectedSpecies(selectedSpecies)
 
         speciesInput.setOnItemClickListener {
                 parent,
@@ -1280,6 +1315,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     it.value == label
                 }
 
+            bindSelectedSpecies(selectedSpecies)
             speciesLayout.error = null
         }
 
@@ -1310,7 +1346,15 @@ class MainActivity : Activity(), OnMapReadyCallback {
                         it.value.equals(
                             typedSpecies,
                             ignoreCase = true
-                        )
+                        ) ||
+                            it.commonName.equals(
+                                typedSpecies,
+                                ignoreCase = true
+                            ) ||
+                            it.scientificName.equals(
+                                typedSpecies,
+                                ignoreCase = true
+                            )
                     }
 
             speciesLayout.error = null
@@ -1534,19 +1578,43 @@ class MainActivity : Activity(), OnMapReadyCallback {
             return
         }
 
+        val username =
+            sessionUser?.username
+                ?.takeIf { it.isNotBlank() }
+
         if (monumentalOnly) {
+            val count =
+                allTrees.count { it.isMonumental }
+
             statusView.text =
-                getString(
-                    R.string.status_monumental,
-                    allTrees.count { it.isMonumental }
-                )
+                if (username != null) {
+                    getString(
+                        R.string.status_monumental_user,
+                        count,
+                        username
+                    )
+                } else {
+                    getString(
+                        R.string.status_monumental,
+                        count
+                    )
+                }
         } else {
             statusView.text =
-                getString(
-                    R.string.status_loaded,
-                    allTrees.size,
-                    "Napoli"
-                )
+                if (username != null) {
+                    getString(
+                        R.string.status_loaded_user,
+                        allTrees.size,
+                        "Napoli",
+                        username
+                    )
+                } else {
+                    getString(
+                        R.string.status_loaded,
+                        allTrees.size,
+                        "Napoli"
+                    )
+                }
         }
     }
 
