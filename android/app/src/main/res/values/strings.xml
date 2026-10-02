@@ -145,4 +145,12 @@
     <string name="measure_marked_deferred">Misura lasciata da completare in seguito.</string>
     <string name="measure_manual_coming">Inserimento manuale completo di circonferenza in preparazione nello Step 5A.</string>
     <string name="measure_help_url">https://opentreenap.altervista.org/come-misurare-un-albero/</string>
+    <string name="measure_manual_title">Inserisci misure</string>
+    <string name="measure_manual_note">Inserisci solo valori che hai misurato personalmente. La circonferenza va rilevata a 1,30 m da terra. Puoi compilare uno solo dei due campi.</string>
+    <string name="measure_manual_height">Altezza misurata (m)</string>
+    <string name="measure_manual_circumference">Circonferenza a 1,30 m (cm)</string>
+    <string name="measure_manual_required">Inserisci almeno altezza o circonferenza.</string>
+    <string name="measure_manual_invalid">Controlla i valori inseriti.</string>
+    <string name="measure_saved">Misure salvate su OpenTreeNap</string>
+    <string name="measure_quality_clinometer">Clinometro smartphone · dispersione %1$.2f m</string>
 </resources>
