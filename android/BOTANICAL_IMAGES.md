@@ -87,3 +87,17 @@ Test reale del 2026-10-02:
 - dopo la correzione del re-layout, immagine, nome comune, nome scientifico, indirizzo, ID e azioni restano tutti visibili;
 - quando l'utente non è autenticato, `Modifica` resta correttamente nascosto e `Scheda botanica` occupa tutta la larghezza;
 - il comportamento con foto reale OTN e il popolamento completo del manifest restano da verificare.
+
+
+## Verifica resa hero
+
+Test visivo su dispositivo del 2026-10-02:
+
+- la stessa immagine rappresentativa di `Quercus ilex` usata dal sito viene mostrata anche nell'app;
+- foreground in fit-center: chioma e tronco restano interamente visibili;
+- backdrop ricavato dalla stessa identica immagine, senza introdurre una seconda sorgente;
+- nessuna deformazione dell'immagine;
+- badge `Immagine specie` leggibile e non invasivo;
+- il resto della scheda (nome, specie, indirizzo, ID, azioni) rimane visibile.
+
+Questa presentazione viene considerata il layout di riferimento per le immagini botaniche nell'app.
