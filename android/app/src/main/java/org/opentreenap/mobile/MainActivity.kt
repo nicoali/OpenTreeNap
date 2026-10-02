@@ -645,9 +645,12 @@ class MainActivity : Activity(), OnMapReadyCallback {
             }
 
         mapControls.visibility = View.GONE
-        treeSheetBehavior.state =
-            BottomSheetBehavior.STATE_EXPANDED
-        treeCard.post { updateMapPadding() }
+        treeCard.requestLayout()
+        treeCard.post {
+            treeSheetBehavior.state =
+                BottomSheetBehavior.STATE_EXPANDED
+            updateMapPadding()
+        }
     }
 
     private fun loadTreeDetails(
@@ -725,10 +728,12 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
         if (imageUrl == null) {
             treeImageContainer.visibility = View.VISIBLE
+            treeCard.requestLayout()
             return
         }
 
         treeImageContainer.visibility = View.VISIBLE
+        treeCard.requestLayout()
         treeImageSource.text =
             getString(
                 if (realPhoto != null) {
@@ -744,6 +749,14 @@ class MainActivity : Activity(), OnMapReadyCallback {
             listener(
                 onSuccess = { _, _ ->
                     treeHeroPlaceholder.visibility = View.GONE
+                    treeCard.requestLayout()
+                    treeCard.post {
+                        if (isTreeSheetVisible()) {
+                            treeSheetBehavior.state =
+                                BottomSheetBehavior.STATE_EXPANDED
+                            updateMapPadding()
+                        }
+                    }
                 },
                 onError = { _, _ ->
                     treeHeroPlaceholder.visibility = View.VISIBLE
