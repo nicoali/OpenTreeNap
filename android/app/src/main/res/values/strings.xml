@@ -153,4 +153,5 @@
     <string name="measure_manual_invalid">Controlla i valori inseriti.</string>
     <string name="measure_saved">Misure salvate su OpenTreeNap</string>
     <string name="measure_quality_clinometer">Clinometro smartphone · dispersione %1$.2f m</string>
+    <string name="measure_already_complete">Le misure principali risultano già presenti.</string>
 </resources>
