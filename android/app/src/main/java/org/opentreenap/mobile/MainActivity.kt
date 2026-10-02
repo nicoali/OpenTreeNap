@@ -129,7 +129,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
         botanicalImages =
             BotanicalImageRepository(
                 applicationContext,
-                BuildConfig.OTM_BASE_URL
+                BuildConfig.BOTANICAL_MANIFEST_URL
             )
 
         rootView = findViewById(R.id.root)
@@ -169,7 +169,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this)
 
-        refreshButton.setOnClickListener { loadTrees() }
+        refreshButton.setOnClickListener {
+            loadTrees()
+            refreshBotanicalManifest()
+        }
         accountButton.setOnClickListener { showAccountDialog() }
         addTreeButton.setOnClickListener {
             if (addingTree) {
