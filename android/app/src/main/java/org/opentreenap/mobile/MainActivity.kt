@@ -1859,7 +1859,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
     }
 
     private fun configureSystemBars() {
-        WindowCompat.enableEdgeToEdge(window)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
