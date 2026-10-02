@@ -1,5 +1,10 @@
 package org.opentreenap.mobile.model
 
+data class TreeExtraField(
+    val label: String,
+    val value: String
+)
+
 data class TreeMarker(
     val plotId: Int,
     val treeId: Int?,
@@ -15,5 +20,9 @@ data class TreeMarker(
     val height: Double? = null,
     val customId: String? = null,
     val photoUrl: String? = null,
-    val isMonumental: Boolean = false
+    val isMonumental: Boolean = false,
+    val updatedAt: String? = null,
+    val updatedBy: String? = null,
+    val detailUrl: String? = null,
+    val extraFields: List<TreeExtraField> = emptyList()
 )
