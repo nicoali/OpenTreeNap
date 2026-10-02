@@ -128,6 +128,9 @@ Obiettivo: misurare in modo guidato e validabile altezza e circonferenza del fus
 - [ ] Validazione altezza su almeno 30 alberi contro clinometro/laser.
 - [ ] Validazione circonferenza su almeno 50 alberi contro nastro dendrometrico.
 - [ ] Scrittura nei campi OTN/UDF solo dopo conferma utente.
+- [ ] Per altezza/circonferenza: scelta `Inserisci misura` / `Misura con smartphone` / `Da misurare`.
+- [ ] Salvare metodo, data, autore e qualità/errore della misura.
+- [ ] Pagina pubblica `Come misurare un albero` su opentreenap.altervista.org, con procedure manuali e smartphone.
 
 # Sprint 6 — Riconoscimento assistito specie
 
