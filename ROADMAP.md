@@ -91,7 +91,7 @@ Obiettivo: usare una sola fonte di immagini/specie in app e OTN.
 
 Obiettivo: trasformare il dettaglio albero in una vera scheda informativa.
 
-**Implementazione attiva:** Android `0.6.0` su `feature/android-sprint4-tree-detail` + metadata API sul backend `rebrand/opentreenap-it-en`. Test dispositivo 2026-10-02 superato per scheda, ultimo aggiornamento/autore, indicazioni, condivisione e QR. Le UDF aggiuntive restano da verificare su un albero che le esponga; il test foto reale resta rinviato. Checklist: [android/TREE_DETAIL_SPRINT4.md](android/TREE_DETAIL_SPRINT4.md).
+**Sprint 4 completato e verificato (2026-10-02):** scheda completa, ultimo aggiornamento/autore, indicazioni, condivisione e QR verificati su dispositivo. UDF aggiuntive e priorità foto reale restano test differiti appena esistono record adatti. Checklist: [android/TREE_DETAIL_SPRINT4.md](android/TREE_DETAIL_SPRINT4.md).
 
 - [x] Foto rappresentativa specie nella scheda; foto reale OTN già supportata ma da verificare appena disponibile.
 - [x] Nome comune.
@@ -116,25 +116,27 @@ Obiettivo: trasformare il dettaglio albero in una vera scheda informativa.
 
 Obiettivo: consentire contributi controllati dal telefono.
 
+**Implementazione attiva:** `feature/android-sprint5-contributions-ai`. Per il riconoscimento usiamo come motore primario BioCLIP v1 self-hosted, open source/MIT, limitato alle specie dell'istanza Napoli. Pl@ntNet resta solo fallback opzionale. Dettagli: [android/SPRINT5_RECOGNITION.md](android/SPRINT5_RECOGNITION.md).
+
 ### Riconoscimento assistito specie
 
 - [ ] Pulsante `Riconosci albero` da fotocamera/galleria.
-- [ ] Integrazione Pl@ntNet lato server (API key mai nell'APK).
+- [ ] Motore primario BioCLIP v1 self-hosted; Pl@ntNet solo fallback opzionale lato server.
 - [ ] Supportare 1–5 foto dello stesso albero, con organo `auto`, foglia, fiore, frutto o corteccia.
-- [ ] Mostrare le prime 3 specie candidate con confidenza e nome scientifico/comune.
+- [ ] Mostrare le prime 3 specie candidate con confidenza e nome scientifico/comune, ristrette alle specie OTN Napoli.
 - [ ] Confrontare le candidate con le specie già presenti nell'istanza OTN Napoli.
 - [ ] Consentire solo conferma manuale dell'utente: nessuna modifica automatica della specie.
 - [ ] Azione opzionale `Confronta immagini` per aprire una ricerca immagini/web della candidata.
 - [ ] Registrare in futuro esito confermato/rifiutato per migliorare il workflow di validazione.
 
 - [ ] Login persistente sicuro.
-- [ ] Logout.
+- [x] Logout.
 - [ ] Recupero password.
 - [ ] Registrazione account.
-- [ ] Aggiunta nuovo albero.
-- [ ] Modifica albero esistente.
+- [x] Aggiunta nuovo albero.
+- [x] Modifica albero esistente.
 - [ ] Upload foto.
-- [ ] Gestione permessi reali OTN.
+- [x] Gestione permessi reali OTN.
 - [ ] Segnalazione errori/danni.
 - [ ] Storico modifiche utente.
 - [ ] Conferma prima delle modifiche distruttive.
