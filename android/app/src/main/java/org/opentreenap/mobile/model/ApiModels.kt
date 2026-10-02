@@ -14,3 +14,10 @@ data class SpeciesItem(
     val scientificName: String,
     val value: String
 )
+
+
+data class InstancePermissions(
+    val canAddTree: Boolean,
+    val canEditTree: Boolean,
+    val canEditTreePhoto: Boolean
+)
