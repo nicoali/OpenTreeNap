@@ -3118,6 +3118,8 @@ class MainActivity : Activity(), OnMapReadyCallback {
             "com.google.android.geo.API_KEY"
         private const val LOCATION_PERMISSION_REQUEST =
             210
+        private const val REQUEST_MEASURE_HEIGHT =
+            5601
         private const val BOTANICAL_BASE_URL =
             "https://opentreenap.altervista.org"
     }
