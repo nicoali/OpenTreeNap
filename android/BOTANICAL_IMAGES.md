@@ -106,3 +106,14 @@ Test reale del 2026-10-02:
 - badge `Immagine specie`, nome comune, nome scientifico, indirizzo, ID e azione botanica restano visibili.
 
 Questo conferma il flusso automatico WordPress → manifest REST → Android senza nuova APK per aggiungere una specie.
+
+
+## Test foto reale rinviato
+
+Al 2026-10-02 non sono ancora presenti foto reali caricate sugli alberi OTN da usare per una verifica end-to-end.
+
+La priorità è già implementata:
+
+`foto reale albero > immagine rappresentativa specie > placeholder`.
+
+Il test resta esplicitamente aperto e dovrà essere eseguito appena nello Sprint 4 o 5 sarà disponibile almeno un albero con foto reale.
