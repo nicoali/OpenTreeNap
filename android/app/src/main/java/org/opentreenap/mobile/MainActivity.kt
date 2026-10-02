@@ -2268,6 +2268,40 @@ class MainActivity : Activity(), OnMapReadyCallback {
         ).setOnClickListener {
             dialog.dismiss()
 
+            val hasCircumference =
+                tree.extraFields.any {
+                    it.label.equals(
+                        "Circonferenza 1,30 m",
+                        ignoreCase = true
+                    )
+                }
+
+            val heightStatus =
+                if (tree.height == null) {
+                    "Da misurare"
+                } else {
+                    null
+                }
+
+            val circumferenceStatus =
+                if (!hasCircumference) {
+                    "Da misurare"
+                } else {
+                    null
+                }
+
+            if (
+                heightStatus == null &&
+                circumferenceStatus == null
+            ) {
+                showOtnMessage(
+                    getString(
+                        R.string.measure_already_complete
+                    )
+                )
+                return@setOnClickListener
+            }
+
             requireLoginThen {
                 saveTreeMeasurements(
                     tree = tree,
@@ -2275,8 +2309,9 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     circumferenceCm = null,
                     heightMethod = null,
                     circumferenceMethod = null,
-                    heightStatus = "Da misurare",
-                    circumferenceStatus = "Da misurare",
+                    heightStatus = heightStatus,
+                    circumferenceStatus =
+                        circumferenceStatus,
                     quality = null
                 )
             }
