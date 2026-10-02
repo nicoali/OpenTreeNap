@@ -50,7 +50,7 @@ class OtmApiClient(
                 setRequestProperty("X-Signature", signature)
                 setRequestProperty(
                     "platform-ver-build",
-                    "OpenTreeNap-Android/0.3.2"
+                    "OpenTreeNap-Android/0.4.0"
                 )
             }
 
@@ -290,7 +290,7 @@ class OtmApiClient(
             readTimeout = 30_000
             setRequestProperty("Accept", "application/json")
             setRequestProperty("X-Signature", signature)
-            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.3.2")
+            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.4.0")
 
             if (username != null && password != null) {
                 val credentials = "$username:$password"
