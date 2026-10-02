@@ -16,24 +16,5 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowBackground">@color/otn_cream</item>
-        <item name="bottomSheetDialogTheme">@style/Theme.OpenTreeNap.BottomSheetDialog</item>
-    </style>
-
-    <style name="Theme.OpenTreeNap.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
-        <item name="bottomSheetStyle">@style/Widget.OpenTreeNap.BottomSheet</item>
-    </style>
-
-    <style name="Widget.OpenTreeNap.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
-        <item name="android:background">@drawable/sheet_surface</item>
-        <item name="backgroundTint">@color/otn_surface</item>
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.OpenTreeNap.BottomSheet</item>
-    </style>
-
-    <style name="ShapeAppearance.OpenTreeNap.BottomSheet" parent="">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSizeTopLeft">28dp</item>
-        <item name="cornerSizeTopRight">28dp</item>
-        <item name="cornerSizeBottomLeft">0dp</item>
-        <item name="cornerSizeBottomRight">0dp</item>
     </style>
 </resources>
