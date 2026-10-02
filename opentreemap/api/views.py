@@ -183,6 +183,96 @@ def get_plot_list(request, instance):
     size = min(int(request.GET.get("size", "100")), 10000)
     end = size + start
 
+    # Mobile/map clients only need a compact inventory payload.  The legacy
+    # context_dict_for_plot() path is intentionally rich: it loads photos,
+    # audits, containing polygons, progress data and sharing metadata for every
+    # plot.  That is appropriate for a plot-detail response but unnecessarily
+    # expensive for rendering hundreds or thousands of markers.
+    #
+    # mobile=1 keeps the existing endpoint and HMAC contract while returning
+    # only the fields required to draw the map. Full plot details are still
+    # retrieved lazily from /plots/{id} when the user taps a marker.
+    mobile = request.GET.get("mobile", "").lower() in ("1", "true", "yes")
+
+    if mobile:
+        rows = Tree.objects\
+            .filter(instance=instance)\
+            .order_by('plot_id')\
+            .values(
+                'id',
+                'plot_id',
+                'plot__geom',
+                'plot__owner_orig_id',
+                'diameter',
+                'height',
+                'udfs',
+                'species_id',
+                'species__common_name',
+                'species__genus',
+                'species__species',
+                'species__cultivar',
+                'species__other_part_of_name',
+            )[start:end]
+
+        results = []
+
+        for row in rows:
+            geom = row['plot__geom']
+
+            species = None
+            common_name = row['species__common_name'] or ''
+            genus = row['species__genus'] or ''
+            species_name = row['species__species'] or ''
+            cultivar = row['species__cultivar'] or ''
+            other = row['species__other_part_of_name'] or ''
+
+            scientific_parts = [genus, species_name, other]
+            scientific_name = ' '.join(
+                part for part in scientific_parts if part)
+            if cultivar:
+                scientific_name = ("%s '%s'" %
+                                   (scientific_name, cultivar)).strip()
+
+            if row['species_id']:
+                species = {
+                    'id': row['species_id'],
+                    'common_name': common_name,
+                    'genus': genus,
+                    'species': species_name,
+                    'cultivar': cultivar,
+                    'other_part_of_name': other,
+                    'scientific_name': scientific_name,
+                }
+
+            title = common_name or scientific_name or (
+                'Albero #%s' % row['id'])
+
+            results.append({
+                'has_tree': True,
+                'title': title,
+                # Address and other expensive detail fields are loaded lazily.
+                'address_full': '',
+                'plot': {
+                    'id': row['plot_id'],
+                    'owner_orig_id': row['plot__owner_orig_id'],
+                    'geom': {
+                        'srid': geom.srid or 4326,
+                        'x': geom.x,
+                        'y': geom.y,
+                    },
+                },
+                'tree': {
+                    'id': row['id'],
+                    'diameter': row['diameter'],
+                    'height': row['height'],
+                    'udfs': dict(row['udfs'] or {}),
+                    'species': species,
+                },
+            })
+
+        return results
+
+    # Legacy/full response retained for existing web and API clients.
     # order_by prevents testing weirdness
     plots = Plot.objects.filter(instance=instance)\
                         .order_by('id')[start:end]
