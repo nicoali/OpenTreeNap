@@ -208,8 +208,8 @@
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/treeImageContainer"
             android:layout_width="match_parent"
-            android:layout_height="132dp"
-            android:layout_marginBottom="12dp"
+            android:layout_height="96dp"
+            android:layout_marginBottom="10dp"
             android:visibility="visible"
             app:cardBackgroundColor="@color/otn_surface_alt"
             app:cardCornerRadius="18dp"
