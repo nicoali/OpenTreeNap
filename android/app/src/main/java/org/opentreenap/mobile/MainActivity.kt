@@ -9,17 +9,20 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.ViewGroup
+import android.view.Gravity
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -35,6 +38,8 @@ import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.maps.android.clustering.ClusterManager
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import coil.load
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -83,12 +88,17 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private lateinit var treeHeroPlaceholder: ImageView
     private lateinit var treeImageSource: TextView
     private lateinit var treeMeta: TextView
+    private lateinit var treeUpdated: TextView
     private lateinit var treeStats: View
     private lateinit var treeCustomId: TextView
     private lateinit var treeDbh: TextView
     private lateinit var treeHeight: TextView
     private lateinit var botanicalCardButton: Button
     private lateinit var editTreeButton: Button
+    private lateinit var treeDataButton: MaterialButton
+    private lateinit var treeDirectionsButton: MaterialButton
+    private lateinit var treeShareButton: MaterialButton
+    private lateinit var treeQrButton: MaterialButton
 
     private var map: GoogleMap? = null
     private var clusterManager: ClusterManager<TreeClusterItem>? = null
@@ -155,12 +165,17 @@ class MainActivity : Activity(), OnMapReadyCallback {
         treeHeroPlaceholder = findViewById(R.id.treeHeroPlaceholder)
         treeImageSource = findViewById(R.id.treeImageSource)
         treeMeta = findViewById(R.id.treeMeta)
+        treeUpdated = findViewById(R.id.treeUpdated)
         treeStats = findViewById(R.id.treeStats)
         treeCustomId = findViewById(R.id.treeCustomId)
         treeDbh = findViewById(R.id.treeDbh)
         treeHeight = findViewById(R.id.treeHeight)
         botanicalCardButton = findViewById(R.id.botanicalCard)
         editTreeButton = findViewById(R.id.editTree)
+        treeDataButton = findViewById(R.id.treeData)
+        treeDirectionsButton = findViewById(R.id.treeDirections)
+        treeShareButton = findViewById(R.id.treeShare)
+        treeQrButton = findViewById(R.id.treeQr)
 
         setupTreeSheet()
         applySystemInsets()
@@ -212,6 +227,30 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     tree = tree,
                     point = LatLng(tree.latitude, tree.longitude)
                 )
+            }
+        }
+
+        treeDataButton.setOnClickListener {
+            selectedTree?.let {
+                showTreeDataSheet(it)
+            }
+        }
+
+        treeDirectionsButton.setOnClickListener {
+            selectedTree?.let {
+                openTreeDirections(it)
+            }
+        }
+
+        treeShareButton.setOnClickListener {
+            selectedTree?.let {
+                shareTree(it)
+            }
+        }
+
+        treeQrButton.setOnClickListener {
+            selectedTree?.let {
+                showTreeQrSheet(it)
             }
         }
 
@@ -633,6 +672,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
         bindTreeImage(tree)
         bindTreeStats(tree)
         treeMeta.text = buildTreeMeta(tree)
+        bindTreeUpdateMeta(tree)
 
         botanicalCardButton.isEnabled =
             scientific.isNotBlank()
@@ -775,6 +815,59 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 }
             )
         }
+    }
+
+    private fun bindTreeUpdateMeta(
+        tree: TreeMarker
+    ) {
+        val updated =
+            tree.updatedAt
+                ?.takeIf { it.isNotBlank() }
+
+        if (updated == null) {
+            treeUpdated.visibility = View.GONE
+            treeUpdated.text = ""
+            return
+        }
+
+        val displayDate =
+            formatIsoDate(updated)
+
+        treeUpdated.text =
+            tree.updatedBy
+                ?.takeIf { it.isNotBlank() }
+                ?.let {
+                    getString(
+                        R.string.tree_last_update_by,
+                        displayDate,
+                        it
+                    )
+                }
+                ?: getString(
+                    R.string.tree_last_update,
+                    displayDate
+                )
+
+        treeUpdated.visibility = View.VISIBLE
+    }
+
+    private fun formatIsoDate(
+        raw: String
+    ): String {
+        val base =
+            raw.take(16)
+                .replace('T', ' ')
+
+        if (base.length < 16) {
+            return raw
+        }
+
+        val year = base.substring(0, 4)
+        val month = base.substring(5, 7)
+        val day = base.substring(8, 10)
+        val time = base.substring(11, 16)
+
+        return "$day/$month/$year · $time"
     }
 
     private fun bindTreeStats(
@@ -1576,6 +1669,515 @@ class MainActivity : Activity(), OnMapReadyCallback {
             .replace(',', '.')
             .takeIf { it.isNotBlank() }
             ?.toDoubleOrNull()
+
+    private fun treePublicUrl(
+        tree: TreeMarker
+    ): String =
+        tree.detailUrl
+            ?.takeIf { it.isNotBlank() }
+            ?: (
+                BuildConfig.OTM_BASE_URL.trimEnd('/') +
+                    "/" +
+                    BuildConfig.OTM_INSTANCE +
+                    "/features/" +
+                    tree.plotId +
+                    "/"
+                )
+
+    private fun showTreeDataSheet(
+        tree: TreeMarker
+    ) {
+        val content =
+            layoutInflater.inflate(
+                R.layout.sheet_tree_data,
+                null
+            )
+
+        content.findViewById<TextView>(
+            R.id.detailTitle
+        ).text =
+            tree.commonName
+                ?.takeIf { it.isNotBlank() }
+                ?: tree.title
+
+        val scientific =
+            content.findViewById<TextView>(
+                R.id.detailScientific
+            )
+        scientific.text =
+            tree.scientificName.orEmpty()
+        scientific.visibility =
+            if (
+                tree.scientificName
+                    .isNullOrBlank()
+            ) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
+
+        val updated =
+            content.findViewById<TextView>(
+                R.id.detailUpdated
+            )
+
+        updated.text =
+            tree.updatedAt
+                ?.takeIf { it.isNotBlank() }
+                ?.let {
+                    val date =
+                        formatIsoDate(it)
+
+                    tree.updatedBy
+                        ?.takeIf {
+                            name ->
+                            name.isNotBlank()
+                        }
+                        ?.let {
+                            name ->
+                            getString(
+                                R.string.tree_last_update_by,
+                                date,
+                                name
+                            )
+                        }
+                        ?: getString(
+                            R.string.tree_last_update,
+                            date
+                        )
+                }
+                ?: getString(
+                    R.string.tree_update_unknown
+                )
+
+        val fields =
+            content.findViewById<LinearLayout>(
+                R.id.detailFields
+            )
+
+        addDetailRow(
+            fields,
+            getString(
+                R.string.tree_detail_status
+            ),
+            getString(
+                if (tree.isMonumental) {
+                    R.string.tree_detail_monumental
+                } else {
+                    R.string.tree_detail_standard
+                }
+            )
+        )
+
+        tree.address
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                addDetailRow(
+                    fields,
+                    getString(
+                        R.string.tree_detail_address
+                    ),
+                    it
+                )
+            }
+
+        if (tree.plotId >= 0) {
+            addDetailRow(
+                fields,
+                getString(
+                    R.string.tree_detail_site_id
+                ),
+                tree.plotId.toString()
+            )
+        }
+
+        tree.treeId?.let {
+            addDetailRow(
+                fields,
+                getString(
+                    R.string.tree_detail_tree_id
+                ),
+                it.toString()
+            )
+        }
+
+        tree.customId
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                addDetailRow(
+                    fields,
+                    getString(
+                        R.string.tree_detail_custom_id
+                    ),
+                    it
+                )
+            }
+
+        tree.diameter?.let {
+            addDetailRow(
+                fields,
+                getString(
+                    R.string.tree_detail_dbh
+                ),
+                formatNumber(it) + " cm"
+            )
+        }
+
+        tree.height?.let {
+            addDetailRow(
+                fields,
+                getString(
+                    R.string.tree_detail_height
+                ),
+                formatNumber(it) + " m"
+            )
+        }
+
+        if (tree.extraFields.isNotEmpty()) {
+            addDetailSectionTitle(
+                fields,
+                getString(
+                    R.string.tree_detail_extra
+                )
+            )
+
+            tree.extraFields.forEach {
+                field ->
+                addDetailRow(
+                    fields,
+                    field.label,
+                    field.value
+                )
+            }
+        }
+
+        val dialog =
+            BottomSheetDialog(this)
+
+        dialog.setContentView(content)
+        dialog.setOnShowListener {
+            dialog.behavior.skipCollapsed = true
+            dialog.behavior.state =
+                BottomSheetBehavior.STATE_EXPANDED
+        }
+
+        content.findViewById<MaterialButton>(
+            R.id.detailClose
+        ).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun addDetailSectionTitle(
+        parent: LinearLayout,
+        title: String
+    ) {
+        val view =
+            TextView(this).apply {
+                text = title
+                setTextColor(
+                    getColor(
+                        R.color.otn_gold
+                    )
+                )
+                textSize = 12f
+                setTypeface(
+                    typeface,
+                    Typeface.BOLD
+                )
+                setPadding(
+                    dp(2),
+                    dp(14),
+                    dp(2),
+                    dp(6)
+                )
+            }
+
+        parent.addView(view)
+    }
+
+    private fun addDetailRow(
+        parent: LinearLayout,
+        label: String,
+        value: String
+    ) {
+        val container =
+            LinearLayout(this).apply {
+                orientation =
+                    LinearLayout.VERTICAL
+                setBackgroundResource(
+                    R.drawable.tree_detail_panel
+                )
+                setPadding(
+                    dp(12),
+                    dp(10),
+                    dp(12),
+                    dp(10)
+                )
+            }
+
+        val params =
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams
+                    .MATCH_PARENT,
+                LinearLayout.LayoutParams
+                    .WRAP_CONTENT
+            ).apply {
+                topMargin = dp(7)
+            }
+
+        val labelView =
+            TextView(this).apply {
+                text = label
+                setTextColor(
+                    getColor(
+                        R.color.otn_text_muted
+                    )
+                )
+                textSize = 10f
+                setTypeface(
+                    typeface,
+                    Typeface.BOLD
+                )
+            }
+
+        val valueView =
+            TextView(this).apply {
+                text = value
+                setTextColor(
+                    getColor(
+                        R.color.otn_navy
+                    )
+                )
+                textSize = 14f
+                setPadding(
+                    0,
+                    dp(3),
+                    0,
+                    0
+                )
+            }
+
+        container.addView(labelView)
+        container.addView(valueView)
+        parent.addView(
+            container,
+            params
+        )
+    }
+
+    private fun openTreeDirections(
+        tree: TreeMarker
+    ) {
+        val latitude = tree.latitude
+        val longitude = tree.longitude
+        val label =
+            tree.commonName
+                ?.takeIf { it.isNotBlank() }
+                ?: tree.title
+
+        val navigationUri =
+            Uri.parse(
+                "google.navigation:q=" +
+                    latitude +
+                    "," +
+                    longitude
+            )
+
+        val googleIntent =
+            Intent(
+                Intent.ACTION_VIEW,
+                navigationUri
+            ).apply {
+                setPackage(
+                    "com.google.android.apps.maps"
+                )
+            }
+
+        if (
+            googleIntent.resolveActivity(
+                packageManager
+            ) != null
+        ) {
+            startActivity(googleIntent)
+            return
+        }
+
+        val fallback =
+            Uri.parse(
+                "geo:" +
+                    latitude +
+                    "," +
+                    longitude +
+                    "?q=" +
+                    latitude +
+                    "," +
+                    longitude +
+                    "(" +
+                    Uri.encode(label) +
+                    ")"
+            )
+
+        startActivity(
+            Intent(
+                Intent.ACTION_VIEW,
+                fallback
+            )
+        )
+    }
+
+    private fun shareTree(
+        tree: TreeMarker
+    ) {
+        val url =
+            treePublicUrl(tree)
+        val name =
+            tree.commonName
+                ?.takeIf { it.isNotBlank() }
+                ?: tree.title
+
+        val text =
+            getString(
+                R.string.tree_share_text,
+                name,
+                url
+            )
+
+        val intent =
+            Intent(
+                Intent.ACTION_SEND
+            ).apply {
+                type = "text/plain"
+                putExtra(
+                    Intent.EXTRA_SUBJECT,
+                    getString(
+                        R.string.tree_share_subject,
+                        name
+                    )
+                )
+                putExtra(
+                    Intent.EXTRA_TEXT,
+                    text
+                )
+            }
+
+        startActivity(
+            Intent.createChooser(
+                intent,
+                getString(
+                    R.string.tree_share
+                )
+            )
+        )
+    }
+
+    private fun showTreeQrSheet(
+        tree: TreeMarker
+    ) {
+        val url =
+            treePublicUrl(tree)
+
+        if (url.isBlank()) {
+            showOtnMessage(
+                getString(
+                    R.string.tree_no_public_url
+                ),
+                isError = true
+            )
+            return
+        }
+
+        val content =
+            layoutInflater.inflate(
+                R.layout.sheet_tree_qr,
+                null
+            )
+
+        content.findViewById<TextView>(
+            R.id.qrTreeName
+        ).text =
+            tree.commonName
+                ?.takeIf { it.isNotBlank() }
+                ?: tree.title
+
+        content.findViewById<TextView>(
+            R.id.qrUrl
+        ).text = url
+
+        val image =
+            content.findViewById<ImageView>(
+                R.id.qrImage
+            )
+
+        image.setImageBitmap(
+            createQrBitmap(
+                url,
+                dp(240)
+            )
+        )
+
+        val dialog =
+            BottomSheetDialog(this)
+
+        dialog.setContentView(content)
+        dialog.setOnShowListener {
+            dialog.behavior.skipCollapsed = true
+            dialog.behavior.state =
+                BottomSheetBehavior.STATE_EXPANDED
+        }
+
+        content.findViewById<MaterialButton>(
+            R.id.qrClose
+        ).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun createQrBitmap(
+        value: String,
+        size: Int
+    ): Bitmap {
+        val matrix =
+            QRCodeWriter().encode(
+                value,
+                BarcodeFormat.QR_CODE,
+                size,
+                size
+            )
+
+        val pixels =
+            IntArray(
+                size * size
+            )
+
+        for (y in 0 until size) {
+            for (x in 0 until size) {
+                pixels[
+                    y * size + x
+                ] =
+                    if (matrix[x, y]) {
+                        Color.rgb(
+                            23,
+                            50,
+                            77
+                        )
+                    } else {
+                        Color.WHITE
+                    }
+            }
+        }
+
+        return Bitmap.createBitmap(
+            pixels,
+            size,
+            size,
+            Bitmap.Config.ARGB_8888
+        )
+    }
 
     private fun openBotanicalCard(
         tree: TreeMarker
