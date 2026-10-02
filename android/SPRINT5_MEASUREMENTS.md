@@ -130,3 +130,17 @@ Campi previsti:
 ## Nota dispositivi
 
 ARCore Depth non è disponibile su tutti i telefoni. La feature deve degradare in modo trasparente e non deve mai inventare precisione che il dispositivo non può fornire.
+
+## Flusso utente opzionale
+
+Per altezza e circonferenza l'utente deve sempre poter scegliere:
+
+- `Inserisci misura` — valore ottenuto manualmente;
+- `Misura con smartphone` — procedura guidata AR/sensori;
+- `Non ora / Da misurare` — nessun blocco alla creazione/modifica dell'albero.
+
+Lo stato `Da misurare` permette a un altro contributore di completare il rilievo in un secondo momento.
+
+Ogni valore deve mantenere il metodo di misura e, quando disponibile, qualità/errore stimato.
+
+La UI deve includere `Come si misura?`, collegato alla guida pubblica sul sito OpenTreeNap.
