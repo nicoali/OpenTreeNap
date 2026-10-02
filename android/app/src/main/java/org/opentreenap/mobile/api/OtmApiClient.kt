@@ -37,6 +37,7 @@ class OtmApiClient(
         val requestUrl =
             baseUrl + "/api/v4/instance/" + instance + "/plots" +
                 "?offset=" + offset + "&size=" + size +
+                "&mobile=1" +
                 "&timestamp=" + timestamp + "&access_key=" + accessKey
         val signature = signer.sign("GET", requestUrl)
 
@@ -80,7 +81,7 @@ class OtmApiClient(
     }
 
     fun fetchAllTrees(
-        pageSize: Int = 150,
+        pageSize: Int = 1000,
         maxTrees: Int = 5000,
         onProgress: ((List<TreeMarker>) -> Unit)? = null
     ): List<TreeMarker> {
