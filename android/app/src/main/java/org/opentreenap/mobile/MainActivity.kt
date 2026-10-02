@@ -99,6 +99,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private lateinit var treeDirectionsButton: MaterialButton
     private lateinit var treeShareButton: MaterialButton
     private lateinit var treeQrButton: MaterialButton
+    private lateinit var treeMeasureButton: MaterialButton
 
     private var map: GoogleMap? = null
     private var clusterManager: ClusterManager<TreeClusterItem>? = null
@@ -120,6 +121,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private var sessionPermissions: InstancePermissions? = null
     private var sessionUsername: String? = null
     private var sessionPassword: String? = null
+    private var pendingMeasurementPlotId: Int? = null
 
     private var normalTreeIcon: BitmapDescriptor? = null
     private var monumentalTreeIcon: BitmapDescriptor? = null
@@ -176,6 +178,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
         treeDirectionsButton = findViewById(R.id.treeDirections)
         treeShareButton = findViewById(R.id.treeShare)
         treeQrButton = findViewById(R.id.treeQr)
+        treeMeasureButton = findViewById(R.id.treeMeasure)
 
         setupTreeSheet()
         applySystemInsets()
@@ -251,6 +254,12 @@ class MainActivity : Activity(), OnMapReadyCallback {
         treeQrButton.setOnClickListener {
             selectedTree?.let {
                 showTreeQrSheet(it)
+            }
+        }
+
+        treeMeasureButton.setOnClickListener {
+            selectedTree?.let {
+                showMeasurementSheet(it)
             }
         }
 
@@ -2177,6 +2186,252 @@ class MainActivity : Activity(), OnMapReadyCallback {
             size,
             Bitmap.Config.ARGB_8888
         )
+    }
+
+    private fun showMeasurementSheet(
+        tree: TreeMarker
+    ) {
+        val content =
+            layoutInflater.inflate(
+                R.layout.sheet_tree_measurements,
+                null
+            )
+
+        content.findViewById<TextView>(
+            R.id.measureTreeName
+        ).text =
+            tree.commonName
+                ?.takeIf { it.isNotBlank() }
+                ?: tree.title
+
+        val values = mutableListOf<String>()
+
+        tree.height?.let {
+            values += getString(
+                R.string.measure_current_height,
+                formatNumber(it)
+            )
+        }
+
+        tree.diameter?.let {
+            values += getString(
+                R.string.measure_current_dbh,
+                formatNumber(it)
+            )
+        }
+
+        content.findViewById<TextView>(
+            R.id.measureCurrentValues
+        ).text =
+            values.takeIf { it.isNotEmpty() }
+                ?.joinToString("  ·  ")
+                ?: getString(
+                    R.string.measure_current_none
+                )
+
+        val dialog =
+            BottomSheetDialog(this)
+
+        dialog.setContentView(content)
+        dialog.setOnShowListener {
+            dialog.behavior.skipCollapsed = true
+            dialog.behavior.state =
+                BottomSheetBehavior.STATE_EXPANDED
+        }
+
+        content.findViewById<MaterialButton>(
+            R.id.measureManual
+        ).setOnClickListener {
+            showOtnMessage(
+                getString(
+                    R.string.measure_manual_coming
+                )
+            )
+        }
+
+        content.findViewById<MaterialButton>(
+            R.id.measureSmartphoneHeight
+        ).setOnClickListener {
+            pendingMeasurementPlotId =
+                tree.plotId
+
+            dialog.dismiss()
+
+            startActivityForResult(
+                Intent(
+                    this,
+                    MeasureHeightActivity::class.java
+                ),
+                REQUEST_MEASURE_HEIGHT
+            )
+        }
+
+        content.findViewById<MaterialButton>(
+            R.id.measureDeferred
+        ).setOnClickListener {
+            dialog.dismiss()
+            showOtnMessage(
+                getString(
+                    R.string.measure_marked_deferred
+                )
+            )
+        }
+
+        content.findViewById<TextView>(
+            R.id.measureHowTo
+        ).setOnClickListener {
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse(
+                        getString(
+                            R.string.measure_help_url
+                        )
+                    )
+                )
+            )
+        }
+
+        content.findViewById<MaterialButton>(
+            R.id.measureClose
+        ).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    @Deprecated(
+        "Legacy result API kept for minSdk compatibility."
+    )
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+        super.onActivityResult(
+            requestCode,
+            resultCode,
+            data
+        )
+
+        if (
+            requestCode !=
+            REQUEST_MEASURE_HEIGHT ||
+            resultCode != RESULT_OK
+        ) {
+            return
+        }
+
+        val height =
+            data?.getDoubleExtra(
+                MeasureHeightActivity
+                    .EXTRA_HEIGHT_M,
+                Double.NaN
+            )
+                ?: Double.NaN
+
+        if (!height.isFinite()) {
+            return
+        }
+
+        val plotId =
+            pendingMeasurementPlotId
+        pendingMeasurementPlotId = null
+
+        val tree =
+            allTrees.firstOrNull {
+                it.plotId == plotId
+            }
+                ?: selectedTree
+                ?: return
+
+        showOtnMessage(
+            getString(
+                R.string.measure_saved_height,
+                height
+            )
+        )
+
+        requireLoginThen {
+            saveMeasuredHeight(
+                tree,
+                height
+            )
+        }
+    }
+
+    private fun saveMeasuredHeight(
+        tree: TreeMarker,
+        height: Double
+    ) {
+        val username =
+            sessionUsername
+                ?: return
+        val password =
+            sessionPassword
+                ?: return
+
+        statusView.setText(
+            R.string.status_saving
+        )
+
+        executor.execute {
+            val result =
+                runCatching {
+                    apiClient().updateTree(
+                        plotId = tree.plotId,
+                        speciesId = null,
+                        diameter = null,
+                        height = height,
+                        username = username,
+                        password = password
+                    )
+                }
+
+            runOnUiThread {
+                result.onSuccess { saved ->
+                    val updated =
+                        allTrees.map {
+                            if (
+                                it.plotId ==
+                                saved.plotId
+                            ) {
+                                saved
+                            } else {
+                                it
+                            }
+                        }
+
+                    allTrees = updated
+                    treeCache.save(updated)
+                    restoreMapStatus()
+
+                    if (
+                        selectedTree?.plotId ==
+                        saved.plotId
+                    ) {
+                        showTreeCardContent(
+                            saved
+                        )
+                    }
+
+                    showOtnMessage(
+                        getString(
+                            R.string.saved_successfully
+                        )
+                    )
+                }.onFailure { error ->
+                    restoreMapStatus()
+                    showOtnMessage(
+                        error.message
+                            ?: error.javaClass
+                                .simpleName,
+                        isError = true
+                    )
+                }
+            }
+        }
     }
 
     private fun openBotanicalCard(
