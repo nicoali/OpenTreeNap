@@ -23,8 +23,8 @@ android {
         applicationId = "org.opentreenap.mobile"
         minSdk = 23
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.3.0"
+        versionCode = 4
+        versionName = "0.3.1"
 
         manifestPlaceholders["MAPS_API_KEY"] = localProperty("MAPS_API_KEY")
         buildConfigField("String", "OTM_BASE_URL", quotedBuildConfig(localProperty("OTM_BASE_URL")))
@@ -43,4 +43,5 @@ android {
 
 dependencies {
     implementation("com.google.android.gms:play-services-maps:20.0.0")
+    implementation("com.google.maps.android:android-maps-utils:3.19.1")
 }
