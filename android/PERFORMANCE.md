@@ -71,3 +71,16 @@ L'endpoint OTM `locations/{lat},{lng}/plots` resta utile per la ricerca di alber
 ## Criterio di chiusura Sprint 1
 
 Dopo il test su dispositivo, gli elementi corrispondenti in `ROADMAP.md` vengono marcati completati. L'ottimizzazione bbox rimane una fase di scalabilità futura finché l'inventario non la richiede.
+
+
+## Risultato verificato
+
+Test reale su dispositivo del 2026-10-02:
+
+- inventario OTN: **684 alberi**;
+- cold start dopo disinstallazione/reinstallazione, quindi senza cache: **circa 3 secondi**;
+- secondo avvio con cache locale: **quasi immediato**;
+- confronto con la baseline iniziale: da circa **40 secondi** a circa **3 secondi**;
+- riduzione percepita del tempo di primo caricamento di oltre il 90%.
+
+Lo Sprint 1 è quindi considerato completato. Le ottimizzazioni bbox/viewport restano disponibili come strategia di scalabilità futura per inventari molto più grandi.
