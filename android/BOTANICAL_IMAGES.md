@@ -94,3 +94,15 @@ risponde con schema v2 e rileva automaticamente 15 specie dalla Media Library, t
 È verificata anche la selezione automatica della rappresentativa più recente: per `Pinus pinea` sono presenti più immagini rappresentative e il manifest sceglie quella modificata più recentemente, mantenendo le altre in `gallery`.
 
 Il passaggio WordPress → manifest automatico è quindi operativo.
+
+
+## Verifica end-to-end Android ↔ WordPress
+
+Test reale del 2026-10-02:
+
+- `Platanus occidentalis`, specie non inserita manualmente nel vecchio manifest statico, viene rilevata dal manifest WordPress live;
+- l'app Android 0.5.1 riceve automaticamente la rappresentativa dalla Media Library;
+- l'immagine viene mostrata con layout adattivo (fit-center + backdrop della stessa sorgente);
+- badge `Immagine specie`, nome comune, nome scientifico, indirizzo, ID e azione botanica restano visibili.
+
+Questo conferma il flusso automatico WordPress → manifest REST → Android senza nuova APK per aggiungere una specie.
