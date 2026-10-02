@@ -50,7 +50,7 @@ class OtmApiClient(
                 setRequestProperty("X-Signature", signature)
                 setRequestProperty(
                     "platform-ver-build",
-                    "OpenTreeNap-Android/0.4.1"
+                    "OpenTreeNap-Android/0.5.0"
                 )
             }
 
@@ -290,7 +290,7 @@ class OtmApiClient(
             readTimeout = 30_000
             setRequestProperty("Accept", "application/json")
             setRequestProperty("X-Signature", signature)
-            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.4.1")
+            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.5.0")
 
             if (username != null && password != null) {
                 val credentials = "$username:$password"
@@ -388,6 +388,24 @@ class OtmApiClient(
             tree.optString("owner_orig_id").trim().takeIf { it.isNotBlank() }
                 ?: plot.optString("owner_orig_id").trim().takeIf { it.isNotBlank() }
 
+        val firstPhoto =
+            item.optJSONArray("photos")
+                ?.optJSONObject(0)
+
+        val photoUrl =
+            firstPhoto
+                ?.let { photo ->
+                    listOf(
+                        photo.optString("absolute_image"),
+                        photo.optString("image"),
+                        photo.optString("thumbnail")
+                    )
+                        .firstOrNull {
+                            it.isNotBlank()
+                        }
+                }
+                ?.let { absoluteUrl(it) }
+
         return TreeMarker(
             plotId = plotId,
             treeId = treeId,
@@ -402,8 +420,27 @@ class OtmApiClient(
             diameter = diameter,
             height = height,
             customId = customId,
+            photoUrl = photoUrl,
             isMonumental = hasMonumentalFlag(item, tree)
         )
+    }
+
+    private fun absoluteUrl(
+        raw: String
+    ): String {
+        val value = raw.trim()
+
+        return when {
+            value.startsWith("https://") ||
+                value.startsWith("http://") ->
+                value
+
+            value.startsWith("/") ->
+                baseUrl + value
+
+            else ->
+                baseUrl + "/" + value
+        }
     }
 
     private fun JSONObject.optNullableDouble(key: String): Double? {
