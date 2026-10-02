@@ -94,6 +94,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private var monumentalTreeIcon: BitmapDescriptor? = null
     private var selectedTreeIcon: BitmapDescriptor? = null
     private var selectedMonumentalIcon: BitmapDescriptor? = null
+    private val clusterIconCache = mutableMapOf<String, BitmapDescriptor>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -381,8 +382,21 @@ class MainActivity : Activity(), OnMapReadyCallback {
             val result =
                 runCatching {
                     apiClient().fetchAllTrees(
-                        pageSize = 500
-                    )
+                        pageSize = 150
+                    ) { partial ->
+                        if (!hadData) {
+                            runOnUiThread {
+                                allTrees = partial
+                                updateFilterUi()
+                                renderClusters()
+                                statusView.text =
+                                    getString(
+                                        R.string.status_loading_count,
+                                        partial.size
+                                    )
+                            }
+                        }
+                    }
                 }
 
             result.onSuccess { trees ->
@@ -1398,6 +1412,13 @@ class MainActivity : Activity(), OnMapReadyCallback {
         count: Int,
         hasMonumental: Boolean = false
     ): BitmapDescriptor {
+        val cacheKey =
+            "$count:$hasMonumental"
+
+        clusterIconCache[cacheKey]?.let {
+            return it
+        }
+
         val size = dp(42)
 
         val bitmap =
@@ -1473,7 +1494,11 @@ class MainActivity : Activity(), OnMapReadyCallback {
             paint
         )
 
-        return BitmapDescriptorFactory.fromBitmap(bitmap)
+        return BitmapDescriptorFactory
+            .fromBitmap(bitmap)
+            .also {
+                clusterIconCache[cacheKey] = it
+            }
     }
 
     private fun toggleMapType() {
