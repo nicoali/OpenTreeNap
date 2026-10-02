@@ -195,77 +195,81 @@ def get_plot_list(request, instance):
     mobile = request.GET.get("mobile", "").lower() in ("1", "true", "yes")
 
     if mobile:
-        rows = Tree.objects\
-            .filter(instance=instance)\
-            .order_by('plot_id')\
-            .values(
-                'id',
-                'plot_id',
-                'plot__geom',
-                'plot__owner_orig_id',
-                'diameter',
-                'height',
-                'udfs',
-                'species_id',
-                'species__common_name',
-                'species__genus',
-                'species__species',
-                'species__cultivar',
-                'species__other_part_of_name',
-            )[start:end]
+        # Page planting sites which actually contain at least one tree.  This
+        # preserves the legacy Plot.current_tree() semantics while avoiding
+        # historical/replacement Tree rows being returned as separate markers.
+        #
+        # Prefetch species in two compact queries instead of executing the
+        # expensive context_dict_for_plot() graph for every marker.
+        plots = Plot.objects\
+            .filter(instance=instance, tree__isnull=False)\
+            .distinct()\
+            .order_by('id')\
+            .prefetch_related('tree_set__species')[start:end]
 
         results = []
 
-        for row in rows:
-            geom = row['plot__geom']
+        for plot in plots:
+            trees = list(plot.tree_set.all())
+            if not trees:
+                continue
+
+            # Match Plot.current_tree(): OTM currently treats the first related
+            # tree as the current tree for API compatibility.
+            tree = trees[0]
+            species_obj = tree.species
 
             species = None
-            common_name = row['species__common_name'] or ''
-            genus = row['species__genus'] or ''
-            species_name = row['species__species'] or ''
-            cultivar = row['species__cultivar'] or ''
-            other = row['species__other_part_of_name'] or ''
+            common_name = ''
+            scientific_name = ''
 
-            scientific_parts = [genus, species_name, other]
-            scientific_name = ' '.join(
-                part for part in scientific_parts if part)
-            if cultivar:
-                scientific_name = ("%s '%s'" %
-                                   (scientific_name, cultivar)).strip()
-
-            if row['species_id']:
+            if species_obj is not None:
+                common_name = species_obj.common_name or ''
+                scientific_name = species_obj.scientific_name or ''
                 species = {
-                    'id': row['species_id'],
+                    'id': species_obj.id,
                     'common_name': common_name,
-                    'genus': genus,
-                    'species': species_name,
-                    'cultivar': cultivar,
-                    'other_part_of_name': other,
+                    'genus': species_obj.genus or '',
+                    'species': species_obj.species or '',
+                    'cultivar': species_obj.cultivar or '',
+                    'other_part_of_name':
+                        species_obj.other_part_of_name or '',
                     'scientific_name': scientific_name,
                 }
 
             title = common_name or scientific_name or (
-                'Albero #%s' % row['id'])
+                'Albero #%s' % tree.id)
+
+            # Geometry is stored internally in EPSG:3857.  Android/Google Maps
+            # requires WGS84 latitude/longitude.
+            latlon = plot.latlon
+
+            address_parts = [
+                plot.address_street or '',
+                plot.address_city or '',
+                plot.address_zip or '',
+            ]
+            address_full = ', '.join(
+                part for part in address_parts if part)
 
             results.append({
                 'has_tree': True,
                 'title': title,
-                # Address and other expensive detail fields are loaded lazily.
-                'address_full': '',
+                'address_full': address_full,
                 'plot': {
-                    'id': row['plot_id'],
-                    'owner_orig_id': row['plot__owner_orig_id'],
+                    'id': plot.id,
+                    'owner_orig_id': plot.owner_orig_id,
                     'geom': {
-                        'srid': geom.srid or 4326,
-                        'x': geom.x,
-                        'y': geom.y,
+                        'srid': 4326,
+                        'x': latlon.x,
+                        'y': latlon.y,
                     },
                 },
                 'tree': {
-                    'id': row['id'],
-                    'diameter': row['diameter'],
-                    'height': row['height'],
-                    'udfs': dict(row['udfs'] or {}),
+                    'id': tree.id,
+                    'diameter': tree.diameter,
+                    'height': tree.height,
+                    'udfs': dict(tree.udfs or {}),
                     'species': species,
                 },
             })
