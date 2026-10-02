@@ -3,6 +3,9 @@
     <string name="app_name">OpenTreeNap</string>
     <string name="status_ready">Napoli · mappa civica degli alberi</string>
     <string name="status_loading">Caricamento alberi…</string>
+    <string name="status_cached">%1$d alberi · cache locale</string>
+    <string name="status_refreshing">Aggiornamento dati…</string>
+    <string name="refresh_failed_cached">Aggiornamento non riuscito: continuo a mostrare i dati salvati.</string>
     <string name="status_loaded">%1$d alberi · %2$s</string>
     <string name="status_monumental">%1$d alberi monumentali</string>
     <string name="status_no_results">Nessun albero in questo filtro</string>
