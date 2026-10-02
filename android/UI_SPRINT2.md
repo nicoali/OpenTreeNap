@@ -23,7 +23,8 @@ La vecchia card statica è ora un vero `BottomSheetBehavior`:
 - quando viene chiusa il marker selezionato torna allo stato normale;
 - i controlli mappa ricompaiono automaticamente;
 - la mappa riceve padding dinamico in base all'altezza reale della scheda;
-- pulsanti Material per Scheda botanica e Modifica.
+- pulsanti Material per Scheda botanica e Modifica;
+- safe-area inferiore dedicata per evitare sovrapposizioni con la barra di navigazione Android.
 
 ### Account e login
 
