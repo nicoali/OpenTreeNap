@@ -54,6 +54,8 @@ Obiettivo: rendere l'app veloce anche con migliaia di alberi.
 
 Obiettivo: eliminare i dialog Android standard e dare all'app un'identità coerente.
 
+**Implementazione attiva:** `feature/android-sprint2-ui`. Material 3, bottom sheet albero, login/account OTN, editor guidato add/edit, Snackbar/error sheet ed edge-to-edge sono implementati e in attesa di verifica su dispositivo. Checklist: [android/UI_SPRINT2.md](android/UI_SPRINT2.md).
+
 - [ ] Bottom sheet professionale per la scheda albero.
 - [ ] Bottom sheet/account panel per login, profilo e logout.
 - [ ] Schermata/modale professionale per modifica albero.
