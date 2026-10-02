@@ -2419,12 +2419,6 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 R.id.manualMeasureError
             )
 
-        tree.height?.let {
-            heightInput.setText(
-                formatNumber(it)
-            )
-        }
-
         val dialog =
             BottomSheetDialog(this)
 
