@@ -87,10 +87,19 @@ class OtmApiClient(
         var offset = 0
 
         while (offset < maxTrees) {
-            val page = fetchTrees(
-                size = pageSize,
-                offset = offset
-            )
+            val page =
+                try {
+                    fetchTrees(
+                        size = pageSize,
+                        offset = offset
+                    )
+                } catch (error: Throwable) {
+                    error(
+                        "Caricamento pagina offset=$offset fallito: " +
+                            (error.message ?: error.javaClass.simpleName)
+                    )
+                }
+
             all += page
 
             if (page.size < pageSize) {
