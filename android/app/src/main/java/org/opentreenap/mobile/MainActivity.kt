@@ -1921,10 +1921,16 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
             (treeCard.layoutParams as
                 ViewGroup.MarginLayoutParams).also { params ->
-                params.bottomMargin =
-                    systemBottomInset + dp(10)
+                params.bottomMargin = 0
                 treeCard.layoutParams = params
             }
+
+            treeCard.setPadding(
+                treeCard.paddingLeft,
+                treeCard.paddingTop,
+                treeCard.paddingRight,
+                systemBottomInset + dp(18)
+            )
 
             updateMapPadding()
             insets
