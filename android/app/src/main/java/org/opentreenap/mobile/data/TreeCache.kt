@@ -3,6 +3,7 @@ package org.opentreenap.mobile.data
 import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
+import org.opentreenap.mobile.model.TreeExtraField
 import org.opentreenap.mobile.model.TreeMarker
 import java.io.File
 
@@ -73,6 +74,21 @@ class TreeCache(
             .put("customId", customId ?: JSONObject.NULL)
             .put("photoUrl", photoUrl ?: JSONObject.NULL)
             .put("isMonumental", isMonumental)
+            .put("updatedAt", updatedAt ?: JSONObject.NULL)
+            .put("updatedBy", updatedBy ?: JSONObject.NULL)
+            .put("detailUrl", detailUrl ?: JSONObject.NULL)
+            .put(
+                "extraFields",
+                JSONArray().apply {
+                    extraFields.forEach { field ->
+                        put(
+                            JSONObject()
+                                .put("label", field.label)
+                                .put("value", field.value)
+                        )
+                    }
+                }
+            )
 
     private fun JSONObject.toTreeMarker(): TreeMarker =
         TreeMarker(
@@ -90,7 +106,38 @@ class TreeCache(
             height = optNullableDouble("height"),
             customId = optNullableString("customId"),
             photoUrl = optNullableString("photoUrl"),
-            isMonumental = optBoolean("isMonumental", false)
+            isMonumental = optBoolean("isMonumental", false),
+            updatedAt = optNullableString("updatedAt"),
+            updatedBy = optNullableString("updatedBy"),
+            detailUrl = optNullableString("detailUrl"),
+            extraFields =
+                optJSONArray("extraFields")
+                    ?.let { array ->
+                        buildList {
+                            for (index in 0 until array.length()) {
+                                val item =
+                                    array.optJSONObject(index)
+                                        ?: continue
+                                val label =
+                                    item.optString("label").trim()
+                                val value =
+                                    item.optString("value").trim()
+
+                                if (
+                                    label.isNotBlank() &&
+                                    value.isNotBlank()
+                                ) {
+                                    add(
+                                        TreeExtraField(
+                                            label,
+                                            value
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    ?: emptyList()
         )
 
     private fun JSONObject.optNullableString(key: String): String? =
