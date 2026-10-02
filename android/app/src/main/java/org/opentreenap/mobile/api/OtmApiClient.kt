@@ -25,15 +25,58 @@ class OtmApiClient(
     private val signer = HmacSigner(secretKey)
 
     fun fetchTrees(size: Int = 100, offset: Int = 0): List<TreeMarker> {
-        val body = request(
-            method = "GET",
-            path = "/api/v4/instance/$instance/plots",
-            query = linkedMapOf(
-                "offset" to offset.toString(),
-                "size" to size.toString()
-            )
-        )
-        return parsePlots(body)
+        require(baseUrl.startsWith("https://")) {
+            "OTM_BASE_URL deve usare HTTPS"
+        }
+        require(instance.isNotBlank()) { "OTM_INSTANCE mancante" }
+        require(accessKey.isNotBlank()) { "OTM_ACCESS_KEY mancante" }
+
+        // Keep the public map GET byte-for-byte compatible with the
+        // V0.2 request path that is already verified against OpenTreeNap.
+        val timestamp = utcTimestamp()
+        val requestUrl =
+            baseUrl + "/api/v4/instance/" + instance + "/plots" +
+                "?offset=" + offset + "&size=" + size +
+                "&timestamp=" + timestamp + "&access_key=" + accessKey
+        val signature = signer.sign("GET", requestUrl)
+
+        val connection =
+            (URL(requestUrl).openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 12_000
+                readTimeout = 30_000
+                setRequestProperty("Accept", "application/json")
+                setRequestProperty("X-Signature", signature)
+                setRequestProperty(
+                    "platform-ver-build",
+                    "OpenTreeNap-Android/0.3.1"
+                )
+            }
+
+        try {
+            val status = connection.responseCode
+            val stream =
+                if (status in 200..299) {
+                    connection.inputStream
+                } else {
+                    connection.errorStream
+                }
+            val body =
+                stream?.bufferedReader(Charsets.UTF_8)
+                    ?.use { it.readText() }
+                    .orEmpty()
+
+            if (status !in 200..299) {
+                error(
+                    "API HTTP " + status + ": " +
+                        body.take(300)
+                )
+            }
+
+            return parsePlots(body)
+        } finally {
+            connection.disconnect()
+        }
     }
 
     fun fetchAllTrees(
@@ -44,19 +87,13 @@ class OtmApiClient(
         var offset = 0
 
         while (offset < maxTrees) {
-            val raw = request(
-                method = "GET",
-                path = "/api/v4/instance/$instance/plots",
-                query = linkedMapOf(
-                    "offset" to offset.toString(),
-                    "size" to pageSize.toString()
-                )
+            val page = fetchTrees(
+                size = pageSize,
+                offset = offset
             )
+            all += page
 
-            val rawArray = JSONArray(raw)
-            all += parsePlots(raw)
-
-            if (rawArray.length() < pageSize) {
+            if (page.size < pageSize) {
                 break
             }
 
