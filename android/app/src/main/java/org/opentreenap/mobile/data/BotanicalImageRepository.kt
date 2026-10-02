@@ -15,13 +15,22 @@ data class BotanicalImageEntry(
 
 class BotanicalImageRepository(
     context: Context,
-    baseUrl: String
+    manifestUrl: String
 ) {
     private val manifestUrl =
-        baseUrl.trimEnd('/') + "/static/botanical-images.json"
+        manifestUrl.trim()
 
     private val cacheFile =
-        File(context.filesDir, "botanical-images-cache-v1.json")
+        File(
+            context.filesDir,
+            "botanical-images-cache-v2.json"
+        )
+
+    private val preferences =
+        context.getSharedPreferences(
+            "botanical-images",
+            Context.MODE_PRIVATE
+        )
 
     @Volatile
     private var entries:
@@ -39,26 +48,64 @@ class BotanicalImageRepository(
         entry(scientificName)?.pageUrl
 
     fun refresh(): Int {
+        require(
+            manifestUrl.startsWith("https://")
+        ) {
+            "Il manifest botanico deve usare HTTPS"
+        }
+
         val connection =
             (
                 URL(manifestUrl)
-                    .openConnection() as HttpURLConnection
+                    .openConnection()
+                    as HttpURLConnection
                 ).apply {
                 requestMethod = "GET"
                 connectTimeout = 8_000
                 readTimeout = 12_000
-                setRequestProperty("Accept", "application/json")
+                setRequestProperty(
+                    "Accept",
+                    "application/json"
+                )
+
+                preferences
+                    .getString("etag", null)
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let {
+                        setRequestProperty(
+                            "If-None-Match",
+                            it
+                        )
+                    }
+
+                setRequestProperty(
+                    "User-Agent",
+                    "OpenTreeNap-Android/0.5.1"
+                )
             }
 
         try {
-            val status = connection.responseCode
+            val status =
+                connection.responseCode
+
+            if (
+                status ==
+                HttpURLConnection.HTTP_NOT_MODIFIED
+            ) {
+                return entries.size
+            }
+
             if (status !in 200..299) {
-                error("Manifest botanico HTTP $status")
+                error(
+                    "Manifest botanico HTTP $status"
+                )
             }
 
             val raw =
                 connection.inputStream
-                    .bufferedReader(Charsets.UTF_8)
+                    .bufferedReader(
+                        Charsets.UTF_8
+                    )
                     .use { it.readText() }
 
             val parsed = parse(raw)
@@ -66,6 +113,21 @@ class BotanicalImageRepository(
             if (parsed.isNotEmpty()) {
                 entries = parsed
                 saveCache(raw)
+
+                connection
+                    .getHeaderField("ETag")
+                    ?.takeIf {
+                        it.isNotBlank()
+                    }
+                    ?.let {
+                        preferences
+                            .edit()
+                            .putString(
+                                "etag",
+                                it
+                            )
+                            .apply()
+                    }
             }
 
             return parsed.size
@@ -88,9 +150,13 @@ class BotanicalImageRepository(
             if (!cacheFile.exists()) {
                 emptyMap()
             } else {
-                parse(cacheFile.readText())
+                parse(
+                    cacheFile.readText()
+                )
             }
-        }.getOrDefault(emptyMap())
+        }.getOrDefault(
+            emptyMap()
+        )
 
     private fun saveCache(
         raw: String
@@ -120,7 +186,10 @@ class BotanicalImageRepository(
                 ?: return emptyMap()
 
         val result =
-            LinkedHashMap<String, BotanicalImageEntry>()
+            LinkedHashMap<
+                String,
+                BotanicalImageEntry
+                >()
 
         val keys = species.keys()
 
@@ -137,8 +206,15 @@ class BotanicalImageRepository(
                 ).trim()
 
             val imageUrl =
-                item.optString("image_url")
+                item.optString(
+                    "representative_image"
+                )
                     .trim()
+                    .ifBlank {
+                        item.optString(
+                            "image_url"
+                        ).trim()
+                    }
 
             if (
                 scientificName.isBlank() ||
@@ -149,13 +225,18 @@ class BotanicalImageRepository(
 
             result[
                 scientificName
-                    .lowercase(Locale.ROOT)
+                    .lowercase(
+                        Locale.ROOT
+                    )
             ] =
                 BotanicalImageEntry(
-                    scientificName = scientificName,
+                    scientificName =
+                        scientificName,
                     imageUrl = imageUrl,
                     pageUrl =
-                        item.optString("page_url")
+                        item.optString(
+                            "page_url"
+                        )
                             .trim()
                             .takeIf {
                                 it.isNotBlank()
