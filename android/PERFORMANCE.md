@@ -14,11 +14,13 @@ Obiettivo: rendere la mappa immediatamente utilizzabile e mantenere buone presta
 - se il refresh fallisce e la cache esiste, la mappa resta utilizzabile;
 - il refresh non cancella più una mappa valida per un errore temporaneo.
 
-### Primo caricamento progressivo
+### Primo caricamento veloce
 
-- inventario scaricato in pagine da 150 record;
-- al primo avvio, senza cache, i primi alberi vengono mostrati appena arriva la prima pagina;
-- il contatore nell'header aumenta durante il caricamento;
+- l'app usa `mobile=1` sul normale endpoint `/plots`;
+- il server restituisce un inventario leggero costruito con una singola query, senza foto, audit, polygon lookup e metadati di dettaglio per ogni albero;
+- pagina Android da 1000 record: l'attuale inventario di Napoli (~400 alberi) arriva in una sola risposta compatta;
+- per inventari >1000 record la stessa API continua a paginare;
+- senza cache i dati vengono mostrati appena arriva la prima risposta;
 - al termine viene salvato lo snapshot completo.
 
 ### Clustering
@@ -56,7 +58,7 @@ L'endpoint OTM `locations/{lat},{lng}/plots` resta utile per la ricerca di alber
 
 ## Test da eseguire sul telefono
 
-1. Primo avvio dopo install/clear data: verificare che compaiano progressivamente 150 → 300 → totale.
+1. Primo avvio dopo install/clear data: verificare il tempo fino alla comparsa del totale e confrontarlo con i ~40 secondi precedenti.
 2. Chiudere e riaprire: gli alberi devono apparire quasi subito dalla cache.
 3. Durante l'aggiornamento la mappa deve restare utilizzabile.
 4. Pan/zoom: niente ricostruzione manuale completa dei marker.
