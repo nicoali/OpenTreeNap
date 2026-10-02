@@ -37,7 +37,7 @@ Ultimo aggiornamento: 2026-10-02.
 
 Obiettivo: rendere l'app veloce anche con migliaia di alberi.
 
-**Implementazione attiva:** `feature/android-sprint1-performance`. Cache-first, refresh in background, caricamento progressivo, ClusterManager/renderer OTN e dettaglio lazy sono implementati; le checkbox verranno chiuse dopo il test sul dispositivo. Piano tecnico e checklist: [android/PERFORMANCE.md](android/PERFORMANCE.md).
+**Sprint completato e verificato su dispositivo (2026-10-02).** Cold start senza cache: ~3 s per 684 alberi; secondo avvio quasi immediato grazie alla cache locale. Piano tecnico e test: [android/PERFORMANCE.md](android/PERFORMANCE.md).
 
 - [x] Mostrare rapidamente dati già disponibili/cached all'avvio.
 - [x] Aggiornamento dati in background senza bloccare la UI.
