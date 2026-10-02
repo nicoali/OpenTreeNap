@@ -2,7 +2,6 @@ package org.opentreenap.mobile
 
 import android.Manifest
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
@@ -12,15 +11,14 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.net.Uri
 import android.os.Bundle
-import android.text.InputType
 import android.util.Log
 import android.view.View
 import android.view.WindowInsets
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
-import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.ImageButton
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -36,6 +34,14 @@ import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.maps.android.clustering.ClusterManager
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import org.opentreenap.mobile.api.OtmApiClient
 import org.opentreenap.mobile.data.TreeCache
 import org.opentreenap.mobile.map.OtnClusterRenderer
@@ -63,6 +69,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private lateinit var filterMonumental: TextView
     private lateinit var mapControls: View
     private lateinit var treeCard: View
+    private lateinit var treeSheetBehavior: BottomSheetBehavior<View>
     private lateinit var treeBadge: TextView
     private lateinit var treeTitle: TextView
     private lateinit var treeScientific: TextView
@@ -127,6 +134,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
         botanicalCardButton = findViewById(R.id.botanicalCard)
         editTreeButton = findViewById(R.id.editTree)
 
+        setupTreeSheet()
         applySystemInsets()
         updateSessionUi()
 
@@ -143,11 +151,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     if (sessionPermissions?.canAddTree == true) {
                         enterAddMode()
                     } else {
-                        Toast.makeText(
-                            this,
-                            R.string.permission_add_denied,
-                            Toast.LENGTH_LONG
-                        ).show()
+                        showOtnMessage(
+                            getString(R.string.permission_add_denied),
+                            isError = true
+                        )
                     }
                 }
             }
@@ -198,6 +205,49 @@ class MainActivity : Activity(), OnMapReadyCallback {
             }
         }
     }
+
+    private fun setupTreeSheet() {
+        treeSheetBehavior =
+            BottomSheetBehavior.from(treeCard).apply {
+                isHideable = true
+                skipCollapsed = true
+                peekHeight = 0
+                state = BottomSheetBehavior.STATE_HIDDEN
+            }
+
+        treeSheetBehavior.addBottomSheetCallback(
+            object : BottomSheetBehavior.BottomSheetCallback() {
+                override fun onStateChanged(
+                    bottomSheet: View,
+                    newState: Int
+                ) {
+                    when (newState) {
+                        BottomSheetBehavior.STATE_HIDDEN -> {
+                            restoreSelectedMarker()
+                            mapControls.visibility = View.VISIBLE
+                            updateSessionUi()
+                            updateMapPadding()
+                        }
+
+                        BottomSheetBehavior.STATE_EXPANDED,
+                        BottomSheetBehavior.STATE_HALF_EXPANDED -> {
+                            mapControls.visibility = View.GONE
+                            updateMapPadding()
+                        }
+                    }
+                }
+
+                override fun onSlide(
+                    bottomSheet: View,
+                    slideOffset: Float
+                ) = Unit
+            }
+        )
+    }
+
+    private fun isTreeSheetVisible(): Boolean =
+        ::treeSheetBehavior.isInitialized &&
+            treeSheetBehavior.state != BottomSheetBehavior.STATE_HIDDEN
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
@@ -442,14 +492,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
                                 R.string.status_error_short
                             )
 
-                        AlertDialog.Builder(this)
-                            .setTitle(R.string.api_error_title)
-                            .setMessage(fullMessage)
-                            .setPositiveButton(
-                                R.string.close,
-                                null
-                            )
-                            .show()
+                        showMessageSheet(
+                            title = getString(R.string.api_error_title),
+                            message = fullMessage
+                        )
                     }
                 }
             }
@@ -569,9 +615,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 View.GONE
             }
 
-        treeCard.visibility = View.VISIBLE
         mapControls.visibility = View.GONE
-        updateMapPadding()
+        treeSheetBehavior.state =
+            BottomSheetBehavior.STATE_EXPANDED
+        treeCard.post { updateMapPadding() }
     }
 
     private fun loadTreeDetails(
@@ -646,8 +693,14 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
     private fun hideTreeCard() {
         restoreSelectedMarker()
-        treeCard.visibility = View.GONE
+
+        if (::treeSheetBehavior.isInitialized) {
+            treeSheetBehavior.state =
+                BottomSheetBehavior.STATE_HIDDEN
+        }
+
         mapControls.visibility = View.VISIBLE
+        updateSessionUi()
         updateMapPadding()
     }
 
@@ -731,139 +784,222 @@ class MainActivity : Activity(), OnMapReadyCallback {
             ).joinToString(" ")
                 .ifBlank { user.username }
 
-        AlertDialog.Builder(this)
-            .setTitle(R.string.account_title)
-            .setMessage(
-                "$displayName\n@${user.username}" +
-                    (user.email?.let { "\n$it" } ?: "")
+        val content =
+            layoutInflater.inflate(
+                R.layout.sheet_account,
+                null
             )
-            .setPositiveButton(R.string.logout) { _, _ ->
-                sessionUser = null
-                sessionPermissions = null
-                sessionUsername = null
-                sessionPassword = null
-                updateSessionUi()
-                restoreMapStatus()
+
+        content.findViewById<TextView>(
+            R.id.accountDisplayName
+        ).text = displayName
+
+        content.findViewById<TextView>(
+            R.id.accountUsername
+        ).text = "@${user.username}"
+
+        content.findViewById<TextView>(
+            R.id.accountEmail
+        ).text =
+            user.email?.takeIf { it.isNotBlank() }
+                ?: getString(R.string.account_email_missing)
+
+        val permissionLabels =
+            buildList {
+                val perms = sessionPermissions
+
+                if (perms?.canAddTree == true) {
+                    add(getString(R.string.account_permission_add))
+                }
+
+                if (perms?.canEditTree == true) {
+                    add(getString(R.string.account_permission_edit))
+                }
+
+                if (perms?.canEditTreePhoto == true) {
+                    add(getString(R.string.account_permission_photo))
+                }
             }
-            .setNegativeButton(R.string.close, null)
-            .show()
+
+        content.findViewById<TextView>(
+            R.id.accountPermissions
+        ).text =
+            permissionLabels
+                .takeIf { it.isNotEmpty() }
+                ?.joinToString("  ·  ")
+                ?: getString(R.string.account_permissions_view)
+
+        val dialog = BottomSheetDialog(this)
+        dialog.setContentView(content)
+        dialog.setOnShowListener {
+            dialog.behavior.skipCollapsed = true
+            dialog.behavior.state =
+                BottomSheetBehavior.STATE_EXPANDED
+        }
+
+        content.findViewById<MaterialButton>(
+            R.id.accountClose
+        ).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        content.findViewById<MaterialButton>(
+            R.id.accountLogout
+        ).setOnClickListener {
+            sessionUser = null
+            sessionPermissions = null
+            sessionUsername = null
+            sessionPassword = null
+            updateSessionUi()
+            restoreMapStatus()
+            dialog.dismiss()
+            showOtnMessage(getString(R.string.logout))
+        }
+
+        dialog.show()
     }
 
     private fun showLoginDialog(
         onSuccess: (() -> Unit)? = null
     ) {
-        val content = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(
-                dp(22),
-                dp(6),
-                dp(22),
-                0
+        val content =
+            layoutInflater.inflate(
+                R.layout.sheet_login,
+                null
             )
-        }
 
-        val usernameInput = EditText(this).apply {
-            hint = getString(R.string.username)
-            isSingleLine = true
-            inputType =
-                InputType.TYPE_CLASS_TEXT
-        }
+        val usernameLayout =
+            content.findViewById<TextInputLayout>(
+                R.id.loginUsernameLayout
+            )
+        val passwordLayout =
+            content.findViewById<TextInputLayout>(
+                R.id.loginPasswordLayout
+            )
+        val usernameInput =
+            content.findViewById<TextInputEditText>(
+                R.id.loginUsername
+            )
+        val passwordInput =
+            content.findViewById<TextInputEditText>(
+                R.id.loginPassword
+            )
+        val errorView =
+            content.findViewById<TextView>(
+                R.id.loginError
+            )
+        val submit =
+            content.findViewById<MaterialButton>(
+                R.id.loginSubmit
+            )
+        val cancel =
+            content.findViewById<MaterialButton>(
+                R.id.loginCancel
+            )
 
-        val passwordInput = EditText(this).apply {
-            hint = getString(R.string.password)
-            isSingleLine = true
-            inputType =
-                InputType.TYPE_CLASS_TEXT or
-                    InputType.TYPE_TEXT_VARIATION_PASSWORD
-        }
-
-        content.addView(usernameInput)
-        content.addView(passwordInput)
-
-        val dialog =
-            AlertDialog.Builder(this)
-                .setTitle(R.string.login_title)
-                .setView(content)
-                .setPositiveButton(R.string.login, null)
-                .setNegativeButton(R.string.cancel, null)
-                .create()
-
+        val dialog = BottomSheetDialog(this)
+        dialog.setContentView(content)
         dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                .setOnClickListener {
-                    val username =
-                        usernameInput.text.toString().trim()
-                    val password =
-                        passwordInput.text.toString()
+            dialog.behavior.skipCollapsed = true
+            dialog.behavior.state =
+                BottomSheetBehavior.STATE_EXPANDED
+        }
 
-                    if (username.isBlank() || password.isBlank()) {
-                        return@setOnClickListener
+        cancel.setOnClickListener {
+            dialog.dismiss()
+            restoreMapStatus()
+        }
+
+        fun attemptLogin() {
+            val username =
+                usernameInput.text?.toString()?.trim().orEmpty()
+            val password =
+                passwordInput.text?.toString().orEmpty()
+
+            usernameLayout.error = null
+            passwordLayout.error = null
+            errorView.visibility = View.GONE
+
+            if (username.isBlank() || password.isBlank()) {
+                if (username.isBlank()) {
+                    usernameLayout.error =
+                        getString(R.string.username)
+                }
+
+                if (password.isBlank()) {
+                    passwordLayout.error =
+                        getString(R.string.password)
+                }
+
+                errorView.text =
+                    getString(R.string.login_required_fields)
+                errorView.visibility = View.VISIBLE
+                return
+            }
+
+            submit.isEnabled = false
+            submit.text = getString(R.string.login_in_progress)
+            statusView.setText(R.string.status_loading)
+
+            executor.execute {
+                val result =
+                    runCatching {
+                        val client = apiClient()
+                        val user =
+                            client.login(
+                                username,
+                                password
+                            )
+                        val permissions =
+                            client.fetchInstancePermissions(
+                                username,
+                                password
+                            )
+
+                        user to permissions
                     }
 
-                    dialog.getButton(
-                        AlertDialog.BUTTON_POSITIVE
-                    ).isEnabled = false
-                    statusView.setText(R.string.status_loading)
+                runOnUiThread {
+                    submit.isEnabled = true
+                    submit.text = getString(R.string.login)
 
-                    executor.execute {
-                        val result =
-                            runCatching {
-                                val client = apiClient()
-                                val user = client.login(
-                                    username,
-                                    password
-                                )
-                                val permissions =
-                                    client.fetchInstancePermissions(
-                                        username,
-                                        password
-                                    )
-                                user to permissions
-                            }
+                    result.onSuccess { loginResult ->
+                        val user = loginResult.first
+                        val permissions = loginResult.second
 
-                        runOnUiThread {
-                            dialog.getButton(
-                                AlertDialog.BUTTON_POSITIVE
-                            ).isEnabled = true
+                        sessionUser = user
+                        sessionPermissions = permissions
+                        sessionUsername = username
+                        sessionPassword = password
+                        updateSessionUi()
 
-                            result.onSuccess { loginResult ->
-                                val user = loginResult.first
-                                val permissions = loginResult.second
-                                sessionUser = user
-                                sessionPermissions = permissions
-                                sessionUsername = username
-                                sessionPassword = password
-                                updateSessionUi()
+                        statusView.text =
+                            getString(
+                                R.string.status_logged_in,
+                                user.username
+                            )
 
-                                Toast.makeText(
-                                    this,
-                                    R.string.login_success,
-                                    Toast.LENGTH_SHORT
-                                ).show()
-
-                                statusView.text =
-                                    getString(
-                                        R.string.status_logged_in,
-                                        user.username
-                                    )
-
-                                dialog.dismiss()
-                                onSuccess?.invoke()
-                            }.onFailure { error ->
-                                Toast.makeText(
-                                    this,
-                                    getString(
-                                        R.string.login_failed,
-                                        error.message
-                                            ?: error.javaClass.simpleName
-                                    ),
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                restoreMapStatus()
-                            }
-                        }
+                        dialog.dismiss()
+                        showOtnMessage(
+                            getString(R.string.login_success)
+                        )
+                        onSuccess?.invoke()
+                    }.onFailure { error ->
+                        errorView.text =
+                            getString(
+                                R.string.login_failed,
+                                error.message
+                                    ?: error.javaClass.simpleName
+                            )
+                        errorView.visibility = View.VISIBLE
+                        restoreMapStatus()
                     }
                 }
+            }
+        }
+
+        submit.setOnClickListener {
+            attemptLogin()
         }
 
         dialog.show()
@@ -906,7 +1042,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 if (
                     loggedIn &&
                     sessionPermissions?.canEditTree == true &&
-                    treeCard.visibility == View.VISIBLE
+                    isTreeSheetVisible()
                 ) {
                     View.VISIBLE
                 } else {
@@ -919,13 +1055,11 @@ class MainActivity : Activity(), OnMapReadyCallback {
         hideTreeCard()
         addingTree = true
         updateAddButtonUi()
-        statusView.setText(R.string.status_add_mode)
+        statusView.setText(R.string.add_tree_map_step)
 
-        Toast.makeText(
-            this,
-            R.string.status_add_mode,
-            Toast.LENGTH_LONG
-        ).show()
+        showOtnMessage(
+            getString(R.string.add_tree_map_step)
+        )
     }
 
     private fun cancelAddMode() {
@@ -970,12 +1104,11 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     onReady(species)
                 }.onFailure { error ->
                     restoreMapStatus()
-                    Toast.makeText(
-                        this,
+                    showOtnMessage(
                         error.message
                             ?: error.javaClass.simpleName,
-                        Toast.LENGTH_LONG
-                    ).show()
+                        isError = true
+                    )
                 }
             }
         }
@@ -1004,185 +1137,245 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 species.firstOrNull { it.id == id }
             }
 
-        val content = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(
-                dp(22),
-                dp(4),
-                dp(22),
-                0
+        val content =
+            layoutInflater.inflate(
+                R.layout.sheet_tree_editor,
+                null
             )
-        }
 
-        val speciesButton = Button(this).apply {
-            text =
-                selectedSpecies?.value
-                    ?: getString(R.string.select_species)
-            isAllCaps = false
-        }
+        val eyebrow =
+            content.findViewById<TextView>(
+                R.id.editorEyebrow
+            )
+        val title =
+            content.findViewById<TextView>(
+                R.id.editorTitle
+            )
+        val position =
+            content.findViewById<TextView>(
+                R.id.editorPosition
+            )
+        val speciesLayout =
+            content.findViewById<TextInputLayout>(
+                R.id.editorSpeciesLayout
+            )
+        val speciesInput =
+            content.findViewById<AutoCompleteTextView>(
+                R.id.editorSpecies
+            )
+        val diameterInput =
+            content.findViewById<TextInputEditText>(
+                R.id.editorDiameter
+            )
+        val heightInput =
+            content.findViewById<TextInputEditText>(
+                R.id.editorHeight
+            )
+        val errorView =
+            content.findViewById<TextView>(
+                R.id.editorError
+            )
+        val cancel =
+            content.findViewById<MaterialButton>(
+                R.id.editorCancel
+            )
+        val save =
+            content.findViewById<MaterialButton>(
+                R.id.editorSave
+            )
 
-        val diameterInput = EditText(this).apply {
-            hint = getString(R.string.diameter_cm)
-            inputType =
-                InputType.TYPE_CLASS_NUMBER or
-                    InputType.TYPE_NUMBER_FLAG_DECIMAL
-            tree?.diameter?.let {
-                setText(formatNumber(it))
-            }
-        }
-
-        val heightInput = EditText(this).apply {
-            hint = getString(R.string.height_m)
-            inputType =
-                InputType.TYPE_CLASS_NUMBER or
-                    InputType.TYPE_NUMBER_FLAG_DECIMAL
-            tree?.height?.let {
-                setText(formatNumber(it))
-            }
-        }
-
-        content.addView(speciesButton)
-        content.addView(diameterInput)
-        content.addView(heightInput)
-
-        speciesButton.setOnClickListener {
-            val labels =
-                species.map { it.value }.toTypedArray()
-
-            AlertDialog.Builder(this)
-                .setTitle(R.string.select_species)
-                .setItems(labels) { _, index ->
-                    selectedSpecies = species[index]
-                    speciesButton.text =
-                        selectedSpecies?.value
+        eyebrow.text =
+            getString(
+                if (tree == null) {
+                    R.string.add_tree_step
+                } else {
+                    R.string.edit_tree_step
                 }
-                .show()
+            )
+
+        title.text =
+            getString(
+                if (tree == null) {
+                    R.string.add_tree_complete_title
+                } else {
+                    R.string.edit_tree_title
+                }
+            )
+
+        position.text =
+            getString(
+                R.string.selected_position,
+                point.latitude,
+                point.longitude
+            )
+
+        tree?.diameter?.let {
+            diameterInput.setText(formatNumber(it))
         }
 
-        val dialog =
-            AlertDialog.Builder(this)
-                .setTitle(
-                    if (tree == null) {
-                        R.string.add_tree_title
-                    } else {
-                        R.string.edit_tree_title
-                    }
-                )
-                .setView(content)
-                .setPositiveButton(R.string.save, null)
-                .setNegativeButton(R.string.cancel) { _, _ ->
-                    restoreMapStatus()
-                }
-                .create()
+        tree?.height?.let {
+            heightInput.setText(formatNumber(it))
+        }
 
+        val labels = species.map { it.value }
+
+        speciesInput.setAdapter(
+            ArrayAdapter(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                labels
+            )
+        )
+        speciesInput.threshold = 0
+
+        selectedSpecies?.let {
+            speciesInput.setText(it.value, false)
+        }
+
+        speciesInput.setOnItemClickListener {
+                parent,
+                _,
+                itemPosition,
+                _ ->
+            val label =
+                parent.getItemAtPosition(itemPosition)
+                    ?.toString()
+                    .orEmpty()
+
+            selectedSpecies =
+                species.firstOrNull {
+                    it.value == label
+                }
+
+            speciesLayout.error = null
+        }
+
+        speciesInput.setOnClickListener {
+            speciesInput.showDropDown()
+        }
+
+        val dialog = BottomSheetDialog(this)
+        dialog.setContentView(content)
         dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                .setOnClickListener {
-                    val selected = selectedSpecies
+            dialog.behavior.skipCollapsed = true
+            dialog.behavior.state =
+                BottomSheetBehavior.STATE_EXPANDED
+        }
 
-                    if (selected == null) {
-                        Toast.makeText(
-                            this,
-                            R.string.species_required,
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@setOnClickListener
+        cancel.setOnClickListener {
+            dialog.dismiss()
+            restoreMapStatus()
+        }
+
+        save.setOnClickListener {
+            val typedSpecies =
+                speciesInput.text?.toString()?.trim().orEmpty()
+
+            val selected =
+                selectedSpecies
+                    ?: species.firstOrNull {
+                        it.value.equals(
+                            typedSpecies,
+                            ignoreCase = true
+                        )
                     }
 
-                    val username = sessionUsername
-                    val password = sessionPassword
+            speciesLayout.error = null
+            errorView.visibility = View.GONE
 
-                    if (
-                        username == null ||
-                        password == null
-                    ) {
+            if (selected == null) {
+                speciesLayout.error =
+                    getString(R.string.species_required)
+                return@setOnClickListener
+            }
+
+            val username = sessionUsername
+            val password = sessionPassword
+
+            if (
+                username == null ||
+                password == null
+            ) {
+                dialog.dismiss()
+                showLoginDialog {
+                    openTreeEditor(tree, point)
+                }
+                return@setOnClickListener
+            }
+
+            val diameter =
+                parseDecimal(
+                    diameterInput.text?.toString().orEmpty()
+                )
+            val height =
+                parseDecimal(
+                    heightInput.text?.toString().orEmpty()
+                )
+
+            save.isEnabled = false
+            save.text = getString(R.string.save_in_progress)
+            statusView.setText(R.string.status_saving)
+
+            executor.execute {
+                val result =
+                    runCatching {
+                        if (tree == null) {
+                            apiClient().createTree(
+                                latitude = point.latitude,
+                                longitude = point.longitude,
+                                speciesId = selected.id,
+                                diameter = diameter,
+                                height = height,
+                                username = username,
+                                password = password
+                            )
+                        } else {
+                            apiClient().updateTree(
+                                plotId = tree.plotId,
+                                speciesId = selected.id,
+                                diameter = diameter,
+                                height = height,
+                                username = username,
+                                password = password
+                            )
+                        }
+                    }
+
+                runOnUiThread {
+                    save.isEnabled = true
+                    save.text = getString(R.string.save)
+
+                    result.onSuccess { saved ->
                         dialog.dismiss()
-                        showLoginDialog {
-                            openTreeEditor(tree, point)
-                        }
-                        return@setOnClickListener
-                    }
 
-                    val diameter =
-                        parseDecimal(
-                            diameterInput.text.toString()
-                        )
-                    val height =
-                        parseDecimal(
-                            heightInput.text.toString()
+                        showOtnMessage(
+                            getString(R.string.saved_successfully)
                         )
 
-                    dialog.getButton(
-                        AlertDialog.BUTTON_POSITIVE
-                    ).isEnabled = false
-                    statusView.setText(R.string.status_saving)
-
-                    executor.execute {
-                        val result =
-                            runCatching {
-                                if (tree == null) {
-                                    apiClient().createTree(
-                                        latitude = point.latitude,
-                                        longitude = point.longitude,
-                                        speciesId = selected.id,
-                                        diameter = diameter,
-                                        height = height,
-                                        username = username,
-                                        password = password
-                                    )
-                                } else {
-                                    apiClient().updateTree(
-                                        plotId = tree.plotId,
-                                        speciesId = selected.id,
-                                        diameter = diameter,
-                                        height = height,
-                                        username = username,
-                                        password = password
-                                    )
-                                }
-                            }
-
-                        runOnUiThread {
-                            dialog.getButton(
-                                AlertDialog.BUTTON_POSITIVE
-                            ).isEnabled = true
-
-                            result.onSuccess { saved ->
-                                dialog.dismiss()
-
-                                Toast.makeText(
-                                    this,
-                                    R.string.tree_saved,
-                                    Toast.LENGTH_SHORT
-                                ).show()
-
-                                map?.animateCamera(
-                                    CameraUpdateFactory
-                                        .newLatLngZoom(
-                                            LatLng(
-                                                saved.latitude,
-                                                saved.longitude
-                                            ),
-                                            17f
-                                        )
-                                )
-
-                                loadTrees()
-                            }.onFailure { error ->
-                                Toast.makeText(
-                                    this,
-                                    getString(
-                                        R.string.tree_save_failed,
-                                        error.message
-                                            ?: error.javaClass.simpleName
+                        map?.animateCamera(
+                            CameraUpdateFactory
+                                .newLatLngZoom(
+                                    LatLng(
+                                        saved.latitude,
+                                        saved.longitude
                                     ),
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                restoreMapStatus()
-                            }
-                        }
+                                    17f
+                                )
+                        )
+
+                        loadTrees()
+                    }.onFailure { error ->
+                        errorView.text =
+                            getString(
+                                R.string.tree_save_failed,
+                                error.message
+                                    ?: error.javaClass.simpleName
+                            )
+                        errorView.visibility = View.VISIBLE
+                        restoreMapStatus()
                     }
                 }
+            }
         }
 
         dialog.show()
@@ -1204,11 +1397,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 ?.takeIf { it.isNotBlank() }
 
         if (scientificName == null) {
-            Toast.makeText(
-                this,
-                R.string.botanical_card_missing,
-                Toast.LENGTH_SHORT
-            ).show()
+            showOtnMessage(
+                getString(R.string.botanical_card_missing),
+                isError = true
+            )
             return
         }
 
@@ -1222,6 +1414,65 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 Uri.parse(url)
             )
         )
+    }
+
+    private fun showOtnMessage(
+        message: String,
+        isError: Boolean = false
+    ) {
+        if (!::rootView.isInitialized) return
+
+        Snackbar.make(
+            rootView,
+            message,
+            Snackbar.LENGTH_LONG
+        )
+            .setBackgroundTint(
+                getColor(
+                    if (isError) {
+                        R.color.otn_error
+                    } else {
+                        R.color.otn_green_dark
+                    }
+                )
+            )
+            .setTextColor(Color.WHITE)
+            .show()
+    }
+
+    private fun showMessageSheet(
+        title: String,
+        message: String
+    ) {
+        val content =
+            layoutInflater.inflate(
+                R.layout.sheet_message,
+                null
+            )
+
+        content.findViewById<TextView>(
+            R.id.messageTitle
+        ).text = title
+
+        content.findViewById<TextView>(
+            R.id.messageBody
+        ).text = message
+
+        val dialog = BottomSheetDialog(this)
+        dialog.setContentView(content)
+        dialog.setOnShowListener {
+            dialog.behavior.skipCollapsed = true
+            dialog.behavior.state =
+                BottomSheetBehavior.STATE_EXPANDED
+        }
+
+        content.findViewById<MaterialButton>(
+            R.id.messageClose
+        ).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun slugify(value: String): String {
@@ -1608,18 +1859,17 @@ class MainActivity : Activity(), OnMapReadyCallback {
     }
 
     private fun configureSystemBars() {
-        window.statusBarColor =
-            getColor(R.color.otn_green_dark)
-        window.navigationBarColor =
-            getColor(R.color.otn_cream)
+        WindowCompat.enableEdgeToEdge(window)
 
-        if (
-            android.os.Build.VERSION.SDK_INT >=
-            android.os.Build.VERSION_CODES.O
-        ) {
-            window.decorView.systemUiVisibility =
-                window.decorView.systemUiVisibility or
-                    View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
+
+        WindowInsetsControllerCompat(
+            window,
+            window.decorView
+        ).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = true
         }
     }
 
@@ -1650,27 +1900,27 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 }
 
             (topPanel.layoutParams as
-                FrameLayout.LayoutParams).also { params ->
+                ViewGroup.MarginLayoutParams).also { params ->
                 params.topMargin = systemTopInset
                 topPanel.layoutParams = params
             }
 
             (filterBar.layoutParams as
-                FrameLayout.LayoutParams).also { params ->
+                ViewGroup.MarginLayoutParams).also { params ->
                 params.topMargin =
                     systemTopInset + dp(64)
                 filterBar.layoutParams = params
             }
 
             (mapControls.layoutParams as
-                FrameLayout.LayoutParams).also { params ->
+                ViewGroup.MarginLayoutParams).also { params ->
                 params.bottomMargin =
                     systemBottomInset + dp(18)
                 mapControls.layoutParams = params
             }
 
             (treeCard.layoutParams as
-                FrameLayout.LayoutParams).also { params ->
+                ViewGroup.MarginLayoutParams).also { params ->
                 params.bottomMargin =
                     systemBottomInset + dp(10)
                 treeCard.layoutParams = params
@@ -1687,12 +1937,23 @@ class MainActivity : Activity(), OnMapReadyCallback {
         val topPadding =
             systemTopInset + dp(108)
 
-        val bottomPadding =
+        val sheetHeight =
             if (
                 ::treeCard.isInitialized &&
-                treeCard.visibility == View.VISIBLE
+                isTreeSheetVisible()
             ) {
-                systemBottomInset + dp(310)
+                treeCard.height
+                    .takeIf { it > 0 }
+                    ?: dp(310)
+            } else {
+                0
+            }
+
+        val bottomPadding =
+            if (sheetHeight > 0) {
+                systemBottomInset +
+                    sheetHeight +
+                    dp(16)
             } else {
                 systemBottomInset + dp(24)
             }
