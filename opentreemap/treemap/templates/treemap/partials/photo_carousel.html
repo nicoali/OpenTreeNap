@@ -1,5 +1,6 @@
 {% load i18n %}
 {% load instance_config %}
+{% load botanical_images %}
 {# Template meant to be included as the contents of a Bootstrap Carousel #}
 {# Expects to be given - photos: a list of MapFeaturePhoto objects, error: an optional error message #}
 
@@ -25,8 +26,11 @@
   </div>
   {% empty %}
   {% if feature.is_plot %}
+  {% botanical_image_url tree.species.scientific_name as botanical_url %}
   <div class="item active">
-    <img id="tree-photo-placeholder" src="{{ STATIC_URL }}img/tree.png" alt="{% trans 'There are no photos' %}">
+    <img id="tree-photo-placeholder"
+         src="{% if botanical_url %}{{ botanical_url }}{% else %}{{ STATIC_URL }}img/tree.png{% endif %}"
+         alt="{% if tree.species.scientific_name %}{{ tree.species.scientific_name }}{% else %}{% trans 'There are no photos' %}{% endif %}">
   </div>
   {% endif %}
 {% endfor %}
