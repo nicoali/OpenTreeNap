@@ -14,7 +14,7 @@ FIELDS = (
     ('Qualità misura', 'string'),
     ('Errore altezza stimato m', 'float'),
     ('Errore circonferenza stimato cm', 'float'),
-    ('Data rilievo smartphone', 'date'),
+    ('Data rilievo', 'date'),
 )
 
 class Command(BaseCommand):
