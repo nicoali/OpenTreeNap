@@ -54,17 +54,17 @@ Obiettivo: rendere l'app veloce anche con migliaia di alberi.
 
 Obiettivo: eliminare i dialog Android standard e dare all'app un'identità coerente.
 
-**Implementazione attiva:** `feature/android-sprint2-ui`. Material 3, bottom sheet albero, login/account OTN, editor guidato add/edit, Snackbar/error sheet ed edge-to-edge sono implementati e in attesa di verifica su dispositivo. Checklist: [android/UI_SPRINT2.md](android/UI_SPRINT2.md).
+**Sprint completato e verificato su dispositivo (2026-10-02).** Material 3, bottom sheet albero, login/account OTN, editor guidato add/edit, palette OTN, Snackbar/error sheet ed edge-to-edge sono stati verificati visivamente e funzionalmente. Checklist: [android/UI_SPRINT2.md](android/UI_SPRINT2.md).
 
-- [ ] Bottom sheet professionale per la scheda albero.
-- [ ] Bottom sheet/account panel per login, profilo e logout.
-- [ ] Schermata/modale professionale per modifica albero.
-- [ ] Flow guidato per aggiunta nuovo albero.
-- [ ] Palette coerente OTN verde / navy / crema / oro.
-- [ ] Migliorare tipografia, spaziature e pulsanti.
-- [ ] Gestione definitiva edge-to-edge e system insets.
-- [ ] Stati vuoti, loading e errori nello stile OpenTreeNap.
-- [ ] Migliorare accessibilità e dimensioni touch target.
+- [x] Bottom sheet professionale per la scheda albero.
+- [x] Bottom sheet/account panel per login, profilo e logout.
+- [x] Schermata/modale professionale per modifica albero.
+- [x] Flow guidato per aggiunta nuovo albero.
+- [x] Palette coerente OTN verde / navy / crema / oro.
+- [x] Migliorare tipografia, spaziature e pulsanti.
+- [x] Gestione definitiva edge-to-edge e system insets.
+- [x] Stati vuoti, loading e errori nello stile OpenTreeNap.
+- [x] Migliorare accessibilità e dimensioni touch target.
 
 # Sprint 3 — Immagini botaniche condivise
 
