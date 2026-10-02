@@ -382,7 +382,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
             val result =
                 runCatching {
                     apiClient().fetchAllTrees(
-                        pageSize = 150
+                        pageSize = 1000
                     ) { partial ->
                         if (!hadData) {
                             runOnUiThread {
