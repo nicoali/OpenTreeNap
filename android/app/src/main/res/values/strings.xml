@@ -48,7 +48,7 @@
     <string name="edit_tree">Modifica</string>
     <string name="edit_tree_title">Modifica albero</string>
     <string name="select_species">Seleziona specie</string>
-    <string name="diameter_cm">Diametro / DBH (cm)</string>
+    <string name="diameter_cm">DBH (cm)</string>
     <string name="height_m">Altezza (m)</string>
     <string name="save">Salva</string>
     <string name="cancel">Annulla</string>
