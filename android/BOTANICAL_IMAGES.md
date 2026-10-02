@@ -79,3 +79,18 @@ Quindi una nuova immagine rappresentativa diventa disponibile in sito, OTN e app
 4. Aprire `Pinus pinea` e `Quercus ilex` nell'app.
 5. Sostituire una rappresentativa su WordPress e verificare l'aggiornamento dopo refresh/cache TTL.
 6. Verificare una foto reale OTN: deve avere precedenza sull'immagine specie.
+
+
+## Verifica endpoint WordPress live
+
+Verificato il 2026-10-02 dopo l'attivazione del plugin su `opentreenap.altervista.org`.
+
+L'endpoint:
+
+`/wp-json/opentreenap/v1/botanical-images`
+
+risponde con schema v2 e rileva automaticamente 15 specie dalla Media Library, tra cui `Pinus pinea`, `Quercus ilex`, `Cedrus libani`, `Celtis australis`, `Magnolia grandiflora` e altre.
+
+È verificata anche la selezione automatica della rappresentativa più recente: per `Pinus pinea` sono presenti più immagini rappresentative e il manifest sceglie quella modificata più recentemente, mantenendo le altre in `gallery`.
+
+Il passaggio WordPress → manifest automatico è quindi operativo.
