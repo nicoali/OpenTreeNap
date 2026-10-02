@@ -290,7 +290,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
         manager.setOnClusterClickListener { cluster ->
             val bounds = LatLngBounds.builder()
             cluster.items.forEach {
-                bounds.include(it.position)
+                bounds.include(it.getPosition())
             }
 
             runCatching {
@@ -305,7 +305,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 if (first != null) {
                     googleMap.animateCamera(
                         CameraUpdateFactory.newLatLngZoom(
-                            first.position,
+                            first.getPosition(),
                             (
                                 googleMap.cameraPosition.zoom +
                                     2f
