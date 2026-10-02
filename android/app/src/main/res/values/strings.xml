@@ -7,6 +7,9 @@
     <string name="status_monumental">%1$d alberi monumentali</string>
     <string name="status_no_results">Nessun albero in questo filtro</string>
     <string name="status_error">Errore API: %1$s</string>
+    <string name="status_logged_in">Connesso come %1$s</string>
+    <string name="status_add_mode">Tocca sulla mappa il punto del nuovo albero</string>
+    <string name="status_saving">Salvataggio in corso…</string>
     <string name="refresh">Aggiorna</string>
     <string name="config_missing">Configura local.properties per collegare l’istanza OpenTreeNap.</string>
     <string name="filter_all">Tutti</string>
@@ -14,7 +17,7 @@
     <string name="filter_monumental_count">Monumentali · %1$d</string>
     <string name="no_monumental_loaded">Nessun albero monumentale riconosciuto nei dati caricati.</string>
     <string name="badge_tree">Albero</string>
-    <string name="badge_monumental">Monumentale</string>
+    <string name="badge_monumental">Albero Monumentale d’Italia</string>
     <string name="details_missing">Dettagli botanici non ancora disponibili.</string>
     <string name="close">Chiudi</string>
     <string name="layers">Cambia tipo di mappa</string>
@@ -23,4 +26,31 @@
     <string name="location_denied">Permesso posizione non concesso.</string>
     <string name="map_satellite">Vista satellite</string>
     <string name="map_standard">Vista mappa</string>
+
+    <string name="account">Account</string>
+    <string name="login">Accedi</string>
+    <string name="logout">Esci</string>
+    <string name="username">Nome utente</string>
+    <string name="password">Password</string>
+    <string name="login_title">Accedi a OpenTreeNap</string>
+    <string name="login_success">Accesso effettuato</string>
+    <string name="login_failed">Accesso non riuscito: %1$s</string>
+    <string name="account_title">Account OpenTreeNap</string>
+
+    <string name="add_tree">Aggiungi albero</string>
+    <string name="add_tree_title">Nuovo albero</string>
+    <string name="edit_tree">Modifica</string>
+    <string name="edit_tree_title">Modifica albero</string>
+    <string name="select_species">Seleziona specie</string>
+    <string name="diameter_cm">Diametro / DBH (cm)</string>
+    <string name="height_m">Altezza (m)</string>
+    <string name="save">Salva</string>
+    <string name="cancel">Annulla</string>
+    <string name="tree_saved">Albero salvato su OpenTreeNap</string>
+    <string name="tree_save_failed">Salvataggio non riuscito: %1$s</string>
+    <string name="species_required">Seleziona prima una specie.</string>
+    <string name="loading_species">Caricamento specie…</string>
+
+    <string name="open_botanical_card">Scheda botanica</string>
+    <string name="botanical_card_missing">Scheda botanica non disponibile per questa specie.</string>
 </resources>
