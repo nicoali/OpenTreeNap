@@ -14,5 +14,6 @@ data class TreeMarker(
     val diameter: Double? = null,
     val height: Double? = null,
     val customId: String? = null,
+    val photoUrl: String? = null,
     val isMonumental: Boolean = false
 )
