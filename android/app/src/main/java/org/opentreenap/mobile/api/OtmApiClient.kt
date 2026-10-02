@@ -51,7 +51,7 @@ class OtmApiClient(
                 setRequestProperty("X-Signature", signature)
                 setRequestProperty(
                     "platform-ver-build",
-                    "OpenTreeNap-Android/0.6.0"
+                    "OpenTreeNap-Android/0.7.0"
                 )
             }
 
@@ -235,6 +235,108 @@ class OtmApiClient(
             ?: error("Albero creato ma risposta non valida")
     }
 
+    fun updateMeasurements(
+        plotId: Int,
+        height: Double?,
+        circumferenceCm: Double?,
+        heightMethod: String?,
+        circumferenceMethod: String?,
+        heightStatus: String?,
+        circumferenceStatus: String?,
+        quality: String?,
+        username: String,
+        password: String
+    ): TreeMarker {
+        val tree = JSONObject()
+
+        height?.let {
+            tree.put("height", it)
+        }
+
+        circumferenceCm?.let {
+            tree.put(
+                "diameter",
+                it / Math.PI
+            )
+            tree.put(
+                "udf:Circonferenza 1,30 m",
+                it
+            )
+        }
+
+        heightMethod
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                tree.put(
+                    "udf:Metodo misura altezza",
+                    it
+                )
+            }
+
+        circumferenceMethod
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                tree.put(
+                    "udf:Metodo misura circonferenza",
+                    it
+                )
+            }
+
+        heightStatus
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                tree.put(
+                    "udf:Stato misura altezza",
+                    it
+                )
+            }
+
+        circumferenceStatus
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                tree.put(
+                    "udf:Stato misura circonferenza",
+                    it
+                )
+            }
+
+        quality
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                tree.put(
+                    "udf:Qualità misura",
+                    it
+                )
+            }
+
+        tree.put(
+            "udf:Data rilievo",
+            localDate()
+        )
+
+        val payload =
+            JSONObject()
+                .put("tree", tree)
+
+        val raw = request(
+            method = "PUT",
+            path = "/api/v4/instance/$instance/plots/$plotId",
+            body =
+                payload.toString()
+                    .toByteArray(
+                        StandardCharsets.UTF_8
+                    ),
+            username = username,
+            password = password
+        )
+
+        return parsePlot(
+            JSONObject(raw)
+        ) ?: error(
+            "Misure salvate ma risposta non valida"
+        )
+    }
+
     fun updateTree(
         plotId: Int,
         speciesId: Int?,
@@ -291,7 +393,7 @@ class OtmApiClient(
             readTimeout = 30_000
             setRequestProperty("Accept", "application/json")
             setRequestProperty("X-Signature", signature)
-            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.6.0")
+            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.7.0")
 
             if (username != null && password != null) {
                 val credentials = "$username:$password"
@@ -716,6 +818,20 @@ class OtmApiClient(
             found
         }
         else -> false
+    }
+
+    private fun localDate(): String {
+        val formatter =
+            SimpleDateFormat(
+                "yyyy-MM-dd",
+                Locale.US
+            )
+        formatter.timeZone =
+            TimeZone.getDefault()
+
+        return formatter.format(
+            Date()
+        )
     }
 
     private fun utcTimestamp(): String {
