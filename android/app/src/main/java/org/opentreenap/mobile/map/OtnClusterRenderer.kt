@@ -48,6 +48,33 @@ class OtnClusterRenderer(
             .zIndex(if (hasMonumental) 2f else 1f)
     }
 
+    override fun onClusterUpdated(
+        cluster: Cluster<TreeClusterItem>,
+        marker: com.google.android.gms.maps.model.Marker
+    ) {
+        val hasMonumental =
+            cluster.items.any { it.tree.isMonumental }
+
+        marker.setIcon(
+            clusterIconProvider(
+                cluster.size,
+                hasMonumental
+            )
+        )
+        marker.zIndex = if (hasMonumental) 2f else 1f
+    }
+
+    override fun onClusterItemUpdated(
+        item: TreeClusterItem,
+        marker: com.google.android.gms.maps.model.Marker
+    ) {
+        super.onClusterItemUpdated(item, marker)
+        marker.setIcon(treeIconProvider(item.tree))
+        marker.setAnchor(0.5f, 0.5f)
+        marker.zIndex =
+            if (item.tree.isMonumental) 3f else 2f
+    }
+
     override fun shouldRenderAsCluster(
         cluster: Cluster<TreeClusterItem>
     ): Boolean = cluster.size > 1
