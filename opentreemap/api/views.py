@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.contrib.gis.db.models.functions import Transform, X, Y
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.tokens import default_token_generator
 
@@ -200,17 +201,17 @@ def get_plot_list(request, instance):
         # no photos, audits, containing polygons or sharing metadata.
         rows = Tree.objects\
             .filter(instance=instance)\
+            .annotate(
+                geom_wgs84=Transform('plot__geom', 4326),
+                longitude=X('geom_wgs84'),
+                latitude=Y('geom_wgs84'),
+            )\
             .order_by('id')\
             .values(
                 'id',
                 'plot_id',
-                'plot__geom',
-                'plot__owner_orig_id',
-                'plot__address_street',
-                'plot__address_city',
-                'plot__address_zip',
-                'diameter',
-                'height',
+                'longitude',
+                'latitude',
                 'udfs',
                 'species_id',
                 'species__common_name',
@@ -223,13 +224,6 @@ def get_plot_list(request, instance):
         results = []
 
         for row in rows:
-            geom = row['plot__geom']
-
-            # OTM stores map geometry in EPSG:3857.  Transform a clone so the
-            # database object is untouched and Android receives WGS84.
-            latlon = geom.clone()
-            latlon.transform(4326)
-
             species = None
             common_name = row['species__common_name'] or ''
             genus = row['species__genus'] or ''
@@ -258,32 +252,31 @@ def get_plot_list(request, instance):
             title = common_name or scientific_name or (
                 'Albero #%s' % row['id'])
 
-            address_parts = [
-                row['plot__address_street'] or '',
-                row['plot__address_city'] or '',
-                row['plot__address_zip'] or '',
-            ]
-            address_full = ', '.join(
-                part for part in address_parts if part)
+            udfs = dict(row['udfs'] or {})
+            monumental_value = udfs.get('Monumentale')
+            is_monumental = str(monumental_value).strip().lower() in (
+                '1', 'true', 'yes', 'si', 'sì', 'monumentale',
+                "albero monumentale d'italia", 'centenario',
+                'centenaria', 'heritage'
+            )
 
             results.append({
                 'has_tree': True,
                 'title': title,
-                'address_full': address_full,
+                'is_monumental': is_monumental,
+                # Address, DBH, height, Custom ID, photos and other rich
+                # fields are fetched lazily from /plots/{id} after a tap.
+                'address_full': '',
                 'plot': {
                     'id': row['plot_id'],
-                    'owner_orig_id': row['plot__owner_orig_id'],
                     'geom': {
                         'srid': 4326,
-                        'x': latlon.x,
-                        'y': latlon.y,
+                        'x': row['longitude'],
+                        'y': row['latitude'],
                     },
                 },
                 'tree': {
                     'id': row['id'],
-                    'diameter': row['diameter'],
-                    'height': row['height'],
-                    'udfs': dict(row['udfs'] or {}),
                     'species': species,
                 },
             })
