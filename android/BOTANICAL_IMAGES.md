@@ -76,3 +76,14 @@ Non è necessario pubblicare una nuova APK per aggiungere una specie al manifest
 5. Aprire una specie non ancora nel manifest: placeholder generico.
 6. Verificare lo stesso comportamento nella pagina dettaglio OTN.
 7. Riavviare l'app: manifest e immagini già viste devono beneficiare della cache.
+
+
+## Verifica parziale su dispositivo
+
+Test reale del 2026-10-02:
+
+- `Quercus ilex` senza foto reale carica correttamente l'immagine rappresentativa WordPress;
+- badge `Immagine specie` visibile;
+- dopo la correzione del re-layout, immagine, nome comune, nome scientifico, indirizzo, ID e azioni restano tutti visibili;
+- quando l'utente non è autenticato, `Modifica` resta correttamente nascosto e `Scheda botanica` occupa tutta la larghezza;
+- il comportamento con foto reale OTN e il popolamento completo del manifest restano da verificare.
