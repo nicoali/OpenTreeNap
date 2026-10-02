@@ -112,11 +112,28 @@ Obiettivo: trasformare il dettaglio albero in una vera scheda informativa.
 - [x] Indicazioni stradali.
 - [x] QR dedicato.
 
-# Sprint 5 — Contributi utenti
+# Sprint 5 — Misurazioni dendrometriche da smartphone
 
-Obiettivo: consentire contributi controllati dal telefono.
+Obiettivo: misurare in modo guidato e validabile altezza e circonferenza del fusto direttamente sul campo.
 
-**Implementazione attiva:** `feature/android-sprint5-contributions-ai`. Per il riconoscimento usiamo come motore primario BioCLIP v1 self-hosted, open source/MIT, limitato alle specie dell'istanza Napoli. Pl@ntNet resta solo fallback opzionale. Dettagli: [android/SPRINT5_RECOGNITION.md](android/SPRINT5_RECOGNITION.md).
+**Implementazione attiva:** `feature/android-sprint5-measurements`. Metodo primario ARCore/Depth, standard circonferenza a 1,30 m e validazione obbligatoria contro strumenti di riferimento prima dell'uso ufficiale. Dettagli: [android/SPRINT5_MEASUREMENTS.md](android/SPRINT5_MEASUREMENTS.md).
+
+- [ ] `Misura altezza` con anchor alla base e puntamento della cima.
+- [ ] Tre misure consecutive + mediana e dispersione.
+- [ ] Fallback clinometro per dispositivi senza ARCore.
+- [ ] `Misura circonferenza` con quota guidata a 1,30 m.
+- [ ] Scansione Depth/point cloud e fit robusto della sezione.
+- [ ] DBH equivalente derivato quando appropriato.
+- [ ] Qualità/tracking/errore stimato salvati con la misura.
+- [ ] Validazione altezza su almeno 30 alberi contro clinometro/laser.
+- [ ] Validazione circonferenza su almeno 50 alberi contro nastro dendrometrico.
+- [ ] Scrittura nei campi OTN/UDF solo dopo conferma utente.
+
+# Sprint 6 — Riconoscimento assistito specie
+
+Obiettivo: suggerire la specie da foto senza modifiche automatiche ai dati.
+
+**Pianificato dopo Sprint 5:** BioCLIP v1 self-hosted come motore primario open source/MIT, ristretto alle specie OTN Napoli; Pl@ntNet resta solo fallback opzionale. Dettagli: [android/SPRINT5_RECOGNITION.md](android/SPRINT5_RECOGNITION.md).
 
 ### Riconoscimento assistito specie
 
@@ -128,6 +145,10 @@ Obiettivo: consentire contributi controllati dal telefono.
 - [ ] Consentire solo conferma manuale dell'utente: nessuna modifica automatica della specie.
 - [ ] Azione opzionale `Confronta immagini` per aprire una ricerca immagini/web della candidata.
 - [ ] Registrare in futuro esito confermato/rifiutato per migliorare il workflow di validazione.
+# Sprint 7 — Contributi utenti
+
+Obiettivo: consentire contributi controllati dal telefono.
+
 
 - [ ] Login persistente sicuro.
 - [x] Logout.
@@ -142,7 +163,7 @@ Obiettivo: consentire contributi controllati dal telefono.
 - [ ] Conferma prima delle modifiche distruttive.
 - [ ] Gestione eventuali pending edits / moderazione.
 
-# Sprint 6 — Alberi monumentali
+# Sprint 8 — Alberi monumentali
 
 Obiettivo: valorizzare il patrimonio monumentale di Napoli.
 
@@ -156,7 +177,7 @@ Obiettivo: valorizzare il patrimonio monumentale di Napoli.
 - [ ] Condivisione dedicata.
 - [ ] Eventuale layer separato sulla mappa.
 
-# Sprint 7 — Schede botaniche
+# Sprint 9 — Schede botaniche
 
 Obiettivo: unificare contenuti scientifici e divulgativi.
 
@@ -172,7 +193,7 @@ Obiettivo: unificare contenuti scientifici e divulgativi.
 - [ ] Stato/uso urbano.
 - [ ] Eventuale gioco collezione/figurine.
 
-# Sprint 8 — Ricerca e navigazione
+# Sprint 10 — Ricerca e navigazione
 
 - [ ] Ricerca specie.
 - [ ] Ricerca indirizzo.
@@ -186,7 +207,7 @@ Obiettivo: unificare contenuti scientifici e divulgativi.
 - [ ] Preferiti.
 - [ ] Alberi visitati.
 
-# Sprint 9 — Benefici ecosistemici
+# Sprint 11 — Benefici ecosistemici
 
 - [ ] Valutare integrazione i-Tree.
 - [ ] CO2.
@@ -197,7 +218,7 @@ Obiettivo: unificare contenuti scientifici e divulgativi.
 - [ ] Presentazione divulgativa semplice.
 - [ ] Dettaglio tecnico opzionale.
 
-# Sprint 10 — Capodimonte e aree speciali
+# Sprint 12 — Capodimonte e aree speciali
 
 - [ ] Layer Capodimonte.
 - [ ] Alberi storici/centenari.
@@ -206,7 +227,7 @@ Obiettivo: unificare contenuti scientifici e divulgativi.
 - [ ] Punti di interesse.
 - [ ] Modalità visita guidata.
 
-# Sprint 11 — Sicurezza e pubblicazione
+# Sprint 13 — Sicurezza e pubblicazione
 
 - [ ] Rimuovere il secret HMAC dall'APK pubblico.
 - [ ] Mobile API/proxy server-side OpenTreeNap.
@@ -226,12 +247,15 @@ Obiettivo: unificare contenuti scientifici e divulgativi.
 2. UI/UX professionale.
 3. Immagini botaniche condivise.
 4. Scheda albero completa.
-5. Add/edit/foto con account.
-6. Monumentali.
-7. Ricerca e percorsi.
-8. Benefici ecosistemici.
-9. Modalità bambini e contenuti speciali.
-10. Hardening sicurezza e pubblicazione.
+5. Misure dendrometriche da smartphone.
+6. Riconoscimento assistito specie.
+7. Add/edit/foto con account.
+8. Monumentali.
+9. Schede botaniche e contenuti speciali.
+10. Ricerca e percorsi.
+11. Benefici ecosistemici.
+12. Capodimonte e aree speciali.
+13. Hardening sicurezza e pubblicazione.
 
 ## Regola di sviluppo
 
