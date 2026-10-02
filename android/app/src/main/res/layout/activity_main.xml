@@ -421,6 +421,24 @@
             android:textSize="10sp"
             android:visibility="gone" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/treeMeasure"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="11dp"
+            android:text="@string/tree_measurements"
+            android:textAllCaps="false"
+            android:textColor="@color/otn_navy"
+            android:textSize="12sp"
+            app:backgroundTint="@color/otn_surface_alt"
+            app:cornerRadius="14dp"
+            app:icon="@drawable/ic_measure"
+            app:iconGravity="textStart"
+            app:iconPadding="7dp"
+            app:iconTint="@color/otn_gold"
+            app:strokeColor="@color/otn_gold"
+            app:strokeWidth="1dp" />
+
         <LinearLayout
             android:id="@+id/treeSecondaryActions"
             android:layout_width="match_parent"
