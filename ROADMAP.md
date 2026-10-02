@@ -133,30 +133,31 @@ Obiettivo: misurare in modo guidato e validabile altezza e circonferenza del fus
 
 Obiettivo: suggerire la specie da foto senza modifiche automatiche ai dati.
 
-**Pianificato dopo Sprint 5:** BioCLIP v1 self-hosted come motore primario open source/MIT, ristretto alle specie OTN Napoli; Pl@ntNet resta solo fallback opzionale. Dettagli: [android/SPRINT5_RECOGNITION.md](android/SPRINT5_RECOGNITION.md).
+**Pianificato dopo Sprint 5:** BioCLIP v1 self-hosted come motore primario open source/MIT, ristretto alle specie OTN Napoli; Pl@ntNet resta solo fallback opzionale. Dettagli: [android/SPRINT6_RECOGNITION.md](android/SPRINT6_RECOGNITION.md).
 
 ### Riconoscimento assistito specie
 
 - [ ] Pulsante `Riconosci albero` da fotocamera/galleria.
-- [ ] Integrazione Pl@ntNet lato server (API key mai nell'APK).
+- [ ] Motore primario BioCLIP v1 self-hosted; Pl@ntNet solo fallback opzionale lato server.
 - [ ] Supportare 1–5 foto dello stesso albero, con organo `auto`, foglia, fiore, frutto o corteccia.
-- [ ] Mostrare le prime 3 specie candidate con confidenza e nome scientifico/comune.
+- [ ] Mostrare le prime 3 specie candidate con confidenza e nome scientifico/comune, ristrette alle specie OTN Napoli.
 - [ ] Confrontare le candidate con le specie già presenti nell'istanza OTN Napoli.
 - [ ] Consentire solo conferma manuale dell'utente: nessuna modifica automatica della specie.
 - [ ] Azione opzionale `Confronta immagini` per aprire una ricerca immagini/web della candidata.
 - [ ] Registrare in futuro esito confermato/rifiutato per migliorare il workflow di validazione.
+
 # Sprint 7 — Contributi utenti
 
 Obiettivo: consentire contributi controllati dal telefono.
 
 - [ ] Login persistente sicuro.
-- [ ] Logout.
+- [x] Logout.
 - [ ] Recupero password.
 - [ ] Registrazione account.
-- [ ] Aggiunta nuovo albero.
-- [ ] Modifica albero esistente.
+- [x] Aggiunta nuovo albero.
+- [x] Modifica albero esistente.
 - [ ] Upload foto.
-- [ ] Gestione permessi reali OTN.
+- [x] Gestione permessi reali OTN.
 - [ ] Segnalazione errori/danni.
 - [ ] Storico modifiche utente.
 - [ ] Conferma prima delle modifiche distruttive.
