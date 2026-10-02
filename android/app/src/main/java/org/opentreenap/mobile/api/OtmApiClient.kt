@@ -50,7 +50,7 @@ class OtmApiClient(
                 setRequestProperty("X-Signature", signature)
                 setRequestProperty(
                     "platform-ver-build",
-                    "OpenTreeNap-Android/0.3.1"
+                    "OpenTreeNap-Android/0.3.2"
                 )
             }
 
@@ -290,7 +290,7 @@ class OtmApiClient(
             readTimeout = 30_000
             setRequestProperty("Accept", "application/json")
             setRequestProperty("X-Signature", signature)
-            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.3.1")
+            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.3.2")
 
             if (username != null && password != null) {
                 val credentials = "$username:$password"
@@ -354,6 +354,9 @@ class OtmApiClient(
         val latitude = geometry.optDouble("y", Double.NaN)
         val longitude = geometry.optDouble("x", Double.NaN)
         if (!latitude.isFinite() || !longitude.isFinite()) return null
+        if (latitude !in -90.0..90.0 || longitude !in -180.0..180.0) {
+            return null
+        }
 
         val tree = item.optJSONObject("tree")
         val hasTree = item.optBoolean("has_tree", tree != null && tree.length() > 0)
