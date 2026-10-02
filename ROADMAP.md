@@ -70,7 +70,7 @@ Obiettivo: eliminare i dialog Android standard e dare all'app un'identità coere
 
 Obiettivo: usare una sola fonte di immagini/specie in app e OTN.
 
-**Implementazione Sprint 3 pronta:** WordPress è la fonte master tramite endpoint REST automatico; OTN usa cache resiliente e Android 0.5.1 usa ETag/cache locale. Resta da attivare il plugin WordPress e verificare il flusso end-to-end prima della chiusura definitiva. Dettagli: [android/BOTANICAL_IMAGES.md](android/BOTANICAL_IMAGES.md).
+**Sprint 3 — WordPress live verificato:** il manifest REST automatico è attivo su `opentreenap.altervista.org` e rileva le immagini della Media Library. OTN usa cache resiliente e Android 0.5.1 usa ETag/cache locale. Resta il test end-to-end finale dopo deploy OTN + build Android. Dettagli: [android/BOTANICAL_IMAGES.md](android/BOTANICAL_IMAGES.md).
 
 - [x] Definire un manifest condiviso specie -> immagine botanica.
 - [x] Associare nome scientifico, URL immagine e pagina botanica tramite manifest WordPress; `species_id` resta risolto lato OTN/app.
