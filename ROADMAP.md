@@ -114,6 +114,17 @@ Obiettivo: trasformare il dettaglio albero in una vera scheda informativa.
 
 Obiettivo: consentire contributi controllati dal telefono.
 
+### Riconoscimento assistito specie
+
+- [ ] Pulsante `Riconosci albero` da fotocamera/galleria.
+- [ ] Integrazione Pl@ntNet lato server (API key mai nell'APK).
+- [ ] Supportare 1–5 foto dello stesso albero, con organo `auto`, foglia, fiore, frutto o corteccia.
+- [ ] Mostrare le prime 3 specie candidate con confidenza e nome scientifico/comune.
+- [ ] Confrontare le candidate con le specie già presenti nell'istanza OTN Napoli.
+- [ ] Consentire solo conferma manuale dell'utente: nessuna modifica automatica della specie.
+- [ ] Azione opzionale `Confronta immagini` per aprire una ricerca immagini/web della candidata.
+- [ ] Registrare in futuro esito confermato/rifiutato per migliorare il workflow di validazione.
+
 - [ ] Login persistente sicuro.
 - [ ] Logout.
 - [ ] Recupero password.
