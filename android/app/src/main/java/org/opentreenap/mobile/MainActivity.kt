@@ -31,10 +31,15 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.maps.android.clustering.ClusterManager
 import org.opentreenap.mobile.api.OtmApiClient
+import org.opentreenap.mobile.data.TreeCache
+import org.opentreenap.mobile.map.OtnClusterRenderer
+import org.opentreenap.mobile.map.TreeClusterItem
 import org.opentreenap.mobile.model.ApiUser
 import org.opentreenap.mobile.model.InstancePermissions
 import org.opentreenap.mobile.model.SpeciesItem
@@ -67,6 +72,9 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private lateinit var editTreeButton: Button
 
     private var map: GoogleMap? = null
+    private var clusterManager: ClusterManager<TreeClusterItem>? = null
+    private var clusterRenderer: OtnClusterRenderer? = null
+    private lateinit var treeCache: TreeCache
     private var systemTopInset = 0
     private var systemBottomInset = 0
     private var allTrees: List<TreeMarker> = emptyList()
@@ -95,6 +103,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
         configureSystemBars()
         setContentView(R.layout.activity_main)
+        treeCache = TreeCache(applicationContext)
 
         rootView = findViewById(R.id.root)
         statusBarScrim = findViewById(R.id.statusBarScrim)
@@ -211,12 +220,8 @@ class MainActivity : Activity(), OnMapReadyCallback {
             Log.w(MAPS_LOG_TAG, "Custom map style unavailable", it)
         }
 
+        setupClusterManager(googleMap)
         updateMapPadding()
-        googleMap.setOnCameraIdleListener {
-            if (!addingTree) {
-                renderClusters()
-            }
-        }
 
         googleMap.setOnMapClickListener { point ->
             if (addingTree) {
@@ -228,35 +233,119 @@ class MainActivity : Activity(), OnMapReadyCallback {
             }
         }
 
-        googleMap.setOnMarkerClickListener { marker ->
-            when (val tag = marker.tag) {
-                is TreeMarker -> {
-                    if (addingTree) {
-                        false
-                    } else {
-                        showTreeCard(tag, marker)
-                        true
-                    }
-                }
-                is ClusterTag -> {
-                    if (addingTree) {
-                        false
-                    } else {
-                        zoomIntoCluster(tag)
-                        true
-                    }
-                }
-                else -> false
-            }
-        }
-
         googleMap.moveCamera(
             CameraUpdateFactory.newLatLngZoom(
                 LatLng(40.8518, 14.2681),
                 12.3f
             )
         )
-        loadTrees()
+        loadCachedTreesThenRefresh()
+    }
+
+    private fun setupClusterManager(
+        googleMap: GoogleMap
+    ) {
+        val manager =
+            ClusterManager<TreeClusterItem>(
+                this,
+                googleMap
+            )
+
+        val renderer =
+            OtnClusterRenderer(
+                context = this,
+                map = googleMap,
+                clusterManager = manager,
+                treeIconProvider = { tree ->
+                    treeIcon(tree)
+                },
+                clusterIconProvider = { count, hasMonumental ->
+                    clusterIcon(
+                        count = count,
+                        hasMonumental = hasMonumental
+                    )
+                }
+            )
+
+        manager.renderer = renderer
+
+        manager.setOnClusterItemClickListener { item ->
+            if (addingTree) {
+                false
+            } else {
+                val marker =
+                    renderer.getMarker(item)
+
+                if (marker != null) {
+                    showTreeCard(item.tree, marker)
+                } else {
+                    showTreeCardContent(item.tree)
+                }
+
+                loadTreeDetails(item.tree)
+                true
+            }
+        }
+
+        manager.setOnClusterClickListener { cluster ->
+            val bounds = LatLngBounds.builder()
+            cluster.items.forEach {
+                bounds.include(it.position)
+            }
+
+            runCatching {
+                googleMap.animateCamera(
+                    CameraUpdateFactory.newLatLngBounds(
+                        bounds.build(),
+                        dp(64)
+                    )
+                )
+            }.onFailure {
+                val first = cluster.items.firstOrNull()
+                if (first != null) {
+                    googleMap.animateCamera(
+                        CameraUpdateFactory.newLatLngZoom(
+                            first.position,
+                            (
+                                googleMap.cameraPosition.zoom +
+                                    2f
+                                ).coerceAtMost(19f)
+                        )
+                    )
+                }
+            }
+            true
+        }
+
+        googleMap.setOnCameraIdleListener(manager)
+        googleMap.setOnMarkerClickListener(manager)
+
+        clusterManager = manager
+        clusterRenderer = renderer
+    }
+
+    private fun loadCachedTreesThenRefresh() {
+        executor.execute {
+            val snapshot = treeCache.load()
+
+            runOnUiThread {
+                if (
+                    snapshot != null &&
+                    snapshot.trees.isNotEmpty()
+                ) {
+                    allTrees = snapshot.trees
+                    updateFilterUi()
+                    renderClusters()
+                    statusView.text =
+                        getString(
+                            R.string.status_cached,
+                            allTrees.size
+                        )
+                }
+
+                loadTrees()
+            }
+        }
     }
 
     private fun apiClient(): OtmApiClient =
@@ -268,20 +357,36 @@ class MainActivity : Activity(), OnMapReadyCallback {
         )
 
     private fun loadTrees() {
-        val googleMap = map ?: return
+        if (map == null) return
 
         if (!isConfigured()) {
             statusView.setText(R.string.config_missing)
             return
         }
 
-        statusView.setText(R.string.status_loading)
+        val hadData = allTrees.isNotEmpty()
+
+        statusView.setText(
+            if (hadData) {
+                R.string.status_refreshing
+            } else {
+                R.string.status_loading
+            }
+        )
+
         refreshButton.isEnabled = false
         refreshButton.alpha = 0.45f
 
         executor.execute {
-            val result = runCatching {
-                apiClient().fetchAllTrees()
+            val result =
+                runCatching {
+                    apiClient().fetchAllTrees(
+                        pageSize = 500
+                    )
+                }
+
+            result.onSuccess { trees ->
+                treeCache.save(trees)
             }
 
             runOnUiThread {
@@ -292,39 +397,53 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     allTrees = trees
                     updateFilterUi()
                     renderClusters()
+
                     Log.i(
                         MAPS_LOG_TAG,
                         "OTM trees loaded count=${trees.size}"
                     )
                 }.onFailure { error ->
-                    Log.e(MAPS_LOG_TAG, "OTM API failure", error)
+                    Log.e(
+                        MAPS_LOG_TAG,
+                        "OTM API failure",
+                        error
+                    )
 
-                    val fullMessage =
-                        error.message ?: error.javaClass.simpleName
+                    if (allTrees.isNotEmpty()) {
+                        restoreMapStatus()
+                        Toast.makeText(
+                            this,
+                            getString(
+                                R.string.refresh_failed_cached
+                            ),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        val fullMessage =
+                            error.message
+                                ?: error.javaClass.simpleName
 
-                    statusView.text =
-                        getString(
-                            R.string.status_error_short
-                        )
+                        statusView.text =
+                            getString(
+                                R.string.status_error_short
+                            )
 
-                    googleMap.clear()
-
-                    AlertDialog.Builder(this)
-                        .setTitle(R.string.api_error_title)
-                        .setMessage(fullMessage)
-                        .setPositiveButton(
-                            R.string.close,
-                            null
-                        )
-                        .show()
+                        AlertDialog.Builder(this)
+                            .setTitle(R.string.api_error_title)
+                            .setMessage(fullMessage)
+                            .setPositiveButton(
+                                R.string.close,
+                                null
+                            )
+                            .show()
+                    }
                 }
             }
         }
     }
 
     private fun renderClusters() {
-        val googleMap = map ?: return
-        if (allTrees.isEmpty()) return
+        val manager = clusterManager ?: return
 
         val visibleTrees =
             if (monumentalOnly) {
@@ -333,72 +452,21 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 allTrees
             }
 
-        googleMap.clear()
-        selectedMarker = null
-        selectedTree = null
+        restoreSelectedMarker()
+        manager.clearItems()
 
         if (visibleTrees.isEmpty()) {
+            manager.cluster()
             statusView.setText(R.string.status_no_results)
             return
         }
 
-        val zoom = googleMap.cameraPosition.zoom
-        val cellSize =
-            when {
-                zoom < 11f -> dp(112)
-                zoom < 13f -> dp(88)
-                zoom < 15f -> dp(68)
-                zoom < 17f -> dp(52)
-                else -> dp(34)
+        manager.addItems(
+            visibleTrees.map {
+                TreeClusterItem(it)
             }
-
-        val groups = linkedMapOf<Long, MutableList<TreeMarker>>()
-        val projection = googleMap.projection
-
-        visibleTrees.forEach { tree ->
-            val point =
-                projection.toScreenLocation(
-                    LatLng(tree.latitude, tree.longitude)
-                )
-            val cellX = point.x / cellSize
-            val cellY = point.y / cellSize
-            val key =
-                (cellX.toLong() shl 32) xor
-                    (cellY.toLong() and 0xffffffffL)
-
-            groups.getOrPut(key) { mutableListOf() }.add(tree)
-        }
-
-        groups.values.forEach { trees ->
-            if (trees.size == 1) {
-                val tree = trees.first()
-                googleMap.addMarker(
-                    MarkerOptions()
-                        .position(
-                            LatLng(
-                                tree.latitude,
-                                tree.longitude
-                            )
-                        )
-                        .icon(treeIcon(tree))
-                        .anchor(0.5f, 0.5f)
-                        .zIndex(if (tree.isMonumental) 3f else 2f)
-                )?.tag = tree
-            } else {
-                val latitude =
-                    trees.sumOf { it.latitude } / trees.size
-                val longitude =
-                    trees.sumOf { it.longitude } / trees.size
-
-                googleMap.addMarker(
-                    MarkerOptions()
-                        .position(LatLng(latitude, longitude))
-                        .icon(clusterIcon(trees.size))
-                        .anchor(0.5f, 0.5f)
-                        .zIndex(1f)
-                )?.tag = ClusterTag(trees)
-            }
-        }
+        )
+        manager.cluster()
 
         restoreMapStatus()
     }
@@ -412,8 +480,21 @@ class MainActivity : Activity(), OnMapReadyCallback {
         selectedMarker = marker
         selectedTree = tree
 
-        marker.setIcon(treeIcon(tree, selected = true))
+        marker.setIcon(
+            treeIcon(
+                tree,
+                selected = true
+            )
+        )
         marker.zIndex = 10f
+
+        showTreeCardContent(tree)
+    }
+
+    private fun showTreeCardContent(
+        tree: TreeMarker
+    ) {
+        selectedTree = tree
 
         treeBadge.text =
             getString(
@@ -423,6 +504,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     R.string.badge_tree
                 }
             )
+
         treeBadge.setBackgroundResource(
             if (tree.isMonumental) {
                 R.drawable.chip_monumental_active
@@ -432,10 +514,13 @@ class MainActivity : Activity(), OnMapReadyCallback {
         )
 
         treeTitle.text =
-            tree.commonName?.takeIf { it.isNotBlank() }
+            tree.commonName
+                ?.takeIf { it.isNotBlank() }
                 ?: tree.title
 
-        val scientific = tree.scientificName.orEmpty()
+        val scientific =
+            tree.scientificName.orEmpty()
+
         treeScientific.text = scientific
         treeScientific.visibility =
             if (scientific.isBlank()) {
@@ -445,13 +530,18 @@ class MainActivity : Activity(), OnMapReadyCallback {
             }
 
         treeDetails.text =
-            tree.address?.takeIf { it.isNotBlank() }
-                ?: tree.snippet?.takeIf { it.isNotBlank() }
-                ?: getString(R.string.details_missing)
+            tree.address
+                ?.takeIf { it.isNotBlank() }
+                ?: tree.snippet
+                    ?.takeIf { it.isNotBlank() }
+                ?: getString(
+                    R.string.details_missing
+                )
 
         treeMeta.text = buildTreeMeta(tree)
 
-        botanicalCardButton.isEnabled = scientific.isNotBlank()
+        botanicalCardButton.isEnabled =
+            scientific.isNotBlank()
         botanicalCardButton.alpha =
             if (scientific.isNotBlank()) 1f else 0.45f
 
@@ -468,6 +558,43 @@ class MainActivity : Activity(), OnMapReadyCallback {
         treeCard.visibility = View.VISIBLE
         mapControls.visibility = View.GONE
         updateMapPadding()
+    }
+
+    private fun loadTreeDetails(
+        tree: TreeMarker
+    ) {
+        if (tree.plotId < 0) return
+
+        executor.execute {
+            val result =
+                runCatching {
+                    apiClient().fetchPlot(tree.plotId)
+                }
+
+            result.onSuccess { detailed ->
+                val updatedTrees =
+                    allTrees.map {
+                        if (it.plotId == detailed.plotId) {
+                            detailed
+                        } else {
+                            it
+                        }
+                    }
+
+                treeCache.save(updatedTrees)
+
+                runOnUiThread {
+                    allTrees = updatedTrees
+
+                    if (
+                        selectedTree?.plotId ==
+                        detailed.plotId
+                    ) {
+                        showTreeCardContent(detailed)
+                    }
+                }
+            }
+        }
     }
 
     private fun buildTreeMeta(tree: TreeMarker): String {
@@ -524,28 +651,6 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
         selectedMarker = null
         selectedTree = null
-    }
-
-    private fun zoomIntoCluster(cluster: ClusterTag) {
-        if (cluster.trees.isEmpty()) return
-
-        val latitude =
-            cluster.trees.sumOf { it.latitude } /
-                cluster.trees.size
-        val longitude =
-            cluster.trees.sumOf { it.longitude } /
-                cluster.trees.size
-
-        val nextZoom =
-            ((map?.cameraPosition?.zoom ?: 12f) + 2f)
-                .coerceAtMost(19f)
-
-        map?.animateCamera(
-            CameraUpdateFactory.newLatLngZoom(
-                LatLng(latitude, longitude),
-                nextZoom
-            )
-        )
     }
 
     private fun updateFilterUi() {
@@ -1290,7 +1395,8 @@ class MainActivity : Activity(), OnMapReadyCallback {
     }
 
     private fun clusterIcon(
-        count: Int
+        count: Int,
+        hasMonumental: Boolean = false
     ): BitmapDescriptor {
         val size = dp(42)
 
@@ -1314,7 +1420,13 @@ class MainActivity : Activity(), OnMapReadyCallback {
         )
 
         paint.color =
-            Color.parseColor("#FFF9ED")
+            Color.parseColor(
+                if (hasMonumental) {
+                    "#B88A2B"
+                } else {
+                    "#FFF9ED"
+                }
+            )
         canvas.drawCircle(
             center,
             center,
@@ -1325,6 +1437,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
         paint.color =
             Color.parseColor(
                 when {
+                    hasMonumental -> "#174B35"
                     count < 10 -> "#8BAA3D"
                     count < 40 -> "#246B4B"
                     else -> "#174B35"
@@ -1634,9 +1747,6 @@ class MainActivity : Activity(), OnMapReadyCallback {
         mapView.onLowMemory()
     }
 
-    private data class ClusterTag(
-        val trees: List<TreeMarker>
-    )
 
     companion object {
         private const val MAPS_LOG_TAG =
