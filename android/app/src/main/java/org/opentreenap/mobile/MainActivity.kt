@@ -298,12 +298,25 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     )
                 }.onFailure { error ->
                     Log.e(MAPS_LOG_TAG, "OTM API failure", error)
+
+                    val fullMessage =
+                        error.message ?: error.javaClass.simpleName
+
                     statusView.text =
                         getString(
-                            R.string.status_error,
-                            error.message ?: error.javaClass.simpleName
+                            R.string.status_error_short
                         )
+
                     googleMap.clear()
+
+                    AlertDialog.Builder(this)
+                        .setTitle(R.string.api_error_title)
+                        .setMessage(fullMessage)
+                        .setPositiveButton(
+                            R.string.close,
+                            null
+                        )
+                        .show()
                 }
             }
         }
