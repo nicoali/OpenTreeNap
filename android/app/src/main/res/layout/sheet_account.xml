@@ -75,12 +75,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:background="@drawable/chip_inactive"
+        android:background="@drawable/account_permissions_panel"
         android:paddingStart="14dp"
         android:paddingTop="10dp"
         android:paddingEnd="14dp"
         android:paddingBottom="10dp"
-        android:textColor="@color/otn_text"
+        android:textColor="@color/otn_green_dark"
         android:textSize="13sp" />
 
     <LinearLayout
