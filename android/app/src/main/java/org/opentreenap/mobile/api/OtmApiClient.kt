@@ -4,6 +4,7 @@ import android.util.Base64
 import org.json.JSONArray
 import org.json.JSONObject
 import org.opentreenap.mobile.model.ApiUser
+import org.opentreenap.mobile.model.InstancePermissions
 import org.opentreenap.mobile.model.SpeciesItem
 import org.opentreenap.mobile.model.TreeMarker
 import java.net.HttpURLConnection
@@ -58,6 +59,24 @@ class OtmApiClient(
             firstName = obj.optString("first_name").takeIf { it.isNotBlank() },
             lastName = obj.optString("last_name").takeIf { it.isNotBlank() },
             email = obj.optString("email").takeIf { it.isNotBlank() }
+        )
+    }
+
+    fun fetchInstancePermissions(
+        username: String,
+        password: String
+    ): InstancePermissions {
+        val raw = request(
+            method = "GET",
+            path = "/api/v4/instance/$instance",
+            username = username,
+            password = password
+        )
+        val perms = JSONObject(raw).optJSONObject("meta_perms")
+        return InstancePermissions(
+            canAddTree = perms?.optBoolean("can_add_tree", false) ?: false,
+            canEditTree = perms?.optBoolean("can_edit_tree", false) ?: false,
+            canEditTreePhoto = perms?.optBoolean("can_edit_tree_photo", false) ?: false
         )
     }
 
