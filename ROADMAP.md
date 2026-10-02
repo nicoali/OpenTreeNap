@@ -133,7 +133,7 @@ Obiettivo: misurare in modo guidato e validabile altezza e circonferenza del fus
 
 Obiettivo: suggerire la specie da foto senza modifiche automatiche ai dati.
 
-**Pianificato dopo Sprint 5:** BioCLIP v1 self-hosted come motore primario open source/MIT, ristretto alle specie OTN Napoli; Pl@ntNet resta solo fallback opzionale. Dettagli: [android/SPRINT5_RECOGNITION.md](android/SPRINT5_RECOGNITION.md).
+**Pianificato dopo Sprint 5:** BioCLIP v1 self-hosted come motore primario open source/MIT, ristretto alle specie OTN Napoli; Pl@ntNet resta solo fallback opzionale. Dettagli: [android/SPRINT6_RECOGNITION.md](android/SPRINT6_RECOGNITION.md).
 
 ### Riconoscimento assistito specie
 
@@ -145,6 +145,7 @@ Obiettivo: suggerire la specie da foto senza modifiche automatiche ai dati.
 - [ ] Consentire solo conferma manuale dell'utente: nessuna modifica automatica della specie.
 - [ ] Azione opzionale `Confronta immagini` per aprire una ricerca immagini/web della candidata.
 - [ ] Registrare in futuro esito confermato/rifiutato per migliorare il workflow di validazione.
+
 # Sprint 7 — Contributi utenti
 
 Obiettivo: consentire contributi controllati dal telefono.
