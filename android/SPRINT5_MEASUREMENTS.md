@@ -144,3 +144,38 @@ Lo stato `Da misurare` permette a un altro contributore di completare il rilievo
 Ogni valore deve mantenere il metodo di misura e, quando disponibile, qualità/errore stimato.
 
 La UI deve includere `Come si misura?`, collegato alla guida pubblica sul sito OpenTreeNap.
+
+
+## Stato implementazione 5A — prototipo operativo
+
+Versione Android: `0.7.0`.
+
+Implementato:
+
+- pulsante `Misure` nella scheda albero;
+- scelta `Inserisci misura manuale`, `Misura altezza con smartphone`, `Da misurare`;
+- inserimento manuale opzionale di altezza e circonferenza a 1,30 m;
+- derivazione del DBH equivalente dalla circonferenza (`DBH = C / π`);
+- schermata CameraX con reticolo per il puntamento;
+- clinometro tramite rotation vector del telefono;
+- acquisizione base/cima;
+- tre misure consecutive;
+- mediana e controllo della dispersione;
+- controllo disponibilità ARCore;
+- salvataggio misura su OTN dopo login/conferma;
+- UDF per metodo, stato, qualità e data del rilievo;
+- `Da misurare` persistente per consentire il completamento da parte di terzi.
+
+### Nota sul prototipo altezza
+
+In questa prima build la fotocamera e i sensori misurano gli angoli, mentre la distanza orizzontale dal tronco viene inserita dall'utente.
+
+La fase successiva 5A.2 sostituirà, sui telefoni compatibili, la distanza manuale con anchor/tracking ARCore. Fino alla validazione sul campo il risultato va considerato un prototipo di misura assistita.
+
+### Preparazione backend
+
+Sul backend OTN è disponibile il comando:
+
+`python manage.py ensure_mobile_measurement_udfs --instance napoli`
+
+Il comando crea solo i campi mancanti e mantiene quelli già esistenti.
