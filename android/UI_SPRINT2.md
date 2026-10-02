@@ -77,3 +77,20 @@ L'editor:
 ## Chiusura Sprint 2
 
 Le checkbox della roadmap verranno marcate completate dopo verifica visiva e funzionale su dispositivo reale.
+
+
+## Verifica finale
+
+Test visivo/funzionale su dispositivo reale del 2026-10-02:
+
+- bottom sheet albero stabile e leggibile;
+- pulsanti "Scheda botanica" e "Modifica" allineati, monoriga e completamente visibili sopra la navigation bar;
+- palette OTN coerente tra verde, navy, crema e oro;
+- badge Monumentale distinto e leggibile;
+- dati albero strutturati con ID/DBH/altezza quando disponibili;
+- editor specie più pulito;
+- stato header mantiene inventario e account;
+- cluster e marker mantengono lo stile OTN;
+- login/account bottom sheet verificati.
+
+Lo Sprint 2 è considerato completato.
