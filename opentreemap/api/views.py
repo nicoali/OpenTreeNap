@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from django.contrib.gis.db.models.functions import Transform, X, Y
+from django.contrib.gis.db.models.functions import Transform
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.tokens import default_token_generator
 
@@ -203,15 +203,12 @@ def get_plot_list(request, instance):
             .filter(instance=instance)\
             .annotate(
                 geom_wgs84=Transform('plot__geom', 4326),
-                longitude=X('geom_wgs84'),
-                latitude=Y('geom_wgs84'),
             )\
             .order_by('id')\
             .values(
                 'id',
                 'plot_id',
-                'longitude',
-                'latitude',
+                'geom_wgs84',
                 'udfs',
                 'species_id',
                 'species__common_name',
@@ -271,8 +268,8 @@ def get_plot_list(request, instance):
                     'id': row['plot_id'],
                     'geom': {
                         'srid': 4326,
-                        'x': row['longitude'],
-                        'y': row['latitude'],
+                        'x': row['geom_wgs84'].x,
+                        'y': row['geom_wgs84'].y,
                     },
                 },
                 'tree': {
