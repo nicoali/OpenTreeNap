@@ -78,6 +78,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private lateinit var treeScientific: TextView
     private lateinit var treeDetails: TextView
     private lateinit var treeImageContainer: View
+    private lateinit var treeHeroBackdrop: ImageView
     private lateinit var treeHeroImage: ImageView
     private lateinit var treeHeroPlaceholder: ImageView
     private lateinit var treeImageSource: TextView
@@ -149,6 +150,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
         treeScientific = findViewById(R.id.treeScientific)
         treeDetails = findViewById(R.id.treeDetails)
         treeImageContainer = findViewById(R.id.treeImageContainer)
+        treeHeroBackdrop = findViewById(R.id.treeHeroBackdrop)
         treeHeroImage = findViewById(R.id.treeHeroImage)
         treeHeroPlaceholder = findViewById(R.id.treeHeroPlaceholder)
         treeImageSource = findViewById(R.id.treeImageSource)
@@ -722,6 +724,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
         val imageUrl =
             realPhoto ?: botanicalPhoto
 
+        treeHeroBackdrop.setImageDrawable(null)
         treeHeroImage.setImageDrawable(null)
         treeHeroPlaceholder.visibility = View.VISIBLE
         treeImageSource.visibility = View.GONE
@@ -744,6 +747,10 @@ class MainActivity : Activity(), OnMapReadyCallback {
             )
         treeImageSource.visibility = View.VISIBLE
 
+        treeHeroBackdrop.load(imageUrl) {
+            crossfade(true)
+        }
+
         treeHeroImage.load(imageUrl) {
             crossfade(true)
             listener(
@@ -759,6 +766,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     }
                 },
                 onError = { _, _ ->
+                    treeHeroBackdrop.setImageDrawable(null)
                     treeHeroPlaceholder.visibility = View.VISIBLE
                     treeImageSource.visibility = View.GONE
                 }
