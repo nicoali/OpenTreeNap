@@ -330,11 +330,59 @@ class OtmApiClient(
             password = password
         )
 
-        return parsePlot(
-            JSONObject(raw)
-        ) ?: error(
-            "Misure salvate ma risposta non valida"
-        )
+        val saved =
+            parsePlot(
+                JSONObject(raw)
+            ) ?: error(
+                "Misure inviate ma risposta non valida"
+            )
+
+        height?.let { expected ->
+            val actual =
+                saved.height
+                    ?: error(
+                        "Il server ha accettato la richiesta ma l'altezza non risulta salvata."
+                    )
+
+            if (kotlin.math.abs(actual - expected) > 0.05) {
+                error(
+                    "Verifica salvataggio fallita: altezza richiesta " +
+                        String.format(Locale.ITALY, "%.2f", expected) +
+                        " m, valore restituito " +
+                        String.format(Locale.ITALY, "%.2f", actual) +
+                        " m."
+                )
+            }
+        }
+
+        circumferenceCm?.let { expected ->
+            val actual =
+                saved.extraFields
+                    .firstOrNull {
+                        it.label.equals(
+                            "Circonferenza 1,30 m",
+                            ignoreCase = true
+                        )
+                    }
+                    ?.value
+                    ?.replace(',', '.')
+                    ?.toDoubleOrNull()
+                    ?: error(
+                        "Il server ha accettato la richiesta ma la circonferenza non risulta salvata."
+                    )
+
+            if (kotlin.math.abs(actual - expected) > 0.1) {
+                error(
+                    "Verifica salvataggio fallita: circonferenza richiesta " +
+                        String.format(Locale.ITALY, "%.1f", expected) +
+                        " cm, valore restituito " +
+                        String.format(Locale.ITALY, "%.1f", actual) +
+                        " cm."
+                )
+            }
+        }
+
+        return saved
     }
 
     fun updateTree(
