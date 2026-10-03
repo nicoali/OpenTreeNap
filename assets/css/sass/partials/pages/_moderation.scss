@@ -37,7 +37,7 @@
                 &,
                 &:hover,
                 &:focus {
-                    color:#8aaa3e ;
+                    color:$primary-color ;
                     background-color:#fff;
                 }
             }
@@ -63,11 +63,11 @@
     padding:20px 0;
 
     a{
-        color:#8aaa3e;
+        color:$primary-color;
         text-decoration:underline;
 
         &:hover {
-            color: darken(#8aaa3e, 10%);
+            color: darken($primary-color, 10%);
         }
     }
 

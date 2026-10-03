@@ -7,13 +7,15 @@ import requests
 import os
 from urllib.parse import urlencode
 from unittest import skipIf
+from unittest.mock import patch
 
+from django.conf import settings
 from django.http import HttpResponse
 from django.test.client import RequestFactory
 
 from treemap.tests.base import OTMTestCase
 
-from geocode.views import geocode
+from geocode.views import geocode, reverse_geocode
 
 
 class MockGeocodeRequest():
@@ -87,3 +89,112 @@ class GeocodeTest(OTMTestCase):
         response_json = json.loads(res.content)
         self.assertIn('error', response_json,
                       'The response body should have an "error" property')
+
+
+    @patch('geocode.views.settings.NOMINATIM_SEARCH_URL',
+           'https://nominatim.example/search')
+    @patch('geocode.views.settings.NOMINATIM_USER_AGENT',
+           'OpenTreeNap-Test/1.0')
+    @patch('geocode.views.requests.get')
+    def test_free_form_civic_number_uses_nominatim_fallback(
+            self, requests_get):
+        class MockResponse(object):
+            status_code = 200
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return [{
+                    'lat': '40.8780000',
+                    'lon': '14.2970000',
+                    'display_name': 'Via della Stadera, Napoli, Italia',
+                    'address': {
+                        'road': 'Via della Stadera',
+                        'city': 'Napoli',
+                        'state': 'Campania',
+                        'postcode': '80143',
+                    },
+                }]
+
+        requests_get.return_value = MockResponse()
+        request = self.factory.get('/geocode', {
+            'address': 'Via della Stadera 86, 80143',
+        })
+
+        response = geocode(request)
+
+        self.assertEqual(40.878, response['lat'])
+        self.assertEqual(14.297, response['lng'])
+        self.assertEqual(
+            'Via della Stadera, 86',
+            response['address']['Address']
+        )
+        self.assertTrue(response['approximate'])
+        self.assertEqual(
+            'OpenStreetMap Nominatim',
+            response['_provider']
+        )
+
+
+class ReverseGeocodeTest(OTMTestCase):
+
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_reverse_geocode_rejects_invalid_coordinates(self):
+        request = self.factory.get('/reverse-geocode', {
+            'lat': 'not-a-number',
+            'lng': '14.2681',
+        })
+        response = reverse_geocode(request)
+        self.assertEqual(400, response.status_code)
+
+    @patch('geocode.views.settings.NOMINATIM_REVERSE_URL',
+           'https://nominatim.example/reverse')
+    @patch('geocode.views.settings.NOMINATIM_USER_AGENT',
+           'OpenTreeNap-Test/1.0')
+    @patch('geocode.views.requests.get')
+    def test_reverse_geocode_falls_back_to_nominatim_without_esri_credentials(
+            self, requests_get):
+        settings.OMGEO_SETTINGS[0][1]['settings']['client_id'] = None
+        settings.OMGEO_SETTINGS[0][1]['settings']['client_secret'] = None
+
+        class MockResponse(object):
+            status_code = 200
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {
+                    'display_name': 'Via Toledo 1, Napoli, 80134, Italia',
+                    'address': {
+                        'road': 'Via Toledo',
+                        'house_number': '1',
+                        'city': 'Napoli',
+                        'state': 'Campania',
+                        'postcode': '80134',
+                    },
+                }
+
+        requests_get.return_value = MockResponse()
+        request = self.factory.get('/reverse-geocode', {
+            'lat': '40.8401',
+            'lng': '14.2491',
+        })
+
+        response = reverse_geocode(request)
+
+        self.assertEqual('Via Toledo, 1', response['address']['Address'])
+        self.assertEqual('Napoli', response['address']['City'])
+        self.assertEqual('Campania', response['address']['Region'])
+        self.assertEqual('80134', response['address']['Postal'])
+        self.assertEqual('OpenStreetMap Nominatim', response['_provider'])
+        self.assertEqual('© OpenStreetMap contributors',
+                         response['_attribution'])
+
+        kwargs = requests_get.call_args[1]
+        self.assertEqual('OpenTreeNap-Test/1.0',
+                         kwargs['headers']['User-Agent'])
+        self.assertEqual(12, kwargs['timeout'])

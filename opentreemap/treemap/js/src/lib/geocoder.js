@@ -55,22 +55,18 @@ exports = module.exports = function () {
     };
 
     var reverseGeocodeClient = function(latLng, distance) {
-        var url = '//geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode';
         var params = {
-            'location': latLngToParam(latLng),
-            'distance': distance,
-            'outSR': '3857',
-            'f': 'json',
-            'forStorage': 'true'
+            'lat': latLng.lat,
+            'lng': latLng.lng,
+            'distance': distance
         };
 
         return Bacon.fromPromise(
             $.ajax({
-                url: url,
+                url: reverse.reverse_geocode(),
                 type: 'GET',
                 data: params,
-                crossDomain: true,
-                dataType: 'jsonp'
+                dataType: 'json'
             })
         );
     };

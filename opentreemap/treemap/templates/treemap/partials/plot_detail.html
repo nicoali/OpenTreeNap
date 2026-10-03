@@ -24,10 +24,7 @@
         {% else %}
             <div class="alert alert-info">
                 <p>
-                    {% blocktrans %}
-                        Ecosystem benefits are not available for tree maps in locations outside the
-                        United States. More info is available on the <a href="https://opentreemap.org/faq/#03">OpenTreeMap FAQ page.</a>
-                    {% endblocktrans %}
+                    {% trans 'Ecosystem benefit estimates are not available for this location. The current calculation models cover the United States.' %}
                 </p>
             </div>
         {% endif %}

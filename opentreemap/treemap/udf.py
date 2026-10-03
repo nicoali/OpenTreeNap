@@ -1269,12 +1269,17 @@ class UDFDictionary(dict):
             if v is not None:
                 yield k, v
         if model_instance is not None:
-            for udfd in self.collection_fields:
+            # collection_fields is a dict keyed by UDF name.  Iterating the
+            # dict therefore yields strings, not UserDefinedFieldDefinition
+            # objects.  Using udfd.name here raises AttributeError during JSON
+            # serialization of plot details as soon as collection UDF support
+            # is initialized.
+            for udf_name in self.collection_fields:
                 v = None
                 try:
-                    v = self.__getitem__(udfd.name)
+                    v = self.__getitem__(udf_name)
                     if v is not None:
-                        yield udfd.name, v
+                        yield udf_name, v
                 except KeyError:
                     pass
 

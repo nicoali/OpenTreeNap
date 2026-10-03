@@ -1,5 +1,7 @@
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 var $ = require('jquery'),
     Bacon = require('baconjs'),
     _ = require('lodash'),
@@ -58,7 +60,7 @@ module.exports.init = function (updateStream) {
 
     $(window).on('beforeunload', function() {
         if ($('.editBtn').is(':hidden')) {
-            return 'Are you sure you want to leave?';
+            return gettext("Are you sure you want to leave?");
         }
     });
 };

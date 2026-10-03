@@ -1,5 +1,7 @@
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 var $ = require('jquery'),
     _ = require('lodash'),
     U = require('treemap/lib/utility.js'),
@@ -46,7 +48,7 @@ function init(options) {
         if (stepNumber === STEP_FINAL) {
             var species = $speciesTypeahead.data('datum'),
                 common_name = species ? species.common_name :
-                              aTreeFieldIsSet() ? "Missing species" : "Empty planting site",
+                              aTreeFieldIsSet() ? gettext("Missing species") : gettext("Empty planting site"),
                 scientific_name = species ? species.scientific_name : '';
             $summaryHead.text(common_name);
             $summarySubhead.text(scientific_name);

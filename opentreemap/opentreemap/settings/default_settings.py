@@ -143,11 +143,17 @@ TILE_HOST = os.environ.get('OTM_TILE_HOST') or None
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
 # In a Windows environment this must be set to your system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'Europe/Rome'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/str/language-identifiers.html
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'it'
+LANGUAGES = (('it', 'Italiano'), ('en', 'English'))
+LANGUAGE_COOKIE_AGE = 60 * 60 * 24 * 365
+LANGUAGE_COOKIE_SECURE = not DEBUG
+LANGUAGE_COOKIE_SAMESITE = 'Lax'
+
+PROJECT_WEBSITE_URL = 'https://opentreenap.altervista.org/'
 
 SITE_ID = 1
 
@@ -156,7 +162,7 @@ SITE_ID = 1
 USE_I18N = True
 
 # Setting this to False will remove the jsi18n url configuration
-USE_JS_I18N = False
+USE_JS_I18N = True
 
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale.
@@ -173,6 +179,9 @@ BASE_DIR = os.path.abspath(
 
 # Path to the Repository root
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
+
+# Project translations take precedence over the historical app catalogs.
+LOCALE_PATHS = (os.path.join(BASE_DIR, 'opentreemap', 'locale'),)
 
 # Path to the location of SCSS files, used for on-the-fly compilation to CSS
 SCSS_ROOT = os.path.join(PROJECT_ROOT, 'assets', 'css', 'sass')
@@ -264,7 +273,7 @@ MIDDLEWARE = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
+    'opentreemap.middleware.OpenTreeNapLocaleMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -438,6 +447,21 @@ USE_ECO_CACHE = True
 
 BING_API_KEY = None
 GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_KEY', None)
+
+# Reverse-geocoding fallback. Keeping the service URL server-side lets us
+# switch providers without shipping a new Android app.
+NOMINATIM_REVERSE_URL = os.environ.get(
+    'OTN_NOMINATIM_REVERSE_URL',
+    'https://nominatim.openstreetmap.org/reverse'
+)
+NOMINATIM_SEARCH_URL = os.environ.get(
+    'OTN_NOMINATIM_SEARCH_URL',
+    'https://nominatim.openstreetmap.org/search'
+)
+NOMINATIM_USER_AGENT = os.environ.get(
+    'OTN_NOMINATIM_USER_AGENT',
+    'OpenTreeNap/0.7 (+https://opentreenap.altervista.org/)'
+)
 
 JS_REVERSE_JS_MINIFY = False
 JS_REVERSE_OUTPUT_PATH = os.path.join(PROJECT_ROOT, 'assets/js/shim')

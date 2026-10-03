@@ -3,7 +3,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import division
 
-import hashlib
 
 from django.core.exceptions import ValidationError
 from django.urls import reverse
@@ -12,6 +11,7 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.http import HttpResponseRedirect
 
+from treemap.branding import localized_etag
 from treemap.search import Filter
 from treemap.models import Tree, Plot
 from treemap.ecobenefits import get_benefits_for_filter
@@ -134,4 +134,4 @@ def ecobenefits_hash(request, instance):
 
     string_to_hash = universal_rev + ":" + eco_str + ":" + map_features
 
-    return hashlib.md5(string_to_hash.encode('utf-8')).hexdigest()
+    return localized_etag(string_to_hash, request)

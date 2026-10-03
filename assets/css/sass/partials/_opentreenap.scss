@@ -1,0 +1,243 @@
+// Shared visual identity with opentreenap.altervista.org.
+// Keep the existing map/sidebar/header dimensions intact.
+html, body { background: $light-gray-color; color: $main-text-color; }
+.header { border-bottom: 1px solid $well-color; }
+.logo .otn-app-brand {
+    display: inline-flex; align-items: center; gap: 12px; max-width: 300px;
+    text-decoration: none; color: $forest-color;
+    img { width: 62px; height: 62px; object-fit: contain; border-radius: 14px; }
+}
+.otn-app-wordmark {
+    strong { display: block; font-size: 2.2rem; font-weight: 700; letter-spacing: -0.6px; }
+    small { display: block; color: $subtext-color; font-size: 1.1rem; }
+}
+.wrapper {
+    .btn { border-radius: 999px; font-weight: 600; }
+    .btn-primary, .btn-otmprimary {
+        background: $primary-color; border-color: darken($primary-color, 5%);
+        box-shadow: 0 4px 12px rgba(47, 110, 59, .12);
+        &:hover, &:focus { background: darken($primary-color, 9%); }
+    }
+    .btn-default {
+        color: $forest-color; background: $paper; border-color: $well-color;
+        &:hover, &:focus { background: $lime-soft-color; }
+    }
+    .btn:focus, a:focus, input:focus, select:focus, textarea:focus {
+        outline: 2px solid $secondary-color; outline-offset: 2px;
+    }
+    .well, .container.contained {
+        background: $paper; border: 1px solid $well-color; border-radius: 14px;
+        box-shadow: 0 10px 26px rgba(31, 78, 50, .07);
+    }
+    .login-signup-panel { border-radius: 22px; }
+    .signup-option { background: $forest-color; }
+}
+.navbar .navbar-right {
+    .otn-project-item a { display: flex; align-items: center; gap: 5px; font-size: 1.2rem; }
+    .otn-language-item { padding: 7px 8px; }
+}
+.otn-language {
+    display: inline-flex; border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 999px; padding: 2px; margin: 0; gap: 2px;
+    button {
+        border: 0; border-radius: 999px; padding: 3px 8px; background: transparent;
+        color: $paper; font-size: 1.1rem; font-weight: 700; line-height: 17px; cursor: pointer;
+        &:hover { background: rgba(255, 255, 255, .15); }
+        &[aria-pressed="true"] { background: $lime-soft-color; color: $forest-color; }
+        &:focus { outline: 2px solid $lime-color; outline-offset: 1px; }
+    }
+}
+footer {
+    background: $light-gray-color; border-top-color: $well-color;
+    a { color: $forest-color; &:hover, &:focus { color: $primary-color; } }
+    .footer-inner { display: flex; align-items: center; gap: 18px; padding: 4px 15px; height: 40px; }
+    .list-inline { margin: 0; white-space: nowrap; }
+}
+.otn-social-links {
+    display: inline-flex; align-items: center; gap: 4px; margin-left: auto;
+    a {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 30px; height: 30px; border-radius: 8px; font-size: 1.7rem;
+        color: $forest-color;
+        &:hover, &:focus { color: $forest-color; background: $lime-soft-color; }
+        &:focus { outline: 2px solid $primary-color; outline-offset: 1px; }
+    }
+}
+.otn-attribution { flex: 0 0 auto; font-size: 1.1rem; color: $subtext-color; }
+.otn-management-logo { display: block; width: 30px; height: 30px; border-radius: 7px; object-fit: contain; }
+#management .map-switcher .brand-icon { padding: 0; background: $paper; }
+.otn-management-wordmark { display: block; font-size: 1.1rem; font-weight: 700; }
+@media #{$screen-ltlg} { .otn-attribution { display: none; } }
+@media #{$screen-xs} {
+    .otn-project-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+    .navbar .navbar-right .otn-project-item a { padding-left: 8px; padding-right: 8px; }
+    .navbar .navbar-right .otn-language-item { padding-left: 2px; padding-right: 2px; }
+    .navbar .explore-map > a .visible-xs-inline { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+// Refined controls: compact rounded rectangles, with clear action hierarchy.
+.wrapper {
+    .btn {
+        border-radius: 10px; border-width: 1px; border-style: solid;
+        font-size: 1.4rem; line-height: 20px; padding: 7px 14px;
+        min-height: 36px; font-weight: 600; letter-spacing: 0;
+        transition: background-color .15s ease, border-color .15s ease;
+    }
+    .btn[class*="btn-"].btn-sm, .btn.btn-small, .btn[class*="btn-"].btn-xs { min-height: 32px; padding: 5px 11px; font-size: 1.3rem; }
+    .btn[class*="btn-"].btn-lg { min-height: 42px; padding: 9px 18px; font-size: 1.6rem; }
+    .btn.btn-primary, .btn.btn-otmprimary, .btn.btn-success {
+        color: $paper; background: $primary-color; border-color: $primary-color;
+        box-shadow: none;
+        &:hover, &:focus, &:active { color: $paper; background: $forest-color; border-color: $forest-color; }
+    }
+    .btn.btn-info, .btn.btn-otmsecondary, .btn.btn-default, .btn:not([class*="btn-"]) {
+        color: $forest-color; background: $paper; border-color: $well-color; box-shadow: none;
+        &:hover, &:focus, &:active { color: $forest-color; background: $lime-soft-color; border-color: $primary-color; }
+    }
+    .btn.btn-danger {
+        color: #953b36; background: #fff7f6; border-color: #deb5b1; box-shadow: none;
+        &:hover, &:focus, &:active { color: $paper; background: #953b36; border-color: #953b36; }
+    }
+    .btn.btn-link { border-color: transparent; background: transparent; box-shadow: none; }
+    .btn.disabled, .btn[disabled] { opacity: .65; cursor: not-allowed; box-shadow: none; }
+    .form-control { border-color: $well-color; border-radius: 8px; box-shadow: none; color: $main-text-color; }
+    .form-control:focus { border-color: $primary-color; box-shadow: 0 0 0 2px rgba($primary-color, .12); }
+    .form-control::placeholder { color: $subtext-color; opacity: 1; }
+    .progress { background: $light-gray-color; border: 1px solid $well-color; box-shadow: none; border-radius: 8px; }
+    .progress-bar { background-color: $primary-color; box-shadow: none; }
+    .alert-info { color: $forest-color; background: $lime-soft-color; border-color: $well-color; border-radius: 10px; }
+}
+.navbar .navbar-nav > li > a { color: rgba(255, 255, 255, .9); }
+.navbar .navbar-nav > li > a:hover, .navbar .navbar-nav > li > a:focus { color: $paper; }
+.header .search-block .btn-group .btn { min-height: 30px; padding: 4px 10px; font-size: 1.2rem; }
+.subhead > .stats-bar {
+    background: $light-gray-color; color: $main-text-color;
+    border-left: 3px solid $primary-color; border-bottom: 1px solid $well-color; box-shadow: none;
+    @media #{$screen-gtxs} {
+        padding-top: 4px; padding-bottom: 4px;
+        .stats-list #tree-and-planting-site-counts { height: 32px; line-height: 32px; max-width: calc(100% - 425px); vertical-align: top; }
+        .stats-list .exportBtn {
+            width: auto; margin-top: 3px; vertical-align: top; min-height: 26px;
+            padding: 3px 9px; font-size: 1.15rem; line-height: 18px;
+            background: $paper; color: $forest-color; border-color: $well-color;
+            &:hover, &:focus { background: $lime-soft-color; color: $forest-color; border-color: $primary-color; }
+        }
+        .addBtn { margin-top: -29px; }
+        .addBtn .btn { min-height: 26px; padding: 3px 9px; font-size: 1.15rem; line-height: 18px; border-radius: 8px; }
+    }
+}
+.tree-details {
+    h3 { color: $forest-color; font-size: 2rem; line-height: 2.8rem; font-weight: 600; margin-top: 24px; margin-bottom: 14px; }
+    .detail-header { background: $lime-soft-color; }
+    .detail-header .common-name { font-size: 2.6rem; line-height: 3.2rem; font-weight: 600; }
+    .table > tbody > tr > td { padding-top: 10px; padding-bottom: 10px; border-color: $well-color; }
+    #map-feature-form > .btn { margin-right: 6px; }
+    #sidebar h3, #sidebar .well h3 { color: $forest-color; }
+    #sidebar .well { padding: 18px; }
+    #comments textarea { border: 1px solid $well-color; border-radius: 10px; padding: 12px; }
+}
+@media #{$screen-gtxs} {
+    #map-content .sidebar { background: $paper; }
+    #map-content .sidebar .panel-group { border-top-color: $well-color; }
+    #map-content .panel-heading, #map-content .panel-heading > a {
+        background: $light-gray-color; color: $forest-color; box-shadow: none;
+        &:hover, &:focus { background: $lime-soft-color; color: $forest-color; box-shadow: none; }
+    }
+    #map-content .panel-heading { border-bottom: 1px solid $well-color; }
+}
+@media (prefers-reduced-motion: reduce) { .wrapper .btn { transition: none; } }
+.container.contained.tree-details {
+    margin-top: 64px; margin-bottom: 64px;
+    &.topper:before { background: $lime-soft-color; border-radius: 14px 14px 0 0; }
+    @media #{$screen-xs} { margin-top: 36px; margin-bottom: 72px; }
+}
+.tree-details #sidebar h5 { color: $forest-color; font-weight: 600; }
+.tree-details .collection-title { margin-top: 22px; line-height: 1.5; color: $forest-color; font-weight: 600; }
+.tree-details .collection-title small { color: $subtext-color; font-size: 1.2rem; }
+
+// Compact desktop shell: 38px navigation + 55px search + 34px results.
+@media #{$screen-gtxs} {
+    .navbar { min-height: 38px; }
+    .navbar .nav, .navbar .nav > li { height: 38px; }
+    .navbar .nav > li > a { height: 38px; padding-top: 8px; padding-bottom: 8px; font-size: 1.25rem; }
+    .navbar .navbar-right .otn-project-item a { font-size: 1.2rem; }
+    .navbar .navbar-right .otn-language-item { padding-top: 4px; padding-bottom: 4px; }
+    .navbar .navbar-right .user-img { top: 4px; }
+    .header.instance-header {
+        height: 93px; padding: 42px 15px 4px;
+        .search-wrapper, .toolbar-wrapper { top: 42px; }
+        .logo .otn-app-brand img { width: 42px; height: 42px; border-radius: 9px; }
+        .otn-app-wordmark strong { font-size: 1.8rem; }
+        .otn-app-wordmark small { font-size: 1rem; }
+        .search-block { padding-top: 1px; padding-bottom: 1px; }
+        .search-block label { font-size: 1.05rem; margin-bottom: 2px; }
+        .search-block .form-control { height: 30px; }
+        .search-options .btn-group .btn { min-height: 22px; padding: 1px 9px; line-height: 18px; font-size: 1.1rem; }
+        .search-options #perform-search.btn {
+            display: block; width: auto; margin: 1px 0 0 auto; min-height: 24px;
+            padding: 2px 12px; font-size: 1.15rem; line-height: 18px; border-radius: 8px;
+        }
+    }
+    .subhead > .stats-bar { height: 34px; padding-top: 1px; padding-bottom: 1px; }
+    .content.explore-map { top: 127px; }
+    .wrapper.embed {
+        .header.instance-header { height: 55px; padding-top: 4px; }
+        .header.instance-header .search-wrapper, .header.instance-header .toolbar-wrapper { top: 6px; }
+        .content.explore-map { top: 89px; }
+    }
+    #map-content .map { right: 320px; }
+    #map-content .sidebar { width: 320px; }
+}
+// Cooler, quieter card backgrounds; reserve saturated colors for actions.
+.container.contained.tree-details {
+    margin-top: 48px;
+    &.topper:before { background: mix($primary-color, $paper, 6%); }
+    .detail-header { background: transparent; }
+    .alert.alert-info { color: $forest-color; background: #f0f5ed; border-color: $well-color; }
+    @media #{$screen-xs} { margin-top: 32px; }
+}
+#otn-information-page {
+    .container.contained.static-page { margin-top: 24px; margin-bottom: 80px; padding: 24px; line-height: 1.7; }
+    .static-page h1 { color: $forest-color; font-size: 2.8rem; font-weight: 600; margin-top: 0; }
+    .static-page h2 { color: $forest-color; font-size: 2rem; font-weight: 600; margin-top: 24px; }
+    .static-page h3 { color: $forest-color; font-size: 1.7rem; font-weight: 600; }
+    .static-page p { margin-bottom: 16px; }
+    .header.instance-header { height: 88px; }
+    .header.instance-header .logo { display: inline-block; }
+    .container.contained.static-page.otn-faq-page {
+        max-width: 900px; padding: 36px 42px; font-size: 1.4rem;
+        .col-md-12 { float: none; }
+        h2 {
+            margin: 0 0 24px; padding-bottom: 16px; border-bottom: 1px solid $well-color;
+            font-size: 2.7rem; line-height: 1.3; letter-spacing: -.025em;
+        }
+        h3 {
+            margin: 16px 0 0; padding: 17px 20px 4px;
+            background: $light-gray-color; border: 1px solid $well-color; border-bottom: 0;
+            border-radius: 12px 12px 0 0; font-size: 1.65rem; line-height: 1.45;
+        }
+        h3 + p {
+            margin: 0 0 16px; padding: 0 20px 18px;
+            background: $light-gray-color; border: 1px solid $well-color; border-top: 0;
+            border-radius: 0 0 12px 12px; line-height: 1.65; color: $main-text-color;
+        }
+        h3 + p + p { margin: 24px 0 0; }
+        a { color: $forest-color; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+    }
+    @media #{$screen-xs} {
+        .header.instance-header { height: 108px; padding-top: 51px; }
+        .header.instance-header .logo { display: inline-block; }
+        .container.contained.static-page { padding: 20px; margin-top: 16px; }
+        .container.contained.static-page.otn-faq-page { padding: 20px; }
+        .otn-faq-page h2 { font-size: 2.3rem; }
+        .otn-faq-page h3 { padding: 15px 16px 4px; }
+        .otn-faq-page h3 + p { padding: 0 16px 16px; }
+    }
+}
+.wrapper .btn.btn-info:disabled, .wrapper .btn.btn-info.disabled,
+.wrapper .btn.btn-otmsecondary:disabled, .wrapper .btn.btn-otmsecondary.disabled {
+    color: $forest-color; background: $paper; border-color: $well-color;
+}
+.wrapper .btn.btn-danger:disabled, .wrapper .btn.btn-danger.disabled {
+    color: #953b36; background: #fff7f6; border-color: #deb5b1;
+}

@@ -1,5 +1,7 @@
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 var $ = require('jquery'),
     _ = require('lodash'),
     U = require('treemap/lib/utility.js'),
@@ -30,7 +32,7 @@ exports.init = function(options) {
                 window.location = successUrl;
             },
             error: function () {
-                toastr.error("Cannot delete");
+                toastr.error(gettext("Cannot delete"));
             }
         });
     });

@@ -67,8 +67,85 @@ def plots_closest_to_point(request, instance, lat, lng):
     return [ctxt_for_plot(plot) for plot in plots]
 
 
+def _mobile_json_safe(value):
+    """
+    Convert UDF values to plain JSON-safe scalars/containers.
+
+    Scalar UDFs may contain Python date/datetime or Decimal-like values.
+    Returning those objects directly in mobile_meta can make the API
+    response serializer raise HTTP 500 after an otherwise successful write.
+    """
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+
+    if hasattr(value, 'isoformat'):
+        try:
+            return value.isoformat()
+        except (TypeError, ValueError):
+            pass
+
+    if isinstance(value, dict):
+        return {
+            str(key): _mobile_json_safe(item)
+            for key, item in value.items()
+        }
+
+    if isinstance(value, (list, tuple, set)):
+        return [_mobile_json_safe(item) for item in value]
+
+    # Decimal and other scalar UDF values are safest as text in mobile_meta;
+    # Android already renders extra fields as strings.
+    return str(value)
+
+
+def _add_mobile_detail_metadata(context, plot):
+    """
+    Add a compact, stable metadata block for mobile detail clients.
+
+    Keep this separate from the legacy context keys so existing OTM web/API
+    clients remain unchanged while Android can consume timestamps, author and
+    scalar UDFs without reverse-engineering Django model serialization.
+    """
+    tree = plot.current_tree()
+    updated_by = getattr(plot, 'updated_by', None)
+
+    context['mobile_meta'] = {
+        'updated_at': (
+            plot.updated_at.isoformat()
+            if getattr(plot, 'updated_at', None)
+            else None
+        ),
+        'updated_by': (
+            {
+                'id': updated_by.pk,
+                'username': updated_by.username,
+            }
+            if updated_by is not None
+            else None
+        ),
+        'plot_udfs': _mobile_json_safe(
+            dict(getattr(plot, 'udfs', None) or {})
+        ),
+        'tree_udfs': (
+            _mobile_json_safe(
+                dict(getattr(tree, 'udfs', None) or {})
+            )
+            if tree else {}
+        ),
+        'detail_url': (
+            context.get('share', {}).get('url')
+            if isinstance(context.get('share'), dict)
+            else None
+        ),
+    }
+
+    return context
+
+
 def get_plot(request, instance, plot_id):
-    return context_dict_for_plot(request, Plot.objects.get(pk=plot_id))
+    plot = Plot.objects.get(pk=plot_id)
+    context = context_dict_for_plot(request, plot)
+    return _add_mobile_detail_metadata(context, plot)
 
 
 def update_or_create_plot(request, instance, plot_id=None):
@@ -114,6 +191,7 @@ def update_or_create_plot(request, instance, plot_id=None):
     plot, __ = update_map_feature(data, request.user, plot)
 
     context_dict = context_dict_for_plot(request, plot)
+    _add_mobile_detail_metadata(context_dict, plot)
 
     # Add geo rev hash so clients will know if a tile refresh is required
     context_dict["geoRevHash"] = plot.instance.geo_rev_hash

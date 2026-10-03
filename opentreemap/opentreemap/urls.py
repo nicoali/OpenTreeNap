@@ -18,6 +18,7 @@ from treemap.urls import USERNAME_PATTERN
 
 from registration_backend.views import RegistrationView
 from opentreemap.health import healthz
+from opentreemap.public_api import napoli_trees
 
 
 admin.autodiscover()
@@ -33,12 +34,13 @@ instance_pattern = r'^(?P<instance_url_name>' + URL_NAME_PATTERN + r')'
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
     re_path(r'^healthz/$', healthz, name='healthz'),
+    re_path(r'^public-api/napoli/trees/$', napoli_trees, name='public_api_napoli_trees'),
     re_path(r'^robots.txt$', RedirectView.as_view(
         url='/static/robots.txt', permanent=True)),
     # Setting permanent=False in case we want to allow customizing favicons
     # per instance in the future
     re_path(r'^favicon\.png$', RedirectView.as_view(
-        url='/static/img/favicon.png', permanent=False)),
+        url='/static/img/opentreenap-favicon.svg', permanent=False)),
     re_path('^comments/', include('django_comments.urls')),
     re_path(r'^', include('geocode.urls')),
     re_path(r'^stormwater/', include('stormwater.urls')),
@@ -91,7 +93,7 @@ if settings.USE_JS_I18N:
     }
 
     urlpatterns = [
-        re_path(r'^jsi18n/$', JavaScriptCatalog.as_view(**js_i18n_info_dict))
+        re_path(r'^jsi18n/$', JavaScriptCatalog.as_view(**js_i18n_info_dict), name='javascript-catalog')
     ] + urlpatterns
 
 if settings.EXTRA_URLS:

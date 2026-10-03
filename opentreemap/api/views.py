@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.contrib.gis.db.models.functions import Transform
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.tokens import default_token_generator
 
@@ -183,6 +184,103 @@ def get_plot_list(request, instance):
     size = min(int(request.GET.get("size", "100")), 10000)
     end = size + start
 
+    # Mobile/map clients only need a compact inventory payload.  The legacy
+    # context_dict_for_plot() path is intentionally rich: it loads photos,
+    # audits, containing polygons, progress data and sharing metadata for every
+    # plot.  That is appropriate for a plot-detail response but unnecessarily
+    # expensive for rendering hundreds or thousands of markers.
+    #
+    # mobile=1 keeps the existing endpoint and HMAC contract while returning
+    # only the fields required to draw the map. Full plot details are still
+    # retrieved lazily from /plots/{id} when the user taps a marker.
+    mobile = request.GET.get("mobile", "").lower() in ("1", "true", "yes")
+
+    if mobile:
+        # The web map and tiler count Tree rows, so the mobile inventory must
+        # expose the same population.  Keep this as a compact values() query:
+        # no photos, audits, containing polygons or sharing metadata.
+        rows = Tree.objects\
+            .filter(instance=instance)\
+            .annotate(
+                geom_wgs84=Transform('plot__geom', 4326),
+            )\
+            .order_by('id')\
+            .values(
+                'id',
+                'plot_id',
+                'geom_wgs84',
+                'udfs',
+                'species_id',
+                'species__common_name',
+                'species__genus',
+                'species__species',
+                'species__cultivar',
+                'species__other_part_of_name',
+            )[start:end]
+
+        results = []
+
+        for row in rows:
+            species = None
+            common_name = row['species__common_name'] or ''
+            genus = row['species__genus'] or ''
+            species_name = row['species__species'] or ''
+            cultivar = row['species__cultivar'] or ''
+            other = row['species__other_part_of_name'] or ''
+
+            scientific_parts = [genus, species_name, other]
+            scientific_name = ' '.join(
+                part for part in scientific_parts if part)
+            if cultivar:
+                scientific_name = ("%s '%s'" %
+                                   (scientific_name, cultivar)).strip()
+
+            if row['species_id']:
+                species = {
+                    'id': row['species_id'],
+                    'common_name': common_name,
+                    'genus': genus,
+                    'species': species_name,
+                    'cultivar': cultivar,
+                    'other_part_of_name': other,
+                    'scientific_name': scientific_name,
+                }
+
+            title = common_name or scientific_name or (
+                'Albero #%s' % row['id'])
+
+            udfs = dict(row['udfs'] or {})
+            monumental_value = udfs.get('Monumentale')
+            is_monumental = str(monumental_value).strip().lower() in (
+                '1', 'true', 'yes', 'si', 'sì', 'monumentale',
+                "albero monumentale d'italia", 'centenario',
+                'centenaria', 'heritage'
+            )
+
+            results.append({
+                'has_tree': True,
+                'title': title,
+                'is_monumental': is_monumental,
+                # Address, DBH, height, Custom ID, photos and other rich
+                # fields are fetched lazily from /plots/{id} after a tap.
+                'address_full': '',
+                'plot': {
+                    'id': row['plot_id'],
+                    'geom': {
+                        'srid': 4326,
+                        'x': row['geom_wgs84'].x,
+                        'y': row['geom_wgs84'].y,
+                    },
+                },
+                'tree': {
+                    'id': row['id'],
+                    'species': species,
+                },
+            })
+
+        return results
+
+    # Legacy/full response retained for existing web and API clients.
     # order_by prevents testing weirdness
     plots = Plot.objects.filter(instance=instance)\
                         .order_by('id')[start:end]

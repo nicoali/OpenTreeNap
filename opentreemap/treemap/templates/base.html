@@ -7,12 +7,13 @@
 <!DOCTYPE html>
 <!--
 {{ header_comment }}-->
-<html>
+{% get_current_language as current_language %}
+<html lang="{{ current_language }}">
   <head>
     <meta charset="utf-8">
-    <title>{% block title %}OpenTreeMap{% block instance_title %}{% endblock %}{% block page_title %}{% endblock %}{% endblock title %}</title>
+    <title>{% block title %}OpenTreeNap{% block instance_title %}{% endblock %}{% block page_title %}{% endblock %}{% endblock title %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="{{ STATIC_URL }}img/opentreenap-favicon.svg" />
     {% block application_css %}
     {% render_bundle 'js/treemap/base' 'css' %}
     {% endblock application_css %}
@@ -95,6 +96,8 @@
             {% endblock instancetopnav %}
           </ul>
           <ul class="pull-right nav navbar-nav navbar-right">
+            <li class="otn-project-item"><a href="{{ settings.PROJECT_WEBSITE_URL }}" title="{% trans 'Project website' %}"><i class="icon-home" aria-hidden="true"></i><span class="otn-project-text">{% trans 'Project website' %}</span></a></li>
+            <li class="otn-language-item">{% include 'treemap/partials/language_switcher.html' %}</li>
             {% if request.user.is_authenticated %}
               <li class="hidden-xs {% block activeuser %}{% endblock %}">
                 <a href="{% url 'profile' %}">{% trans "My Account" %}
@@ -160,8 +163,9 @@
 
         {% block logo %}
         <div class="logo">
-          <a href="{% if last_instance %}{% url 'map' instance_url_name=last_instance.url_name %}{% else %}/{% endif %}"
-            ><img id="site-logo" src="{{ logo_url }}" alt="OpenTreeMap">
+          <a class="otn-app-brand" href="{% if last_instance %}{% url 'map' instance_url_name=last_instance.url_name %}{% else %}/{% endif %}">
+            <img id="site-logo" src="{{ logo_url }}" alt="OpenTreeNap">
+            <span class="otn-app-wordmark"><strong>OpenTreeNap</strong><small>{% trans 'Urban tree mapping' %}</small></span>
           </a>
         </div>
         {% endblock logo %}
@@ -196,7 +200,7 @@
     </div>
 
     {% if not embed %}
-      <footer class="hidden-xs">{% block footer %}{% endblock footer %}</footer>
+      <footer class="hidden-xs">{% block footer %}<div class="footer-inner"><a href="{{ settings.PROJECT_WEBSITE_URL }}">OpenTreeNap</a><nav class="otn-social-links" aria-label="Social"><a href="https://github.com/nicoali" target="_blank" rel="noopener noreferrer" aria-label="GitHub OpenTreeNap" title="GitHub"><i class="icon-github" aria-hidden="true"></i></a><a href="https://www.instagram.com/opentreenap/" target="_blank" rel="noopener noreferrer" aria-label="Instagram OpenTreeNap" title="Instagram"><i class="icon-instagramm" aria-hidden="true"></i></a><a href="https://www.facebook.com/opentreenap/" target="_blank" rel="noopener noreferrer" aria-label="Facebook OpenTreeNap" title="Facebook"><i class="icon-facebook" aria-hidden="true"></i></a></nav><span class="otn-attribution">{% trans 'Based on' %} <a href="https://github.com/OpenTreeMap/otm-core">OpenTreeMap</a> · AGPLv3</span></div>{% endblock footer %}</footer>
     {% endif %}
 
     {% block config_scripts %}
@@ -209,7 +213,7 @@
 
     {% block global_scripts %}
       {% if settings.USE_JS_I18N %}
-      <script type="text/javascript" src="{% url 'django.views.i18n.javascript_catalog' %}"></script>
+      <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
       {% endif %}
       {% if settings.WEBPACK_DEV_SERVER and settings.DEBUG %}
       {# We include the reverse.js file in the webpack bundle in production, but for development we include it on the page instead #}

@@ -2,30 +2,33 @@
 $staticUrl: '../../' !default;
 
 // Fonts
-@import url(//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Roboto:100,400,700);
-$base-font-family               : 'Open Sans', 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+@import url(https://fonts.googleapis.com/css?family=Inter:400,500,600,700);
+$base-font-family               : 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 $base-font-size                 : 62.5%;
 
 // Colors
 $paper                          : #ffffff;
-$primary-color                  : #8baa3d !default; // OTM Green color
-$secondary-color                : #56abb2 !default; // OTM Teal color
-$success-color                  : #add142; // OTM Lime Green color
+$primary-color                  : #557f2d !default;
+$secondary-color                : #4b9fbd !default;
+$success-color                  : #6f9635;
 $warning-color                  : #e0c122; // Warning color
 $alert-color                    : #df4425; // OTM Red color
 
-$navbar-color                   : #42424a; // Navbar gray color
-$well-color                     : #d1d2d4; // Well gray color
+$navbar-color                   : #365d2b;
+$well-color                     : #dfe7dc;
 
-$main-text-color                : #231f20; // Black text color
-$subtext-color                  : #799397; // Midtone gray text color
-$light-gray-color               : #f1f2f2; // Light gray color
+$main-text-color                : #26342c;
+$subtext-color                  : #647168;
+$light-gray-color               : #f6f8f3;
+$forest-color                   : #365d2b;
+$lime-color                     : #a6c63a;
+$lime-soft-color                : #eff6d9;
 
 // Button Colors
-$button-default                 : #f1f2f2;
-$button-primary                 : #8baa3d;
-$button-success                 : #add142;
-$button-info                    : #5bc0de;
+$button-default                 : #ffffff;
+$button-primary                 : $primary-color;
+$button-success                 : #6f9635;
+$button-info                    : $secondary-color;
 $button-warning                 : #f0ad4e;
 $button-danger                  : #df4425;
 $button-inverse                 : #231f20;
@@ -34,10 +37,10 @@ $button-inverse                 : #231f20;
 $background-image               : url('#{$staticUrl}img/default-background.jpg') !default; // Standard tree background
 
 //Management
-$body-management                : #f1f4f9;
-$dark-primary                   : #3d404f;
-$dark-secondary                 : #55555e;
-$table-gray                     : #DFE2E8;
+$body-management                : #f6f8f3;
+$dark-primary                   : #365d2b;
+$dark-secondary                 : #557f2d;
+$table-gray                     : #dfe7dc;
 
 
 // Media Queries

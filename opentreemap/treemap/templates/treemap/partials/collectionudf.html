@@ -8,9 +8,9 @@
 {% if perm_level|is_read_or_write %}
 <div>
   {% if title_prefix %}
-  <h4>{{ title_prefix }} {{ udf.name }}</h4>
+  <h4 class="collection-title">{% trans udf.name %} <small>· {{ title_prefix }}</small></h4>
   {% else %}
-  <h4>{{ udf.name }}</h4>
+  <h4 class="collection-title">{% trans udf.name %}</h4>
   {% endif %}
   <table class="table table-hover"
          {% if perm_level == "write" %}
@@ -22,7 +22,7 @@
         {% if not values %}style="display:none"{% endif %}
         >
       {% for field in udf.datatype_dict %}
-      <th>{{ field.name }}</th>
+      <th>{% trans field.name %}</th>
       {% endfor %}
       <th></th>
     </tr>

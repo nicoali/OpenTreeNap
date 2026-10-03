@@ -1,6 +1,8 @@
 // Manage panel for file uploading
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 var $ = require('jquery'),
     toastr = require('toastr'),
     Bacon = require('baconjs'),
@@ -73,7 +75,7 @@ module.exports.init = function(options) {
                 } else if (json && json.globalErrors) {
                     message = json.globalErrors.join(',');
                 } else {
-                    message = "Upload failed";
+                    message = gettext("Upload failed");
                 }
                 $error.text(message).show();
             }

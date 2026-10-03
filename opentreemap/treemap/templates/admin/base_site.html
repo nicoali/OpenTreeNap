@@ -1,0 +1,6 @@
+{% extends 'admin/base.html' %}
+{% load i18n static %}
+{% block title %}{{ title }} | OpenTreeNap{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/opentreenap-admin.css' %}"><link rel="icon" href="{% static 'img/opentreenap-favicon.svg' %}" type="image/svg+xml">{% endblock %}
+{% block branding %}<h1 id="site-name"><a href="{% url 'admin:index' %}"><img src="{% static 'img/opentreenap-logo.png' %}" alt="">OpenTreeNap</a></h1>{% endblock %}
+{% block nav-global %}<div class="otn-admin-tools"><a href="{{ settings.PROJECT_WEBSITE_URL }}">{% trans 'Project website' %}</a>{% include 'treemap/partials/language_switcher.html' %}</div>{% endblock %}

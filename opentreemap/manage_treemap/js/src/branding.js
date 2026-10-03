@@ -40,8 +40,8 @@ var cssUrl = reverse.scss() + '?' + config.instance.scssQuery,
 uploadPanel.init(dom.uploadPanel);
 
 $(dom.useDefaultColors).on('click', function () {
-    setColor(dom.colorInput.primary, '8BAA3D');
-    setColor(dom.colorInput.secondary, '56ABB2');
+    setColor(dom.colorInput.primary, '557F2D');
+    setColor(dom.colorInput.secondary, '4B9FBD');
 });
 
 form.cancelStream.onValue(function () {

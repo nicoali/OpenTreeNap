@@ -1,9 +1,36 @@
+import logging
 import re
 from django.http import HttpResponseRedirect
 from django.conf import settings
 from django.utils.deprecation import MiddlewareMixin
+from django.middleware.locale import LocaleMiddleware
+from django.utils import translation
+from django.utils.cache import patch_vary_headers
 
-import logging
+
+class OpenTreeNapLocaleMiddleware(LocaleMiddleware):
+    """Use an explicit language choice, otherwise Italian, on existing URLs."""
+
+    def process_request(self, request):
+        supported = dict(settings.LANGUAGES)
+        choices = [request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, '')]
+        if hasattr(request, 'session'):
+            choices.append(request.session.get('_language', ''))
+        language = settings.LANGUAGE_CODE
+        for choice in choices:
+            normalized = choice.lower().split('-')[0] if isinstance(choice, str) else ''
+            if normalized in supported:
+                language = normalized
+                break
+        translation.activate(language)
+        request.LANGUAGE_CODE = translation.get_language()
+
+    def process_response(self, request, response):
+        response = super().process_response(request, response)
+        # HTML and the JS catalog vary by the saved language cookie/session.
+        patch_vary_headers(response, ('Cookie',))
+        return response
+
 logger = logging.getLogger(__name__)
 
 # http://stackoverflow.com/a/30907476

@@ -39,7 +39,10 @@ module.exports = function (options) {
         geocodedLocationStream = gcoder.geocodeStream(geocodeCandidateStream, options.forStorage);
 
     enterOrClickStream.onValue(function () {
-        _.each(typeaheads, function (ta) {
+        // Do not force the location field to the first autocomplete result:
+        // users may intentionally type a civic number that is not present in
+        // the suggestion label. Other filters can still autocomplete.
+        _.each(otherTypeaheads, function (ta) {
             ta.autocomplete();
         });
     });
@@ -53,7 +56,19 @@ module.exports = function (options) {
     };
 
     function getDatum() {
-        var datum = locationTypeahead.getDatum();
+        var datum = locationTypeahead.getDatum(),
+            inputValue = $.trim($(locationTypeahead.input).val() || ''),
+            datumText = datum && $.trim(datum.text || datum.value || '');
+
+        // If the user selected a street suggestion and then added/changed a
+        // civic number, honor exactly what is currently typed.
+        if (inputValue && datum && datumText && inputValue !== datumText) {
+            return {
+                text: inputValue,
+                freeText: true
+            };
+        }
+
         if (datum) {
             if (datum.magicKey) {
                 // Geocode this suggestion using its magic key
@@ -62,9 +77,14 @@ module.exports = function (options) {
                 // Datum is a boundary, which we don't geocode
                 return false;
             }
-        } else if ($(locationTypeahead.input).val()) {
-            // Input could not be autocompleted
-            return new Bacon.Error(config.geocoder.errorString);
+        } else if (inputValue) {
+            // Accept free-form addresses too. The server will try an exact
+            // lookup first and then a street-level fallback when a civic
+            // number is not present in the geocoder database.
+            return {
+                text: inputValue,
+                freeText: true
+            };
         } else {
             // Blank input
             return false;

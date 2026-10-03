@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load l10n %}
 
 {# TODO: this should work for more than tds with fields #}
@@ -28,7 +29,7 @@
     <button class="btn btn-success popover-accept {% block extra_save_classes %}{% endblock %}"
             {% block extra_save_attributes %}
             {% endblock extra_save_attributes %}
-            >Save</button>
-    <button class="btn btn-danger popover-cancel">Cancel</button>
+            >{% trans 'Save' %}</button>
+    <button class="btn btn-danger popover-cancel">{% trans 'Cancel' %}</button>
   </div>
 </td>

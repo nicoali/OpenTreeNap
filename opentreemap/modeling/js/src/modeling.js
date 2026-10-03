@@ -1,5 +1,7 @@
 "use strict";
 
+var gettext = require('treemap/lib/i18n.js').gettext;
+
 var $ = require('jquery'),
     _ = require('lodash'),
     Bacon = require('baconjs'),
@@ -230,10 +232,10 @@ function handleDetailsChanged(planState) {
     planState.detailsStream.onValue(function (details) {
         $(dom.modelName).text(details.name);
         if (details.isPublished) {
-            $(dom.modelVisibilityText).text("PUBLIC");
+            $(dom.modelVisibilityText).text(gettext("PUBLIC"));
             $(dom.modelVisibility).removeClass('private');
         } else {
-            $(dom.modelVisibilityText).text("PRIVATE");
+            $(dom.modelVisibilityText).text(gettext("PRIVATE"));
             $(dom.modelVisibility).addClass('private');
         }
     });

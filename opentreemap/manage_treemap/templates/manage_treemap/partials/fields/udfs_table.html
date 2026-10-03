@@ -1,11 +1,12 @@
+{% load i18n %}
 <h3 class="management-header">{{ model.display_name }}</h3>
 <table class="table table-hover admin-table">
     <thead>
         <tr>
-            <th style="width:32%;">Field Name</th>
-            <th style="width:16%;">Field Type</th>
-            <th style="width:44%;">Choices</th>
-            <th style="width:8%;"><span data-class="edit" data-field="" style="display: none;">Action</span></th>
+            <th style="width:32%;">{% trans 'Field Name' %}</th>
+            <th style="width:16%;">{% trans 'Field Type' %}</th>
+            <th style="width:44%;">{% trans 'Choices' %}</th>
+            <th style="width:8%;"><span data-class="edit" data-field="" style="display: none;">{% trans 'Action' %}</span></th>
         </tr>
     </thead>
     <tbody data-model-type="{{ model.name }}">

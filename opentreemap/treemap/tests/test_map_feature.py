@@ -13,6 +13,7 @@ from treemap.models import Tree, Plot, MapFeature, Species, TreePhoto
 from treemap.instance import Instance
 from treemap.search import Filter
 from treemap.lib import format_benefits
+from treemap.lib.udf import udf_create
 from treemap.ecobenefits import get_benefits_for_filter, BenefitCategory
 from treemap.tests import (make_instance, make_commander_user,
                            LocalMediaTestCase)
@@ -130,6 +131,29 @@ class EcoRevIncr(OTMTestCase):
             species.save_with_user(self.user)
             request_dict = {'tree.species': species.pk}
             update_map_feature(request_dict, self.user, self.plot)
+
+    def test_update_scalar_tree_udf(self):
+        udf_create({
+            'udf.name': 'Measurement circumference',
+            'udf.model': 'Tree',
+            'udf.type': 'float',
+        }, self.instance)
+
+        tree = Tree(instance=self.instance, plot=self.plot)
+        tree.save_with_user(self.user)
+
+        update_map_feature(
+            {'tree.udf:Measurement circumference': 245.5},
+            self.user,
+            self.plot
+        )
+
+        tree.refresh_from_db()
+        self.assertEqual(
+            tree.udfs['Measurement circumference'],
+            245.5
+        )
+
 
 
 class PlotHashTestCase(OTMTestCase):

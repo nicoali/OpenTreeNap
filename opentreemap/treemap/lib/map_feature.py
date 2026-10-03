@@ -16,6 +16,7 @@ from django.utils.translation import gettext as _
 from django.db.models import Q
 
 from treemap.audit import Audit, Role
+from treemap.botanical_images import botanical_image_url
 from treemap.ecobackend import ECOBENEFIT_FAILURE_CODES_AND_PATTERNS
 from treemap.json_field import get_attr_from_json_field
 from treemap.lib import execute_sql
@@ -422,10 +423,22 @@ def _add_share_context(context, request, photos):
     if len(photos) > 0:
         photo_url = photos[0].thumbnail.url
     elif context.get('has_tree'):
-        photo_url = settings.STATIC_URL + "img/tree.png"
+        tree = context.get('tree')
+        species = getattr(tree, 'species', None) if tree else None
+        scientific_name = (
+            getattr(species, 'scientific_name', '') if species else ''
+        )
+        photo_url = botanical_image_url(scientific_name) or (
+            settings.STATIC_URL + "img/tree.png"
+        )
     else:
-        photo_url = settings.STATIC_URL + "img/otmLogo126.png"
-    photo_url = request.build_absolute_uri(photo_url)
+        photo_url = settings.STATIC_URL + "img/opentreenap-logo.png"
+
+    if not (
+        photo_url.startswith('http://') or
+        photo_url.startswith('https://')
+    ):
+        photo_url = request.build_absolute_uri(photo_url)
 
     title = _("%(feature)s on %(treemap)s") % {
         'feature': context['title'],

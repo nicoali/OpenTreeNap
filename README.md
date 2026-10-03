@@ -265,3 +265,8 @@ Refer to the full `LICENSE` file for the applicable terms and copyright notices.
 **Open trees. Open data. Napoli.**
 
 From Naples to anywhere: modernizing OpenTreeMap while preserving its open-source roots.
+
+
+## Roadmap
+
+Lo sviluppo coordinato di OpenTreeNap (OTN, Android, schede botaniche, monumentali e contributi utenti) è tracciato in [ROADMAP.md](ROADMAP.md).

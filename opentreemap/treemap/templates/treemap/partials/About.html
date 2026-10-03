@@ -1,11 +1,6 @@
-<h2>About</h2>
-<p>This tree map enables the general public and local tree organizations to collaboratively create an accurate and informative inventory of the trees in the community. Search for trees by location, species, and other criteria and click on a dot on the map to view more information and photos.</p>
-<p>The tree map can also be accessed via the OpenTreeMap apps for Android and iOS devices.</p>
-
-<a href="https://itunes.apple.com/us/app/opentreemap/id898428451">
-    <img src="https://s3.amazonaws.com/origin.static.opentreemap.org/app-store-badge.png" alt="OpenTreeMap iOS App" style="width: 200px;"/>
-</a>
-
-<a href="https://play.google.com/store/apps/details?id=org.azavea.otm2.prod&amp;hl=en">
-    <img src="https://s3.amazonaws.com/origin.static.opentreemap.org/google-play-badge.png" alt="OpenTreeMap Android App" style="width: 200px;"/>
-</a>
+{% load i18n %}
+<h2>{% trans 'About OpenTreeNap' %}</h2>
+<p>{% trans 'OpenTreeNap is a collaborative map of urban trees, born in Naples and open to communities everywhere.' %}</p>
+<p>{% trans 'Search by location or species, select a tree on the map and explore its details and photographs. Contributions and changes depend on the permissions assigned by the map administrators.' %}</p>
+<p><a href="{{ settings.PROJECT_WEBSITE_URL }}progetto/">{% trans 'Discover the project' %}</a> · <a href="{{ settings.PROJECT_WEBSITE_URL }}partecipa/">{% trans 'Get involved' %}</a></p>
+<p>{% trans 'Based on' %} <a href="https://github.com/OpenTreeMap/otm-core">OpenTreeMap</a> · <a href="https://github.com/nicoali/OpenTreeNap">OpenTreeNap</a> · AGPLv3</p>
