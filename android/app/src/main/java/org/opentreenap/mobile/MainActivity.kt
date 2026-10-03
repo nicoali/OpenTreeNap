@@ -259,7 +259,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
         treeMeasureButton.setOnClickListener {
             selectedTree?.let {
-                showMeasurementSheet(it)
+                openMeasurementSheetFresh(it)
             }
         }
 
@@ -2186,6 +2186,73 @@ class MainActivity : Activity(), OnMapReadyCallback {
             size,
             Bitmap.Config.ARGB_8888
         )
+    }
+
+    private fun openMeasurementSheetFresh(
+        tree: TreeMarker
+    ) {
+        statusView.setText(
+            R.string.measure_loading
+        )
+        treeMeasureButton.isEnabled = false
+        treeMeasureButton.alpha = 0.55f
+
+        executor.execute {
+            val result =
+                runCatching {
+                    apiClient().fetchPlot(
+                        tree.plotId
+                    )
+                }
+
+            runOnUiThread {
+                treeMeasureButton.isEnabled = true
+                treeMeasureButton.alpha = 1f
+                restoreMapStatus()
+
+                result.onSuccess { detailed ->
+                    val updated =
+                        allTrees.map {
+                            if (
+                                it.plotId ==
+                                detailed.plotId
+                            ) {
+                                detailed
+                            } else {
+                                it
+                            }
+                        }
+
+                    allTrees = updated
+                    treeCache.save(updated)
+
+                    if (
+                        selectedTree?.plotId ==
+                        detailed.plotId
+                    ) {
+                        selectedTree = detailed
+                        showTreeCardContent(
+                            detailed
+                        )
+                    }
+
+                    showMeasurementSheet(
+                        detailed
+                    )
+                }.onFailure { error ->
+                    showMessageSheet(
+                        title =
+                            getString(
+                                R.string.measure_load_error_title
+                            ),
+                        message =
+                            error.message
+                                ?: error.javaClass
+                                    .simpleName
+                    )
+                }
+            }
+        }
     }
 
     private fun showMeasurementSheet(
