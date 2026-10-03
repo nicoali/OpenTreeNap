@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 from __future__ import division
 
 import json
+import logging
+import time
 
 import requests
 
@@ -22,6 +24,7 @@ from omgeo.services.esri import EsriWGS
 
 geocoder = Geocoder(sources=settings.OMGEO_SETTINGS)
 ESRI_WGS = EsriWGS(settings=settings.OMGEO_SETTINGS[0][1]['settings'])
+logger = logging.getLogger(__name__)
 
 
 def _omgeo_candidate_to_dict(candidate, srid=3857):
@@ -122,16 +125,97 @@ def _json_error(message, status=502):
     return response
 
 
-def reverse_geocode(request):
-    """
-    Reverse geocode a WGS84 point through the server-side Esri client.
+def _reverse_geocode_nominatim(lat, lng):
+    """Light, user-triggered OSM fallback with caching and <= 1 req/s."""
+    cache_key = 'otn:nominatim:reverse:%.5f:%.5f' % (lat, lng)
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
 
-    The historical browser client called ArcGIS directly with JSONP and
-    forStorage=true but without authentication. Modern ArcGIS requires an
-    authenticated token when results are requested for storage, so proxy the
-    request through Django and reuse the configured ESRI_CLIENT_ID / SECRET.
-    The ArcGIS response shape is returned unchanged for legacy OTM clients.
-    """
+    # OSMF public Nominatim policy requires an absolute maximum of one
+    # request per second per application. Redis-backed cache.add is atomic,
+    # so this also coordinates the two Gunicorn workers.
+    lock_key = 'otn:nominatim:rate-lock'
+    acquired = False
+    for _ in range(20):
+        if cache.add(lock_key, '1', timeout=1):
+            acquired = True
+            break
+        time.sleep(0.1)
+
+    if not acquired:
+        raise RuntimeError('Nominatim rate limiter timeout')
+
+    headers = {
+        'User-Agent': settings.NOMINATIM_USER_AGENT,
+        'Accept': 'application/json',
+        'Accept-Language': 'it',
+    }
+    params = {
+        'lat': '%.8f' % lat,
+        'lon': '%.8f' % lng,
+        'format': 'jsonv2',
+        'addressdetails': 1,
+        'zoom': 18,
+    }
+
+    response = requests.get(
+        settings.NOMINATIM_REVERSE_URL,
+        params=params,
+        headers=headers,
+        timeout=12
+    )
+    response.raise_for_status()
+    payload = response.json()
+
+    address = payload.get('address') or {}
+    road = (
+        address.get('road') or
+        address.get('pedestrian') or
+        address.get('footway') or
+        address.get('path') or
+        address.get('residential')
+    )
+    house_number = address.get('house_number')
+    street = road
+    if road and house_number:
+        street = '%s, %s' % (road, house_number)
+
+    city = (
+        address.get('city') or
+        address.get('town') or
+        address.get('village') or
+        address.get('municipality') or
+        address.get('county')
+    )
+    postal = address.get('postcode')
+    display_name = payload.get('display_name')
+
+    if not any([street, city, postal, display_name]):
+        return None
+
+    result = {
+        'address': {
+            'Address': street or '',
+            'City': city or '',
+            'Postal': postal or '',
+            'LongLabel': display_name or '',
+        },
+        'location': {
+            'x': lng,
+            'y': lat,
+        },
+        '_provider': 'OpenStreetMap Nominatim',
+        '_attribution': '© OpenStreetMap contributors',
+    }
+
+    # Reverse-geocode results for tree-placement points change slowly and
+    # caching avoids repeated calls for the same location.
+    cache.set(cache_key, result, 60 * 60 * 24 * 30)
+    return result
+
+def reverse_geocode(request):
+    """Reverse geocode a WGS84 point, preferring Esri and falling back to OSM."""
     try:
         lat = float(request.GET.get('lat'))
         lng = float(request.GET.get('lng'))
@@ -147,127 +231,89 @@ def reverse_geocode(request):
         distance = 200
     distance = max(1, min(distance, 1000))
 
-    token = cache.get('otn_esri_geocode_access_token')
+    esri_settings = settings.OMGEO_SETTINGS[0][1].get('settings', {})
+    client_id = esri_settings.get('client_id')
+    client_secret = esri_settings.get('client_secret')
 
-    if not token:
-        esri_settings = settings.OMGEO_SETTINGS[0][1].get('settings', {})
-        client_id = esri_settings.get('client_id')
-        client_secret = esri_settings.get('client_secret')
-
-        if not client_id or not client_secret:
-            return _json_error(
-                'Esri credentials are not configured on the OTN server',
-                status=503
-            )
-
-        try:
-            token_response = requests.post(
-                'https://www.arcgis.com/sharing/rest/oauth2/token',
-                data={
-                    'f': 'json',
-                    'grant_type': 'client_credentials',
-                    'client_id': client_id,
-                    'client_secret': client_secret,
-                },
-                timeout=12
-            )
-            token_payload = token_response.json()
-        except requests.RequestException as exc:
-            return _json_error(
-                'Esri token service unavailable: %s' % exc,
-                status=503
-            )
-        except ValueError:
-            return _json_error(
-                'Esri token service returned invalid JSON',
-                status=503
-            )
-
-        token = token_payload.get('access_token')
+    if client_id and client_secret:
+        token = cache.get('otn_esri_geocode_access_token')
 
         if not token:
-            error = token_payload.get('error') or {}
-            if isinstance(error, dict):
-                message = (
-                    error.get('message') or
-                    error.get('error_description') or
-                    error.get('details')
+            try:
+                token_response = requests.post(
+                    'https://www.arcgis.com/sharing/rest/oauth2/token',
+                    data={
+                        'f': 'json',
+                        'grant_type': 'client_credentials',
+                        'client_id': client_id,
+                        'client_secret': client_secret,
+                    },
+                    timeout=12
                 )
-                code = error.get('code')
+                token_payload = token_response.json()
+                token = token_payload.get('access_token')
+            except (requests.RequestException, ValueError) as exc:
+                token = None
+                logger.warning('Esri token request failed: %s', exc)
+
+            if token:
+                try:
+                    expires_in = int(token_payload.get('expires_in', 1800))
+                except (TypeError, ValueError):
+                    expires_in = 1800
+                cache.set(
+                    'otn_esri_geocode_access_token',
+                    token,
+                    max(60, expires_in - 60)
+                )
             else:
-                message = str(error)
-                code = None
-
-            if not message:
-                message = (
-                    token_payload.get('error_description') or
-                    token_payload.get('message') or
-                    'access_token missing'
+                logger.warning(
+                    'Esri credentials configured but no access_token returned; '
+                    'falling back to Nominatim'
                 )
 
-            if isinstance(message, (list, tuple)):
-                message = '; '.join([str(value) for value in message])
-
-            if code is not None:
-                message = '%s (code %s)' % (message, code)
-
-            return _json_error(
-                'Esri authentication failed: %s' % message,
-                status=503
+        if token:
+            url = (
+                'https://geocode.arcgis.com/arcgis/rest/services/'
+                'World/GeocodeServer/reverseGeocode'
             )
-
-        try:
-            expires_in = int(token_payload.get('expires_in', 1800))
-        except (TypeError, ValueError):
-            expires_in = 1800
-
-        cache.set(
-            'otn_esri_geocode_access_token',
-            token,
-            max(60, expires_in - 60)
-        )
-
-    url = (
-        'https://geocode.arcgis.com/arcgis/rest/services/'
-        'World/GeocodeServer/reverseGeocode'
-    )
-    params = {
-        'location': '%.8f,%.8f' % (lng, lat),
-        'distance': distance,
-        'outSR': 4326,
-        'f': 'json',
-        'forStorage': 'true',
-        'langCode': 'it',
-        'outFields': '*',
-        'token': token,
-    }
+            params = {
+                'location': '%.8f,%.8f' % (lng, lat),
+                'distance': distance,
+                'outSR': 4326,
+                'f': 'json',
+                'forStorage': 'true',
+                'langCode': 'it',
+                'outFields': '*',
+                'token': token,
+            }
+            try:
+                upstream = requests.get(url, params=params, timeout=12)
+                payload = upstream.json()
+                if (
+                    200 <= upstream.status_code < 300 and
+                    isinstance(payload, dict) and
+                    payload.get('address') and
+                    not payload.get('error')
+                ):
+                    payload['_provider'] = 'Esri ArcGIS'
+                    return payload
+                logger.warning('Esri reverse geocode failed; using OSM fallback')
+            except (requests.RequestException, ValueError) as exc:
+                logger.warning('Esri reverse geocode failed: %s', exc)
 
     try:
-        upstream = requests.get(url, params=params, timeout=12)
-        payload = upstream.json()
-    except requests.RequestException as exc:
-        return _json_error('Reverse geocoder unavailable: %s' % exc, status=502)
-    except ValueError:
-        return _json_error('Reverse geocoder returned invalid JSON', status=502)
-
-    if upstream.status_code < 200 or upstream.status_code >= 300:
+        payload = _reverse_geocode_nominatim(lat, lng)
+    except (requests.RequestException, ValueError, RuntimeError) as exc:
         return _json_error(
-            'Reverse geocoder HTTP %s' % upstream.status_code,
+            'Reverse geocoder unavailable: %s' % exc,
             status=502
         )
 
-    if isinstance(payload, dict) and payload.get('error'):
-        error = payload.get('error') or {}
-        message = error.get('message') if isinstance(error, dict) else str(error)
-        return _json_error(
-            'Reverse geocoder error: %s' % (message or 'unknown error'),
-            status=502
-        )
+    if payload:
+        return payload
 
-    if not isinstance(payload, dict) or not payload.get('address'):
-        return _json_error('No reverse-geocode result found', status=404)
-
-    return payload
+    return _json_error('No reverse-geocode result found', status=404)
 
 def get_esri_token(request):
     return {'token': ESRI_WGS.get_token()}
