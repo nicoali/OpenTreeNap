@@ -23,6 +23,7 @@ import com.google.ar.core.ArCoreApk
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import java.util.ArrayDeque
 import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.asin
@@ -62,11 +63,14 @@ class MeasureHeightActivity :
     private var rotationVector: Sensor? = null
 
     private var elevationDeg = 0.0
-    private var smoothedElevationDeg: Double? = null
     private var baseAngleDeg: Double? = null
     private var topAngleDeg: Double? = null
     private var sessionDistanceM: Double? = null
     private val measurements = mutableListOf<Double>()
+    private val measurementAngles =
+        mutableListOf<Pair<Double, Double>>()
+    private val rawElevationSamples =
+        ArrayDeque<Double>()
 
     private val cameraPermission =
         registerForActivityResult(
@@ -227,16 +231,28 @@ class MeasureHeightActivity :
                 180.0 /
                 PI
 
-        smoothedElevationDeg =
-            smoothedElevationDeg
-                ?.let { previous ->
-                    previous * 0.82 +
-                        rawDegrees * 0.18
-                }
-                ?: rawDegrees
+        rawElevationSamples.addLast(rawDegrees)
+        while (rawElevationSamples.size > 15) {
+            rawElevationSamples.removeFirst()
+        }
+
+        // Keep the live value responsive and avoid the long exponential lag
+        // that biased captures while moving from base to top.
+        val recent =
+            rawElevationSamples.toList()
+                .takeLast(
+                    minOf(
+                        5,
+                        rawElevationSamples.size
+                    )
+                )
 
         elevationDeg =
-            smoothedElevationDeg ?: rawDegrees
+            if (recent.isNotEmpty()) {
+                median(recent)
+            } else {
+                rawDegrees
+            }
 
         liveAngle.text =
             getString(
@@ -340,7 +356,7 @@ class MeasureHeightActivity :
         }
 
         distanceLayout.error = null
-        baseAngleDeg = elevationDeg
+        baseAngleDeg = captureAngle()
         topAngleDeg = null
         topButton.isEnabled = true
 
@@ -370,7 +386,7 @@ class MeasureHeightActivity :
                 ?: parseDistance()
                 ?: return
 
-        topAngleDeg = elevationDeg
+        topAngleDeg = captureAngle()
 
         val top =
             topAngleDeg
@@ -395,6 +411,7 @@ class MeasureHeightActivity :
         }
 
         measurements += height
+        measurementAngles += base to top
 
         if (sessionDistanceM == null) {
             sessionDistanceM = distance
@@ -452,11 +469,25 @@ class MeasureHeightActivity :
             measurements.mapIndexed {
                     index,
                     value ->
-                getString(
-                    R.string.measure_result_item,
-                    index + 1,
-                    value
-                )
+                val angles =
+                    measurementAngles
+                        .getOrNull(index)
+
+                if (angles != null) {
+                    getString(
+                        R.string.measure_result_item_angles,
+                        index + 1,
+                        value,
+                        angles.first,
+                        angles.second
+                    )
+                } else {
+                    getString(
+                        R.string.measure_result_item,
+                        index + 1,
+                        value
+                    )
+                }
             }.toMutableList()
 
         if (measurements.size >= 3) {
@@ -491,6 +522,8 @@ class MeasureHeightActivity :
 
     private fun resetMeasurements() {
         measurements.clear()
+        measurementAngles.clear()
+        rawElevationSamples.clear()
         baseAngleDeg = null
         topAngleDeg = null
         sessionDistanceM = null
@@ -572,6 +605,23 @@ class MeasureHeightActivity :
         }
 
         return value
+    }
+
+    private fun captureAngle(): Double {
+        val recent =
+            rawElevationSamples.toList()
+                .takeLast(
+                    minOf(
+                        9,
+                        rawElevationSamples.size
+                    )
+                )
+
+        return if (recent.isNotEmpty()) {
+            median(recent)
+        } else {
+            elevationDeg
+        }
     }
 
     private fun median(
