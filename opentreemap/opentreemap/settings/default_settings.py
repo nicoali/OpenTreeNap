@@ -448,6 +448,17 @@ USE_ECO_CACHE = True
 BING_API_KEY = None
 GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_KEY', None)
 
+# Reverse-geocoding fallback. Keeping the service URL server-side lets us
+# switch providers without shipping a new Android app.
+NOMINATIM_REVERSE_URL = os.environ.get(
+    'OTN_NOMINATIM_REVERSE_URL',
+    'https://nominatim.openstreetmap.org/reverse'
+)
+NOMINATIM_USER_AGENT = os.environ.get(
+    'OTN_NOMINATIM_USER_AGENT',
+    'OpenTreeNap/0.7 (+https://opentreenap.altervista.org/)'
+)
+
 JS_REVERSE_JS_MINIFY = False
 JS_REVERSE_OUTPUT_PATH = os.path.join(PROJECT_ROOT, 'assets/js/shim')
 
