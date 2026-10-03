@@ -10,8 +10,13 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.WindowInsets
@@ -116,6 +121,9 @@ class MainActivity : Activity(), OnMapReadyCallback {
     private var selectedTree: TreeMarker? = null
     private val executor = Executors.newSingleThreadExecutor()
     private val assetExecutor = Executors.newSingleThreadExecutor()
+    private val locationHandler = Handler(Looper.getMainLooper())
+    private var activeLocationListener: LocationListener? = null
+    private var locationTimeoutRunnable: Runnable? = null
 
     private var sessionUser: ApiUser? = null
     private var sessionPermissions: InstancePermissions? = null
@@ -1417,6 +1425,22 @@ class MainActivity : Activity(), OnMapReadyCallback {
             content.findViewById<TextInputEditText>(
                 R.id.editorHeight
             )
+        val addressStreetInput =
+            content.findViewById<TextInputEditText>(
+                R.id.editorAddressStreet
+            )
+        val addressCityInput =
+            content.findViewById<TextInputEditText>(
+                R.id.editorAddressCity
+            )
+        val addressZipInput =
+            content.findViewById<TextInputEditText>(
+                R.id.editorAddressZip
+            )
+        val geocodeStatus =
+            content.findViewById<TextView>(
+                R.id.editorGeocodeStatus
+            )
         val errorView =
             content.findViewById<TextView>(
                 R.id.editorError
@@ -1454,6 +1478,18 @@ class MainActivity : Activity(), OnMapReadyCallback {
                 point.latitude,
                 point.longitude
             )
+
+        addressStreetInput.setText(
+            tree?.addressStreet
+                ?: tree?.address
+                ?: ""
+        )
+        addressCityInput.setText(
+            tree?.addressCity.orEmpty()
+        )
+        addressZipInput.setText(
+            tree?.addressZip.orEmpty()
+        )
 
         tree?.diameter?.let {
             diameterInput.setText(formatNumber(it))
@@ -1602,6 +1638,22 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     heightInput.text?.toString().orEmpty()
                 )
 
+            val addressStreet =
+                addressStreetInput.text
+                    ?.toString()
+                    ?.trim()
+                    ?.takeIf { it.isNotBlank() }
+            val addressCity =
+                addressCityInput.text
+                    ?.toString()
+                    ?.trim()
+                    ?.takeIf { it.isNotBlank() }
+            val addressZip =
+                addressZipInput.text
+                    ?.toString()
+                    ?.trim()
+                    ?.takeIf { it.isNotBlank() }
+
             save.isEnabled = false
             save.text = getString(R.string.save_in_progress)
             statusView.setText(R.string.status_saving)
@@ -1616,6 +1668,9 @@ class MainActivity : Activity(), OnMapReadyCallback {
                                 speciesId = selected.id,
                                 diameter = diameter,
                                 height = height,
+                                addressStreet = addressStreet,
+                                addressCity = addressCity,
+                                addressZip = addressZip,
                                 username = username,
                                 password = password
                             )
@@ -1625,6 +1680,9 @@ class MainActivity : Activity(), OnMapReadyCallback {
                                 speciesId = selected.id,
                                 diameter = diameter,
                                 height = height,
+                                addressStreet = addressStreet,
+                                addressCity = addressCity,
+                                addressZip = addressZip,
                                 username = username,
                                 password = password
                             )
@@ -1669,6 +1727,77 @@ class MainActivity : Activity(), OnMapReadyCallback {
         }
 
         dialog.show()
+
+        if (tree == null) {
+            geocodeStatus.visibility = View.VISIBLE
+            geocodeStatus.setText(
+                R.string.address_lookup_waiting
+            )
+
+            executor.execute {
+                val result =
+                    runCatching {
+                        apiClient().reverseGeocode(
+                            latitude = point.latitude,
+                            longitude = point.longitude
+                        )
+                    }
+
+                runOnUiThread {
+                    if (!dialog.isShowing) {
+                        return@runOnUiThread
+                    }
+
+                    val address =
+                        result.getOrNull()
+
+                    if (address != null) {
+                        if (
+                            addressStreetInput.text
+                                ?.toString()
+                                .orEmpty()
+                                .isBlank()
+                        ) {
+                            addressStreetInput.setText(
+                                address.street
+                                    ?: address.formatted
+                                    ?: ""
+                            )
+                        }
+
+                        if (
+                            addressCityInput.text
+                                ?.toString()
+                                .orEmpty()
+                                .isBlank()
+                        ) {
+                            addressCityInput.setText(
+                                address.city.orEmpty()
+                            )
+                        }
+
+                        if (
+                            addressZipInput.text
+                                ?.toString()
+                                .orEmpty()
+                                .isBlank()
+                        ) {
+                            addressZipInput.setText(
+                                address.postalCode.orEmpty()
+                            )
+                        }
+
+                        geocodeStatus.setText(
+                            R.string.address_lookup_found
+                        )
+                    } else {
+                        geocodeStatus.setText(
+                            R.string.address_lookup_failed
+                        )
+                    }
+                }
+            }
+        }
     }
 
     private fun parseDecimal(
@@ -3191,36 +3320,191 @@ class MainActivity : Activity(), OnMapReadyCallback {
         enableLocationAndCenter()
     }
 
-    @Suppress("MissingPermission", "DEPRECATION")
+    @Suppress("MissingPermission")
     private fun enableLocationAndCenter() {
         val googleMap = map ?: return
         googleMap.isMyLocationEnabled = true
 
-        var centered = false
+        val manager =
+            getSystemService(
+                LocationManager::class.java
+            )
 
-        googleMap.setOnMyLocationChangeListener { location ->
-            if (!centered) {
-                centered = true
+        val providers =
+            listOf(
+                LocationManager.GPS_PROVIDER,
+                LocationManager.NETWORK_PROVIDER
+            )
+                .filter {
+                    runCatching {
+                        manager.isProviderEnabled(it)
+                    }.getOrDefault(false)
+                }
 
-                googleMap.animateCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                        LatLng(
-                            location.latitude,
-                            location.longitude
-                        ),
-                        16f
-                    )
+        if (providers.isEmpty()) {
+            Toast.makeText(
+                this,
+                R.string.location_unavailable,
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        fun center(location: Location) {
+            googleMap.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(
+                    LatLng(
+                        location.latitude,
+                        location.longitude
+                    ),
+                    17f
                 )
+            )
+        }
 
-                googleMap.setOnMyLocationChangeListener(null)
+        val cached =
+            providers
+                .mapNotNull {
+                    runCatching {
+                        manager.getLastKnownLocation(it)
+                    }.getOrNull()
+                }
+                .maxByOrNull {
+                    it.time
+                }
+
+        if (cached != null) {
+            center(cached)
+
+            val ageMs =
+                System.currentTimeMillis() -
+                    cached.time
+
+            if (ageMs in 0..120_000) {
+                Toast.makeText(
+                    this,
+                    R.string.location_found,
+                    Toast.LENGTH_SHORT
+                ).show()
+                return
             }
         }
+
+        stopLocationLookup()
+
+        val listener =
+            object : LocationListener {
+                override fun onLocationChanged(
+                    location: Location
+                ) {
+                    center(location)
+                    stopLocationLookup()
+
+                    Toast.makeText(
+                        this@MainActivity,
+                        R.string.location_found,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                @Deprecated("Deprecated in Android")
+                override fun onStatusChanged(
+                    provider: String?,
+                    status: Int,
+                    extras: Bundle?
+                ) = Unit
+
+                override fun onProviderEnabled(
+                    provider: String
+                ) = Unit
+
+                override fun onProviderDisabled(
+                    provider: String
+                ) = Unit
+            }
+
+        activeLocationListener = listener
+
+        var requested = false
+
+        providers.forEach { provider ->
+            runCatching {
+                manager.requestLocationUpdates(
+                    provider,
+                    0L,
+                    0f,
+                    listener,
+                    Looper.getMainLooper()
+                )
+                requested = true
+            }
+        }
+
+        if (!requested) {
+            stopLocationLookup()
+            Toast.makeText(
+                this,
+                R.string.location_unavailable,
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        val timeout =
+            Runnable {
+                val hadCached =
+                    cached != null
+
+                stopLocationLookup()
+
+                if (!hadCached) {
+                    Toast.makeText(
+                        this,
+                        R.string.location_unavailable,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+
+        locationTimeoutRunnable = timeout
+        locationHandler.postDelayed(
+            timeout,
+            15_000L
+        )
 
         Toast.makeText(
             this,
             R.string.location_searching,
             Toast.LENGTH_SHORT
         ).show()
+    }
+
+    @Suppress("MissingPermission")
+    private fun stopLocationLookup() {
+        locationTimeoutRunnable
+            ?.let {
+                locationHandler.removeCallbacks(it)
+            }
+        locationTimeoutRunnable = null
+
+        val listener =
+            activeLocationListener
+                ?: return
+
+        activeLocationListener = null
+
+        if (!hasLocationPermission()) {
+            return
+        }
+
+        val manager =
+            getSystemService(
+                LocationManager::class.java
+            )
+
+        runCatching {
+            manager.removeUpdates(listener)
+        }
     }
 
     private fun hasLocationPermission(): Boolean =
@@ -3429,6 +3713,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
     }
 
     override fun onDestroy() {
+        stopLocationLookup()
         executor.shutdownNow()
         assetExecutor.shutdownNow()
         mapView.onDestroy()
