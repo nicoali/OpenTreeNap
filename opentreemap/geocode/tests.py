@@ -7,13 +7,14 @@ import requests
 import os
 from urllib.parse import urlencode
 from unittest import skipIf
+from unittest.mock import patch
 
 from django.http import HttpResponse
 from django.test.client import RequestFactory
 
 from treemap.tests.base import OTMTestCase
 
-from geocode.views import geocode
+from geocode.views import geocode, reverse_geocode
 
 
 class MockGeocodeRequest():
@@ -87,3 +88,56 @@ class GeocodeTest(OTMTestCase):
         response_json = json.loads(res.content)
         self.assertIn('error', response_json,
                       'The response body should have an "error" property')
+
+
+class ReverseGeocodeTest(OTMTestCase):
+
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_reverse_geocode_rejects_invalid_coordinates(self):
+        request = self.factory.get('/geocode/reverse-geocode', {
+            'lat': 'not-a-number',
+            'lng': '14.2681',
+        })
+        response = reverse_geocode(request)
+        self.assertEqual(400, response.status_code)
+
+    @patch('geocode.views.requests.get')
+    @patch('geocode.views.ESRI_WGS.get_token')
+    def test_reverse_geocode_uses_authenticated_server_proxy(
+            self, get_token, requests_get):
+        get_token.return_value = 'test-token'
+
+        class MockResponse(object):
+            status_code = 200
+
+            def json(self):
+                return {
+                    'address': {
+                        'Address': 'Via Toledo, 1',
+                        'City': 'Napoli',
+                        'Postal': '80134',
+                    },
+                    'location': {
+                        'x': 14.2491,
+                        'y': 40.8401,
+                    },
+                }
+
+        requests_get.return_value = MockResponse()
+        request = self.factory.get('/geocode/reverse-geocode', {
+            'lat': '40.8401',
+            'lng': '14.2491',
+        })
+
+        response = reverse_geocode(request)
+
+        self.assertEqual('Via Toledo, 1', response['address']['Address'])
+        self.assertEqual('Napoli', response['address']['City'])
+        self.assertEqual('80134', response['address']['Postal'])
+
+        kwargs = requests_get.call_args[1]
+        self.assertEqual('true', kwargs['params']['forStorage'])
+        self.assertEqual('test-token', kwargs['params']['token'])
+        self.assertEqual(12, kwargs['timeout'])
