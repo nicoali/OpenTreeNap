@@ -96,37 +96,42 @@ class ReverseGeocodeTest(OTMTestCase):
         self.factory = RequestFactory()
 
     def test_reverse_geocode_rejects_invalid_coordinates(self):
-        request = self.factory.get('/geocode/reverse-geocode', {
+        request = self.factory.get('/reverse-geocode', {
             'lat': 'not-a-number',
             'lng': '14.2681',
         })
         response = reverse_geocode(request)
         self.assertEqual(400, response.status_code)
 
+    @patch('geocode.views.settings.NOMINATIM_REVERSE_URL',
+           'https://nominatim.example/reverse')
+    @patch('geocode.views.settings.NOMINATIM_USER_AGENT',
+           'OpenTreeNap-Test/1.0')
     @patch('geocode.views.requests.get')
-    @patch('geocode.views.ESRI_WGS.get_token')
-    def test_reverse_geocode_uses_authenticated_server_proxy(
-            self, get_token, requests_get):
-        get_token.return_value = 'test-token'
+    def test_reverse_geocode_falls_back_to_nominatim_without_esri_credentials(
+            self, requests_get):
+        settings.OMGEO_SETTINGS[0][1]['settings']['client_id'] = None
+        settings.OMGEO_SETTINGS[0][1]['settings']['client_secret'] = None
 
         class MockResponse(object):
             status_code = 200
 
+            def raise_for_status(self):
+                return None
+
             def json(self):
                 return {
+                    'display_name': 'Via Toledo 1, Napoli, 80134, Italia',
                     'address': {
-                        'Address': 'Via Toledo, 1',
-                        'City': 'Napoli',
-                        'Postal': '80134',
-                    },
-                    'location': {
-                        'x': 14.2491,
-                        'y': 40.8401,
+                        'road': 'Via Toledo',
+                        'house_number': '1',
+                        'city': 'Napoli',
+                        'postcode': '80134',
                     },
                 }
 
         requests_get.return_value = MockResponse()
-        request = self.factory.get('/geocode/reverse-geocode', {
+        request = self.factory.get('/reverse-geocode', {
             'lat': '40.8401',
             'lng': '14.2491',
         })
@@ -136,8 +141,11 @@ class ReverseGeocodeTest(OTMTestCase):
         self.assertEqual('Via Toledo, 1', response['address']['Address'])
         self.assertEqual('Napoli', response['address']['City'])
         self.assertEqual('80134', response['address']['Postal'])
+        self.assertEqual('OpenStreetMap Nominatim', response['_provider'])
+        self.assertEqual('© OpenStreetMap contributors',
+                         response['_attribution'])
 
         kwargs = requests_get.call_args[1]
-        self.assertEqual('true', kwargs['params']['forStorage'])
-        self.assertEqual('test-token', kwargs['params']['token'])
+        self.assertEqual('OpenTreeNap-Test/1.0',
+                         kwargs['headers']['User-Agent'])
         self.assertEqual(12, kwargs['timeout'])
