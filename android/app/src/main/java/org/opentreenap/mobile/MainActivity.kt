@@ -1787,9 +1787,18 @@ class MainActivity : Activity(), OnMapReadyCallback {
                             )
                         }
 
-                        geocodeStatus.setText(
-                            R.string.address_lookup_found
-                        )
+                        geocodeStatus.text =
+                            address.attribution
+                                ?.takeIf { it.isNotBlank() }
+                                ?.let {
+                                    getString(
+                                        R.string.address_lookup_found_attributed,
+                                        it
+                                    )
+                                }
+                                ?: getString(
+                                    R.string.address_lookup_found
+                                )
                     } else {
                         geocodeStatus.setText(
                             R.string.address_lookup_failed
