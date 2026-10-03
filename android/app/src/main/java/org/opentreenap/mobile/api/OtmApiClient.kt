@@ -311,7 +311,15 @@ class OtmApiClient(
                 street = street,
                 city = city,
                 postalCode = postal,
-                formatted = formatted
+                formatted = formatted,
+                provider =
+                    root.optString("_provider")
+                        .trim()
+                        .takeIf { it.isNotBlank() },
+                attribution =
+                    root.optString("_attribution")
+                        .trim()
+                        .takeIf { it.isNotBlank() }
             )
         } finally {
             connection.disconnect()
