@@ -63,8 +63,13 @@ module.exports = function (options) {
                 return false;
             }
         } else if ($(locationTypeahead.input).val()) {
-            // Input could not be autocompleted
-            return new Bacon.Error(config.geocoder.errorString);
+            // Accept free-form addresses too. The server will try an exact
+            // lookup first and then a street-level fallback when a civic
+            // number is not present in the geocoder database.
+            return {
+                text: $(locationTypeahead.input).val(),
+                freeText: true
+            };
         } else {
             // Blank input
             return false;
