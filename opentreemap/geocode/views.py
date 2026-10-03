@@ -5,6 +5,8 @@ from __future__ import division
 
 import json
 
+import requests
+
 from django.http import HttpResponse
 from django.utils.translation import gettext as _
 from django.conf import settings
@@ -108,9 +110,102 @@ def geocode(request):
     return _no_results_response(address)
 
 
+
+def _json_error(message, status=502):
+    response = HttpResponse(
+        json.dumps({'error': message}),
+        status=status,
+        content_type='application/json'
+    )
+    response['Content-length'] = str(len(response.content))
+    return response
+
+
+def reverse_geocode(request):
+    """
+    Reverse geocode a WGS84 point through the server-side Esri client.
+
+    The historical browser client called ArcGIS directly with JSONP and
+    forStorage=true but without authentication. Modern ArcGIS requires an
+    authenticated token when results are requested for storage, so proxy the
+    request through Django and reuse the configured ESRI_CLIENT_ID / SECRET.
+    The ArcGIS response shape is returned unchanged for legacy OTM clients.
+    """
+    try:
+        lat = float(request.GET.get('lat'))
+        lng = float(request.GET.get('lng'))
+    except (TypeError, ValueError):
+        return _json_error('lat and lng must be valid numbers', status=400)
+
+    if not (-90.0 <= lat <= 90.0 and -180.0 <= lng <= 180.0):
+        return _json_error('lat or lng is outside the valid range', status=400)
+
+    try:
+        distance = int(request.GET.get('distance', '200'))
+    except (TypeError, ValueError):
+        distance = 200
+    distance = max(1, min(distance, 1000))
+
+    try:
+        token = ESRI_WGS.get_token()
+    except Exception as exc:
+        return _json_error(
+            'Esri authentication failed: %s' % exc,
+            status=503
+        )
+
+    if not token:
+        return _json_error(
+            'Esri credentials are required for stored reverse-geocode results',
+            status=503
+        )
+
+    url = (
+        'https://geocode.arcgis.com/arcgis/rest/services/'
+        'World/GeocodeServer/reverseGeocode'
+    )
+    params = {
+        'location': '%.8f,%.8f' % (lng, lat),
+        'distance': distance,
+        'outSR': 4326,
+        'f': 'json',
+        'forStorage': 'true',
+        'langCode': 'it',
+        'outFields': '*',
+        'token': token,
+    }
+
+    try:
+        upstream = requests.get(url, params=params, timeout=12)
+        payload = upstream.json()
+    except requests.RequestException as exc:
+        return _json_error('Reverse geocoder unavailable: %s' % exc, status=502)
+    except ValueError:
+        return _json_error('Reverse geocoder returned invalid JSON', status=502)
+
+    if upstream.status_code < 200 or upstream.status_code >= 300:
+        return _json_error(
+            'Reverse geocoder HTTP %s' % upstream.status_code,
+            status=502
+        )
+
+    if isinstance(payload, dict) and payload.get('error'):
+        error = payload.get('error') or {}
+        message = error.get('message') if isinstance(error, dict) else str(error)
+        return _json_error(
+            'Reverse geocoder error: %s' % (message or 'unknown error'),
+            status=502
+        )
+
+    if not isinstance(payload, dict) or not payload.get('address'):
+        return _json_error('No reverse-geocode result found', status=404)
+
+    return payload
+
 def get_esri_token(request):
     return {'token': ESRI_WGS.get_token()}
 
 
 geocode_view = json_api_call(geocode)
+reverse_geocode_view = json_api_call(reverse_geocode)
 get_esri_token_view = json_api_call(get_esri_token)
