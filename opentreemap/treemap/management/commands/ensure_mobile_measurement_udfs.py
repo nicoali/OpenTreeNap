@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import json
+
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
+
+from treemap.audit import Role, FieldPermission
 from treemap.instance import Instance
-from treemap.lib.udf import udf_create, udf_exists
+from treemap.udf import UserDefinedFieldDefinition
+
 
 FIELDS = (
     ('Circonferenza 1,30 m', 'float'),
@@ -17,32 +23,82 @@ FIELDS = (
     ('Data rilievo', 'date'),
 )
 
+
 class Command(BaseCommand):
-    help = 'Prepare Tree UDF fields used by the OpenTreeNap mobile measurement workflow.'
+    help = (
+        'Prepare the scalar Tree UDF fields used by the OpenTreeNap '
+        'mobile measurement workflow.'
+    )
 
     def add_arguments(self, parser):
         parser.add_argument('--instance', default='napoli')
 
+    @transaction.atomic
     def handle(self, *args, **options):
         slug = options['instance']
+
         try:
             instance = Instance.objects.get(url_name=slug)
         except Instance.DoesNotExist:
             raise CommandError('Unknown instance: %s' % slug)
 
-        created = 0
+        created = []
+        existing = []
+
         for name, field_type in FIELDS:
-            params = {
-                'udf.name': name,
-                'udf.model': 'Tree',
-                'udf.type': field_type,
-            }
-            if not udf_exists(params, instance):
-                udf_create(params, instance)
-                created += 1
+            udf = UserDefinedFieldDefinition.objects.filter(
+                instance=instance,
+                model_type='Tree',
+                name=name,
+                iscollection=False,
+            ).first()
+
+            if udf is not None:
+                existing.append(name)
+                continue
+
+            udf = UserDefinedFieldDefinition.objects.create(
+                name=name,
+                model_type='Tree',
+                iscollection=False,
+                instance=instance,
+                datatype=json.dumps({'type': field_type}),
+            )
+
+            # Mirror the permission behavior of treemap.lib.udf.udf_create(),
+            # but deliberately do NOT mutate instance.mobile_api_fields or
+            # instance.web_detail_fields here. Some long-lived OTM instances
+            # contain legacy duplicate field entries which make Instance.save()
+            # fail validation. Android reads these scalar UDFs directly from
+            # mobile_meta.tree_udfs, so registering them in those legacy field
+            # lists is not required for the measurement API.
+            for role in Role.objects.filter(instance=instance):
+                FieldPermission.objects.get_or_create(
+                    model_name='Tree',
+                    field_name=udf.canonical_name,
+                    permission_level=role.default_permission_level,
+                    role=role,
+                    instance=role.instance,
+                )
+
+            created.append(name)
+
+        if created:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    'Created %d measurement field(s): %s'
+                    % (len(created), ', '.join(created))
+                )
+            )
+
+        if existing:
+            self.stdout.write(
+                'Already present (%d): %s'
+                % (len(existing), ', '.join(existing))
+            )
 
         self.stdout.write(
             self.style.SUCCESS(
-                'Measurement fields ready for %s (%d created).' % (slug, created)
+                'Measurement fields ready for %s.' % slug
             )
         )
