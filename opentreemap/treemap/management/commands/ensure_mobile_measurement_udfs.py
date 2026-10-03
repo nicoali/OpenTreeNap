@@ -53,17 +53,17 @@ class Command(BaseCommand):
                 iscollection=False,
             ).first()
 
-            if udf is not None:
+            if udf is None:
+                udf = UserDefinedFieldDefinition.objects.create(
+                    name=name,
+                    model_type='Tree',
+                    iscollection=False,
+                    instance=instance,
+                    datatype=json.dumps({'type': field_type}),
+                )
+                created.append(name)
+            else:
                 existing.append(name)
-                continue
-
-            udf = UserDefinedFieldDefinition.objects.create(
-                name=name,
-                model_type='Tree',
-                iscollection=False,
-                instance=instance,
-                datatype=json.dumps({'type': field_type}),
-            )
 
             # Mirror the permission behavior of treemap.lib.udf.udf_create(),
             # but deliberately do NOT mutate instance.mobile_api_fields or
@@ -72,16 +72,34 @@ class Command(BaseCommand):
             # fail validation. Android reads these scalar UDFs directly from
             # mobile_meta.tree_udfs, so registering them in those legacy field
             # lists is not required for the measurement API.
+            #
+            # Measurement fields must be immediately writable by the instance
+            # administrator. Older instances may have a role default of
+            # WRITE_WITH_AUDIT, which would make a successful mobile PUT appear
+            # to "save" while the value remains pending. Force administrator
+            # measurement permissions to WRITE_DIRECTLY and preserve the
+            # configured default level for all other roles.
             for role in Role.objects.filter(instance=instance):
-                FieldPermission.objects.get_or_create(
-                    model_name='Tree',
-                    field_name=udf.canonical_name,
-                    permission_level=role.default_permission_level,
-                    role=role,
-                    instance=role.instance,
+                desired_level = (
+                    FieldPermission.WRITE_DIRECTLY
+                    if role.name == Role.ADMINISTRATOR
+                    else role.default_permission_level
                 )
 
-            created.append(name)
+                permission, was_created = FieldPermission.objects.get_or_create(
+                    model_name='Tree',
+                    field_name=udf.canonical_name,
+                    role=role,
+                    instance=role.instance,
+                    defaults={'permission_level': desired_level},
+                )
+
+                if (
+                    role.name == Role.ADMINISTRATOR and
+                    permission.permission_level != desired_level
+                ):
+                    permission.permission_level = desired_level
+                    permission.save()
 
         if created:
             self.stdout.write(
