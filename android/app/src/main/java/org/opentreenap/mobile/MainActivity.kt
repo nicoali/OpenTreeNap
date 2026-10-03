@@ -2663,6 +2663,7 @@ class MainActivity : Activity(), OnMapReadyCallback {
 
                     allTrees = updated
                     treeCache.save(updated)
+                    renderClusters()
                     restoreMapStatus()
 
                     if (
