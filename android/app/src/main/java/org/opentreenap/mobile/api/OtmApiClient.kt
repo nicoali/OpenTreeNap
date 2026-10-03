@@ -203,7 +203,7 @@ class OtmApiClient(
     ): ReverseGeocodeResult? {
         val requestUrl =
             baseUrl +
-                "/geocode/reverse-geocode" +
+                "/reverse-geocode" +
                 "?lat=" +
                 URLEncoder.encode(
                     latitude.toString(),
