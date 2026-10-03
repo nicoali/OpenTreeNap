@@ -165,5 +165,6 @@
     <string name="address_zip">CAP</string>
     <string name="address_lookup_waiting">Ricerca automatica dell’indirizzo…</string>
     <string name="address_lookup_found">Indirizzo trovato automaticamente. Puoi correggerlo prima di salvare.</string>
+    <string name="address_lookup_found_attributed">Indirizzo trovato automaticamente · %1$s. Puoi correggerlo prima di salvare.</string>
     <string name="address_lookup_failed">Indirizzo non trovato automaticamente: puoi inserirlo a mano.</string>
 </resources>
