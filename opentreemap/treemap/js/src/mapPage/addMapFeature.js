@@ -116,18 +116,27 @@ function init(options) {
     reverseGeocodeStream.onValue(function (response) {
         var a = response.address || {},
             street = a.Address || '',
+            cleanPart = function (part) {
+                if (part === undefined || part === null) {
+                    return '';
+                }
+                var value = String(part).trim();
+                if (value.toLowerCase() === 'undefined' ||
+                    value.toLowerCase() === 'null' ||
+                    value.toLowerCase() === 'none') {
+                    return '';
+                }
+                return value;
+            },
             rest = [a.City, a.Region, a.Postal]
+                .map(cleanPart)
                 .filter(function (part) {
-                    return part !== undefined &&
-                           part !== null &&
-                           String(part).trim() !== '';
+                    return part !== '';
                 })
                 .join(' '),
-            fullAddress = [street, rest]
+            fullAddress = [cleanPart(street), cleanPart(rest)]
                 .filter(function (part) {
-                    return part !== undefined &&
-                           part !== null &&
-                           String(part).trim() !== '';
+                    return part !== '';
                 })
                 .join(' ');
 
