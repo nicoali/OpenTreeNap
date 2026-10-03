@@ -56,6 +56,7 @@ class MeasureHeightActivity :
     private lateinit var baseButton: MaterialButton
     private lateinit var topButton: MaterialButton
     private lateinit var saveButton: MaterialButton
+    private lateinit var cancelButton: MaterialButton
 
     private lateinit var sensorManager: SensorManager
     private var rotationVector: Sensor? = null
@@ -64,6 +65,7 @@ class MeasureHeightActivity :
     private var smoothedElevationDeg: Double? = null
     private var baseAngleDeg: Double? = null
     private var topAngleDeg: Double? = null
+    private var sessionDistanceM: Double? = null
     private val measurements = mutableListOf<Double>()
 
     private val cameraPermission =
@@ -118,6 +120,8 @@ class MeasureHeightActivity :
             findViewById(R.id.measureTop)
         saveButton =
             findViewById(R.id.measureSave)
+        cancelButton =
+            findViewById(R.id.measureCancel)
 
         sensorManager =
             getSystemService(SENSOR_SERVICE)
@@ -130,10 +134,12 @@ class MeasureHeightActivity :
         updateResultUi()
         checkArSupport()
 
-        findViewById<MaterialButton>(
-            R.id.measureCancel
-        ).setOnClickListener {
-            finish()
+        cancelButton.setOnClickListener {
+            if (measurements.size >= 3) {
+                resetMeasurements()
+            } else {
+                finish()
+            }
         }
 
         findViewById<TextView>(
@@ -308,6 +314,10 @@ class MeasureHeightActivity :
     }
 
     private fun captureBase() {
+        if (measurements.size >= 3) {
+            return
+        }
+
         if (rotationVector == null) {
             result.text =
                 getString(
@@ -317,7 +327,8 @@ class MeasureHeightActivity :
         }
 
         val distance =
-            parseDistance()
+            sessionDistanceM
+                ?: parseDistance()
                 ?: return
 
         if (distance < 1.0) {
@@ -346,12 +357,17 @@ class MeasureHeightActivity :
     }
 
     private fun captureTop() {
+        if (measurements.size >= 3) {
+            return
+        }
+
         val base =
             baseAngleDeg
                 ?: return
 
         val distance =
-            parseDistance()
+            sessionDistanceM
+                ?: parseDistance()
                 ?: return
 
         topAngleDeg = elevationDeg
@@ -380,6 +396,12 @@ class MeasureHeightActivity :
 
         measurements += height
 
+        if (sessionDistanceM == null) {
+            sessionDistanceM = distance
+            distanceInput.isEnabled = false
+            distanceInput.clearFocus()
+        }
+
         baseAngleDeg = null
         topAngleDeg = null
         topButton.isEnabled = false
@@ -390,6 +412,15 @@ class MeasureHeightActivity :
                 measurements.size,
                 3
             )
+
+        if (measurements.size >= 3) {
+            baseButton.isEnabled = false
+            topButton.isEnabled = false
+            cancelButton.text =
+                getString(
+                    R.string.measure_repeat_measurement
+                )
+        }
 
         updateResultUi()
     }
@@ -456,6 +487,24 @@ class MeasureHeightActivity :
 
         result.text =
             lines.joinToString("\n")
+    }
+
+    private fun resetMeasurements() {
+        measurements.clear()
+        baseAngleDeg = null
+        topAngleDeg = null
+        sessionDistanceM = null
+
+        distanceLayout.error = null
+        distanceInput.isEnabled = true
+        baseButton.isEnabled = true
+        topButton.isEnabled = false
+        saveButton.isEnabled = false
+        cancelButton.text =
+            getString(R.string.cancel)
+        captured.text = ""
+
+        updateResultUi()
     }
 
     private fun finishWithMeasurement() {
