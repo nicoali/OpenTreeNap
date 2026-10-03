@@ -67,14 +67,52 @@ python manage.py create_system_user
 log "Generating JavaScript URL reverse table..."
 python manage.py collectstatic_js_reverse
 
+frontend_stats_valid() {
+  python - <<'PY'
+import json
+import os
+import sys
+
+path = '/app/static/webpack-stats.json'
+if not os.path.isfile(path) or os.path.getsize(path) == 0:
+    sys.exit(1)
+
+try:
+    with open(path, 'r', encoding='utf-8') as fh:
+        data = json.load(fh)
+except Exception:
+    sys.exit(1)
+
+if data.get('status') != 'done':
+    sys.exit(1)
+
+chunks = data.get('chunks')
+if not isinstance(chunks, dict) or not chunks:
+    sys.exit(1)
+
+sys.exit(0)
+PY
+}
+
 if [[ "${OTM_SKIP_FRONTEND_BUILD:-0}" != "1" ]]; then
-  if [[ ! -s /app/static/webpack-stats.json || "${OTM_FORCE_FRONTEND_BUILD:-0}" == "1" ]]; then
+  if [[ "${OTM_FORCE_FRONTEND_BUILD:-0}" == "1" ]] || ! frontend_stats_valid; then
     log "Building legacy frontend bundle with the v4.1 Node 14 bridge..."
+    rm -f /app/static/webpack-stats.json
+    mkdir -p /app/static
     cd /app
     ./node_modules/.bin/webpack --config webpack.prod.config.js
     cd /app/opentreemap
+
+    if ! frontend_stats_valid; then
+      log "ERROR: Webpack finished without producing a valid webpack-stats.json"
+      if [[ -f /app/static/webpack-stats.json ]]; then
+        log "webpack-stats.json contents:"
+        cat /app/static/webpack-stats.json || true
+      fi
+      exit 1
+    fi
   else
-    log "Frontend bundle already present; skipping rebuild."
+    log "Frontend bundle already present and valid; skipping rebuild."
   fi
 else
   log "Skipping frontend build because OTM_SKIP_FRONTEND_BUILD=1"
