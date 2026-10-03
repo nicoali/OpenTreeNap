@@ -5,6 +5,13 @@ data class TreeExtraField(
     val value: String
 )
 
+data class ReverseGeocodeResult(
+    val street: String?,
+    val city: String?,
+    val postalCode: String?,
+    val formatted: String?
+)
+
 data class TreeMarker(
     val plotId: Int,
     val treeId: Int?,
@@ -16,6 +23,9 @@ data class TreeMarker(
     val scientificName: String? = null,
     val speciesId: Int? = null,
     val address: String? = null,
+    val addressStreet: String? = null,
+    val addressCity: String? = null,
+    val addressZip: String? = null,
     val diameter: Double? = null,
     val height: Double? = null,
     val customId: String? = null,
