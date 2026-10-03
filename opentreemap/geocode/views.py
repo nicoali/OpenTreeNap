@@ -5,6 +5,7 @@ from __future__ import division
 
 import json
 import logging
+import re
 import time
 
 import requests
@@ -88,31 +89,170 @@ def _get_viewbox_from_request(request):
         return None
 
 
+def _nominatim_rate_limit():
+    lock_key = 'otn:nominatim:rate-lock'
+    for _ in range(20):
+        if cache.add(lock_key, '1', timeout=1):
+            return
+        time.sleep(0.1)
+    raise RuntimeError('Nominatim rate limiter timeout')
+
+
+def _extract_house_number(address):
+    patterns = [
+        r',\s*(\d{1,4}[A-Za-z]?(?:[/-]\d{1,4}[A-Za-z]?)?)\b',
+        r'\s(\d{1,4}[A-Za-z]?(?:[/-]\d{1,4}[A-Za-z]?)?)\s*(?=,|\b\d{5}\b|$)',
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, address or '')
+        if match:
+            return match.group(1)
+    return None
+
+
+def _remove_house_number(address, house_number):
+    if not house_number:
+        return address
+    escaped = re.escape(house_number)
+    value = re.sub(r',\s*' + escaped + r'\b', '', address, count=1)
+    if value == address:
+        value = re.sub(
+            r'\s' + escaped + r'\s*(?=,|\b\d{5}\b|$)',
+            '',
+            address,
+            count=1
+        )
+    return re.sub(r'\s+,', ',', value).strip(' ,')
+
+
+def _nominatim_forward_geocode(address):
+    cache_key = 'otn:nominatim:search:%s' % address.strip().lower()
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
+
+    house_number = _extract_house_number(address)
+    queries = [address.strip()]
+    approximate_query = _remove_house_number(address.strip(), house_number)
+    if approximate_query and approximate_query not in queries:
+        queries.append(approximate_query)
+
+    headers = {
+        'User-Agent': settings.NOMINATIM_USER_AGENT,
+        'Accept': 'application/json',
+        'Accept-Language': 'it',
+    }
+
+    for index, query in enumerate(queries):
+        _nominatim_rate_limit()
+        response = requests.get(
+            settings.NOMINATIM_SEARCH_URL,
+            params={
+                'q': query,
+                'format': 'jsonv2',
+                'addressdetails': 1,
+                'limit': 5,
+                'countrycodes': 'it',
+            },
+            headers=headers,
+            timeout=12
+        )
+        response.raise_for_status()
+        results = response.json()
+        if not results:
+            continue
+
+        item = results[0]
+        details = item.get('address') or {}
+        road = (
+            details.get('road') or
+            details.get('pedestrian') or
+            details.get('footway') or
+            details.get('path') or
+            details.get('residential') or
+            details.get('neighbourhood')
+        )
+        result_house_number = details.get('house_number')
+        effective_house_number = result_house_number or house_number
+        street = road
+        if road and effective_house_number:
+            street = '%s, %s' % (road, effective_house_number)
+
+        city = (
+            details.get('city') or
+            details.get('town') or
+            details.get('village') or
+            details.get('municipality') or
+            details.get('county')
+        )
+        postal = details.get('postcode')
+        region = details.get('state') or details.get('region') or ''
+
+        payload = {
+            'lat': float(item['lat']),
+            'lng': float(item['lon']),
+            'approximate': index > 0 or (house_number is not None and not result_house_number),
+            'requested_address': address,
+            'matched_address': item.get('display_name') or query,
+            'address': {
+                'Address': street or address,
+                'City': city or '',
+                'Region': region or '',
+                'Postal': postal or '',
+                'LongLabel': item.get('display_name') or '',
+            },
+            '_provider': 'OpenStreetMap Nominatim',
+            '_attribution': '© OpenStreetMap contributors',
+        }
+        cache.set(cache_key, payload, 60 * 60 * 24 * 30)
+        return payload
+
+    return None
+
+
 def geocode(request):
-    """
-    Search for specified address, returning candidates with lat/int
-    """
+    """Geocode a selected suggestion or a free-form address."""
     key = request.GET.get('key')
-    address = request.GET.get('address').encode('utf-8')
+    address = (request.GET.get('address') or '').strip()
     for_storage = 'forStorage' in request.GET
 
+    if not address:
+        return _no_results_response(address)
+
     if key:
-        # See settings.OMGEO_SETTINGS for configuration
-        pq = PlaceQuery(query=address, key=key, for_storage=for_storage)
-        geocode_result = geocoder.geocode(pq)
-        candidates = geocode_result.get('candidates', None)
-        if candidates:
-            # There should only be one candidate since the user already chose a
-            # specific suggestion and the front end filters out suggestions
-            # that might result in more than one candidate (like "Beaches").
-            match = candidates[0]
-            return {
-                'lat': match.y,
-                'lng': match.x
-            }
+        try:
+            pq = PlaceQuery(
+                query=address.encode('utf-8'),
+                key=key,
+                for_storage=for_storage
+            )
+            geocode_result = geocoder.geocode(pq)
+            candidates = geocode_result.get('candidates', None)
+            if candidates:
+                match = candidates[0]
+                return {
+                    'lat': match.y,
+                    'lng': match.x,
+                    'requested_address': address,
+                    'approximate': False,
+                    '_provider': 'Esri ArcGIS',
+                }
+        except Exception as exc:
+            logger.warning(
+                'Esri forward geocode failed; falling back to Nominatim: %s',
+                exc
+            )
+
+    try:
+        result = _nominatim_forward_geocode(address)
+    except (requests.RequestException, ValueError, RuntimeError) as exc:
+        logger.warning('Nominatim forward geocode failed: %s', exc)
+        result = None
+
+    if result:
+        return result
 
     return _no_results_response(address)
-
 
 
 def _json_error(message, status=502):
