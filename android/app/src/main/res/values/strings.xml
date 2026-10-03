@@ -140,6 +140,7 @@
     <string name="measure_repeatability_bad">Misure troppo discordanti: ripeti la procedura.</string>
     <string name="measure_need_more">Mancano %1$d misure.</string>
     <string name="confirm_measurement">Conferma misura</string>
+    <string name="measure_repeat_measurement">Ripeti misurazione</string>
     <string name="measure_saved_height">Altezza misurata: %1$.2f m</string>
     <string name="measure_login_to_save">Accedi per salvare la misura su OpenTreeNap.</string>
     <string name="measure_marked_deferred">Misura lasciata da completare in seguito.</string>
