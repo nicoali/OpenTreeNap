@@ -135,6 +135,7 @@
     <string name="measure_completed_count">Misure completate: %1$d/%2$d</string>
     <string name="measure_height_empty">Servono 3 misure. Inizia puntando la base del tronco.</string>
     <string name="measure_result_item">Misura %1$d: %2$.2f m</string>
+    <string name="measure_result_item_angles">Misura %1$d: %2$.2f m · base %3$.1f° · cima %4$.1f°</string>
     <string name="measure_result_median">Mediana: %1$.2f m · dispersione: %2$.2f m</string>
     <string name="measure_repeatability_ok">Ripetibilità accettabile per il prototipo. Conferma oppure ripeti.</string>
     <string name="measure_repeatability_bad">Misure troppo discordanti: ripeti la procedura.</string>
