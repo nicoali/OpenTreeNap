@@ -126,6 +126,7 @@ class ReverseGeocodeTest(OTMTestCase):
                         'road': 'Via Toledo',
                         'house_number': '1',
                         'city': 'Napoli',
+                        'state': 'Campania',
                         'postcode': '80134',
                     },
                 }
@@ -140,6 +141,7 @@ class ReverseGeocodeTest(OTMTestCase):
 
         self.assertEqual('Via Toledo, 1', response['address']['Address'])
         self.assertEqual('Napoli', response['address']['City'])
+        self.assertEqual('Campania', response['address']['Region'])
         self.assertEqual('80134', response['address']['Postal'])
         self.assertEqual('OpenStreetMap Nominatim', response['_provider'])
         self.assertEqual('© OpenStreetMap contributors',
