@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "org.opentreenap.mobile"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 36
         versionCode = 11
         versionName = "0.7.0"
