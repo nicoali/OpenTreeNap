@@ -158,4 +158,12 @@
     <string name="measure_save_error_title">Salvataggio misure</string>
     <string name="measure_loading">Caricamento misure…</string>
     <string name="measure_load_error_title">Lettura misure</string>
+    <string name="location_unavailable">Posizione non disponibile. Controlla GPS e permesso di localizzazione.</string>
+    <string name="location_found">Posizione trovata.</string>
+    <string name="address_street">Indirizzo</string>
+    <string name="address_city">Città</string>
+    <string name="address_zip">CAP</string>
+    <string name="address_lookup_waiting">Ricerca automatica dell’indirizzo…</string>
+    <string name="address_lookup_found">Indirizzo trovato automaticamente. Puoi correggerlo prima di salvare.</string>
+    <string name="address_lookup_failed">Indirizzo non trovato automaticamente: puoi inserirlo a mano.</string>
 </resources>
