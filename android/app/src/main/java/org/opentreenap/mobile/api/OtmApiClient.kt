@@ -5,11 +5,13 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.opentreenap.mobile.model.ApiUser
 import org.opentreenap.mobile.model.InstancePermissions
+import org.opentreenap.mobile.model.ReverseGeocodeResult
 import org.opentreenap.mobile.model.SpeciesItem
 import org.opentreenap.mobile.model.TreeExtraField
 import org.opentreenap.mobile.model.TreeMarker
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -195,12 +197,125 @@ class OtmApiClient(
         )
     }
 
+    fun reverseGeocode(
+        latitude: Double,
+        longitude: Double
+    ): ReverseGeocodeResult? {
+        val location =
+            URLEncoder.encode(
+                "${longitude},${latitude}",
+                "UTF-8"
+            )
+
+        val url =
+            URL(
+                "https://geocode.arcgis.com/arcgis/rest/services/" +
+                    "World/GeocodeServer/reverseGeocode" +
+                    "?location=" + location +
+                    "&distance=200&outSR=4326&f=json&forStorage=true"
+            )
+
+        val connection =
+            (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 10_000
+                readTimeout = 15_000
+                setRequestProperty("Accept", "application/json")
+            }
+
+        try {
+            val status = connection.responseCode
+            val stream =
+                if (status in 200..299) {
+                    connection.inputStream
+                } else {
+                    connection.errorStream
+                }
+
+            val body =
+                stream?.bufferedReader(Charsets.UTF_8)
+                    ?.use { it.readText() }
+                    .orEmpty()
+
+            if (status !in 200..299 || body.isBlank()) {
+                return null
+            }
+
+            val address =
+                JSONObject(body)
+                    .optJSONObject("address")
+                    ?: return null
+
+            fun firstValue(vararg keys: String): String? =
+                keys.asSequence()
+                    .map {
+                        address.optString(it)
+                            .trim()
+                    }
+                    .firstOrNull {
+                        it.isNotBlank()
+                    }
+
+            val street =
+                firstValue(
+                    "Address",
+                    "ShortLabel"
+                )
+            val city =
+                firstValue(
+                    "City",
+                    "District",
+                    "Subregion"
+                )
+            val postal =
+                firstValue(
+                    "Postal",
+                    "PostalExt"
+                )
+            val formatted =
+                firstValue(
+                    "LongLabel",
+                    "Match_addr"
+                )
+                    ?: listOfNotNull(
+                        street,
+                        city,
+                        postal
+                    )
+                        .takeIf {
+                            it.isNotEmpty()
+                        }
+                        ?.joinToString(", ")
+
+            if (
+                street == null &&
+                city == null &&
+                postal == null &&
+                formatted == null
+            ) {
+                return null
+            }
+
+            return ReverseGeocodeResult(
+                street = street,
+                city = city,
+                postalCode = postal,
+                formatted = formatted
+            )
+        } finally {
+            connection.disconnect()
+        }
+    }
+
     fun createTree(
         latitude: Double,
         longitude: Double,
         speciesId: Int,
         diameter: Double?,
         height: Double?,
+        addressStreet: String? = null,
+        addressCity: String? = null,
+        addressZip: String? = null,
         username: String,
         password: String
     ): TreeMarker {
@@ -210,18 +325,44 @@ class OtmApiClient(
         diameter?.let { tree.put("diameter", it) }
         height?.let { tree.put("height", it) }
 
-        val payload = JSONObject()
-            .put(
-                "plot",
-                JSONObject().put(
-                    "geom",
-                    JSONObject()
-                        .put("srid", 4326)
-                        .put("x", longitude)
-                        .put("y", latitude)
-                )
+        val plot =
+            JSONObject().put(
+                "geom",
+                JSONObject()
+                    .put("srid", 4326)
+                    .put("x", longitude)
+                    .put("y", latitude)
             )
-            .put("tree", tree)
+
+        addressStreet
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                plot.put(
+                    "address_street",
+                    it
+                )
+            }
+        addressCity
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                plot.put(
+                    "address_city",
+                    it
+                )
+            }
+        addressZip
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                plot.put(
+                    "address_zip",
+                    it
+                )
+            }
+
+        val payload =
+            JSONObject()
+                .put("plot", plot)
+                .put("tree", tree)
 
         val raw = request(
             method = "POST",
@@ -426,6 +567,9 @@ class OtmApiClient(
         speciesId: Int?,
         diameter: Double?,
         height: Double?,
+        addressStreet: String? = null,
+        addressCity: String? = null,
+        addressZip: String? = null,
         username: String,
         password: String
     ): TreeMarker {
@@ -434,7 +578,22 @@ class OtmApiClient(
         diameter?.let { tree.put("diameter", it) }
         height?.let { tree.put("height", it) }
 
-        val payload = JSONObject().put("tree", tree)
+        val plot = JSONObject()
+        addressStreet
+            ?.takeIf { it.isNotBlank() }
+            ?.let { plot.put("address_street", it) }
+        addressCity
+            ?.takeIf { it.isNotBlank() }
+            ?.let { plot.put("address_city", it) }
+        addressZip
+            ?.takeIf { it.isNotBlank() }
+            ?.let { plot.put("address_zip", it) }
+
+        val payload =
+            JSONObject().put("tree", tree)
+        if (plot.length() > 0) {
+            payload.put("plot", plot)
+        }
 
         val raw = request(
             method = "PUT",
@@ -561,6 +720,18 @@ class OtmApiClient(
             listOf(genus, speciesName).filter { it.isNotBlank() }.joinToString(" ")
         }
         val address = item.optString("address_full").trim()
+        val addressStreet =
+            plot.optString("address_street")
+                .trim()
+                .takeIf { it.isNotBlank() }
+        val addressCity =
+            plot.optString("address_city")
+                .trim()
+                .takeIf { it.isNotBlank() }
+        val addressZip =
+            plot.optString("address_zip")
+                .trim()
+                .takeIf { it.isNotBlank() }
         val apiTitle = item.optString("title").trim()
 
         val title = commonName.takeIf { it.isNotBlank() }
@@ -629,6 +800,9 @@ class OtmApiClient(
             scientificName = scientificName.takeIf { it.isNotBlank() },
             speciesId = speciesId,
             address = address.takeIf { it.isNotBlank() },
+            addressStreet = addressStreet,
+            addressCity = addressCity,
+            addressZip = addressZip,
             diameter = diameter,
             height = height,
             customId = customId,
