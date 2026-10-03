@@ -10,6 +10,7 @@ import requests
 from django.http import HttpResponse
 from django.utils.translation import gettext as _
 from django.conf import settings
+from django.core.cache import cache
 from django.contrib.gis.geos.point import Point
 
 from django_tinsel.decorators import json_api_call
@@ -146,18 +147,84 @@ def reverse_geocode(request):
         distance = 200
     distance = max(1, min(distance, 1000))
 
-    try:
-        token = ESRI_WGS.get_token()
-    except Exception as exc:
-        return _json_error(
-            'Esri authentication failed: %s' % exc,
-            status=503
-        )
+    token = cache.get('otn_esri_geocode_access_token')
 
     if not token:
-        return _json_error(
-            'Esri credentials are required for stored reverse-geocode results',
-            status=503
+        esri_settings = settings.OMGEO_SETTINGS[0][1].get('settings', {})
+        client_id = esri_settings.get('client_id')
+        client_secret = esri_settings.get('client_secret')
+
+        if not client_id or not client_secret:
+            return _json_error(
+                'Esri credentials are not configured on the OTN server',
+                status=503
+            )
+
+        try:
+            token_response = requests.post(
+                'https://www.arcgis.com/sharing/rest/oauth2/token',
+                data={
+                    'f': 'json',
+                    'grant_type': 'client_credentials',
+                    'client_id': client_id,
+                    'client_secret': client_secret,
+                },
+                timeout=12
+            )
+            token_payload = token_response.json()
+        except requests.RequestException as exc:
+            return _json_error(
+                'Esri token service unavailable: %s' % exc,
+                status=503
+            )
+        except ValueError:
+            return _json_error(
+                'Esri token service returned invalid JSON',
+                status=503
+            )
+
+        token = token_payload.get('access_token')
+
+        if not token:
+            error = token_payload.get('error') or {}
+            if isinstance(error, dict):
+                message = (
+                    error.get('message') or
+                    error.get('error_description') or
+                    error.get('details')
+                )
+                code = error.get('code')
+            else:
+                message = str(error)
+                code = None
+
+            if not message:
+                message = (
+                    token_payload.get('error_description') or
+                    token_payload.get('message') or
+                    'access_token missing'
+                )
+
+            if isinstance(message, (list, tuple)):
+                message = '; '.join([str(value) for value in message])
+
+            if code is not None:
+                message = '%s (code %s)' % (message, code)
+
+            return _json_error(
+                'Esri authentication failed: %s' % message,
+                status=503
+            )
+
+        try:
+            expires_in = int(token_payload.get('expires_in', 1800))
+        except (TypeError, ValueError):
+            expires_in = 1800
+
+        cache.set(
+            'otn_esri_geocode_access_token',
+            token,
+            max(60, expires_in - 60)
         )
 
     url = (
