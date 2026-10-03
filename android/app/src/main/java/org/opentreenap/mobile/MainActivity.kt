@@ -2682,11 +2682,15 @@ class MainActivity : Activity(), OnMapReadyCallback {
                     )
                 }.onFailure { error ->
                     restoreMapStatus()
-                    showOtnMessage(
-                        error.message
-                            ?: error.javaClass
-                                .simpleName,
-                        isError = true
+                    showMessageSheet(
+                        title =
+                            getString(
+                                R.string.measure_save_error_title
+                            ),
+                        message =
+                            error.message
+                                ?: error.javaClass
+                                    .simpleName
                     )
                 }
             }
