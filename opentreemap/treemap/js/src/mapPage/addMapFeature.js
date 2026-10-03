@@ -145,8 +145,7 @@ function init(options) {
                 .val(manualForwardStreet);
         }
 
-        var street = a.Address || '',
-            cleanPart = function (part) {
+        var cleanPart = function (part) {
                 if (part === undefined || part === null) {
                     return '';
                 }
@@ -158,22 +157,30 @@ function init(options) {
                 }
                 return value;
             },
+            street = cleanPart(a.Address),
             rest = [a.City, a.Region, a.Postal]
                 .map(cleanPart)
                 .filter(function (part) {
                     return part !== '';
                 })
                 .join(' '),
-            fullAddress = [cleanPart(street), cleanPart(rest)]
+            fullAddress = [street, rest]
                 .filter(function (part) {
                     return part !== '';
                 })
                 .join(' ');
 
         $addressInput.val(fullAddress);
-        $summaryAddress.html(
-            rest ? street + '<br/>' + rest : street
-        );
+
+        // Never render provider placeholders such as the literal string
+        // "undefined". Use text nodes for address content and only inject
+        // the line break ourselves.
+        $summaryAddress.empty().text(street);
+        if (rest) {
+            $summaryAddress
+                .append('<br/>')
+                .append(document.createTextNode(rest));
+        }
     });
     reverseGeocodeStream.onError($addressInput, 'val', '');
 
