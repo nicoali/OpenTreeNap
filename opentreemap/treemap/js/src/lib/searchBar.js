@@ -381,7 +381,7 @@ module.exports = exports = {
                 // typeahead box.
                 .filter(function() {
                     var datum = getSearchDatum();
-                    return !(datum && datum.magicKey);
+                    return !(datum && (datum.magicKey || datum.freeText));
                 })
                 .map(Search.buildSearch),
             resetStream = $(dom.resetButton)
