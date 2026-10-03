@@ -45,6 +45,7 @@ function init(options) {
         $geolocateError = U.$find('.geolocate-error', $sidebar),
         $pointInStreamError = U.$find('.pointnotinmap-error', $sidebar),
         triggerSearchBus = options.triggerSearchBus,
+        manualForwardStreet = null,
 
         $form = U.$find(formSelector, $sidebar),
         editFields = formSelector + ' [data-class="edit"]',
@@ -104,7 +105,29 @@ function init(options) {
             forStorage: true
         }).geocodedLocationStream;
 
-    geocodedLocationStream.onValue(onLocationChosen);
+    geocodedLocationStream.onValue(function (response) {
+        var address = response.address || {};
+
+        // A user-entered civic number is authoritative when the provider only
+        // found the street approximately. Keep it through the subsequent
+        // reverse-geocode pass after the marker is positioned.
+        manualForwardStreet =
+            response.approximate && address.Address ?
+                String(address.Address).trim() :
+                null;
+
+        if (address.Address) {
+            $form.find("input[name$='address_street']").val(address.Address);
+        }
+        if (address.City) {
+            $form.find("input[name$='address_city']").val(address.City);
+        }
+        if (address.Postal) {
+            $form.find("input[name$='address_zip']").val(address.Postal);
+        }
+
+        onLocationChosen(response);
+    });
     geocodedLocationStream.onError(function () {
         $geocodeError.show();
     });
@@ -114,8 +137,15 @@ function init(options) {
             reverseGeocodeStreamAndUpdateAddressesOnForm(markerMoveStream, formSelector);
 
     reverseGeocodeStream.onValue(function (response) {
-        var a = response.address || {},
-            street = a.Address || '',
+        var a = response.address || {};
+
+        if (manualForwardStreet) {
+            a.Address = manualForwardStreet;
+            $form.find("input[name$='address_street']")
+                .val(manualForwardStreet);
+        }
+
+        var street = a.Address || '',
             cleanPart = function (part) {
                 if (part === undefined || part === null) {
                     return '';
@@ -195,6 +225,7 @@ function init(options) {
     //     deactivate() -> Inactive
 
     function activate() {
+        manualForwardStreet = null;
         $(dom.addFeatureHeaderLink).addClass("active");
         $(dom.exploreMapHeaderLink).removeClass("active");
         stepControls.showStep(0);
@@ -332,6 +363,7 @@ function init(options) {
 
     function clearEditControls() {
         clearChildEditControls();
+        manualForwardStreet = null;
 
         addressTypeahead.clear();
         $(editFields).find('input,select').each(function () {
