@@ -189,15 +189,22 @@ def _reverse_geocode_nominatim(lat, lng):
         address.get('county')
     )
     postal = address.get('postcode')
+    region = (
+        address.get('state') or
+        address.get('region') or
+        address.get('state_district') or
+        address.get('county')
+    )
     display_name = payload.get('display_name')
 
-    if not any([street, city, postal, display_name]):
+    if not any([street, city, region, postal, display_name]):
         return None
 
     result = {
         'address': {
             'Address': street or '',
             'City': city or '',
+            'Region': region or '',
             'Postal': postal or '',
             'LongLabel': display_name or '',
         },
