@@ -67,6 +67,37 @@ def plots_closest_to_point(request, instance, lat, lng):
     return [ctxt_for_plot(plot) for plot in plots]
 
 
+def _mobile_json_safe(value):
+    """
+    Convert UDF values to plain JSON-safe scalars/containers.
+
+    Scalar UDFs may contain Python date/datetime or Decimal-like values.
+    Returning those objects directly in mobile_meta can make the API
+    response serializer raise HTTP 500 after an otherwise successful write.
+    """
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+
+    if hasattr(value, 'isoformat'):
+        try:
+            return value.isoformat()
+        except (TypeError, ValueError):
+            pass
+
+    if isinstance(value, dict):
+        return {
+            str(key): _mobile_json_safe(item)
+            for key, item in value.items()
+        }
+
+    if isinstance(value, (list, tuple, set)):
+        return [_mobile_json_safe(item) for item in value]
+
+    # Decimal and other scalar UDF values are safest as text in mobile_meta;
+    # Android already renders extra fields as strings.
+    return str(value)
+
+
 def _add_mobile_detail_metadata(context, plot):
     """
     Add a compact, stable metadata block for mobile detail clients.
@@ -92,8 +123,15 @@ def _add_mobile_detail_metadata(context, plot):
             if updated_by is not None
             else None
         ),
-        'plot_udfs': dict(getattr(plot, 'udfs', None) or {}),
-        'tree_udfs': dict(getattr(tree, 'udfs', None) or {}) if tree else {},
+        'plot_udfs': _mobile_json_safe(
+            dict(getattr(plot, 'udfs', None) or {})
+        ),
+        'tree_udfs': (
+            _mobile_json_safe(
+                dict(getattr(tree, 'udfs', None) or {})
+            )
+            if tree else {}
+        ),
         'detail_url': (
             context.get('share', {}).get('url')
             if isinstance(context.get('share'), dict)
