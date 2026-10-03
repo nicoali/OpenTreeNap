@@ -53,6 +53,97 @@ The Docker stack has also been validated from a **fresh Ubuntu 24.04 VPS and fre
 
 ---
 
+## ✨ OpenTreeNap extensions beyond the historical OTM stack
+
+OpenTreeNap is not only a compatibility port. Development is adding a set of
+OpenTreeNap-specific features on top of the historical OpenTreeMap codebase and
+its legacy mobile workflow.
+
+**Status legend:** ✅ implemented/tested · 🧪 active prototype or field validation · 🛠️ in development/planned.
+
+### Web, backend and data platform
+
+- ✅ **Italian/English OpenTreeNap rebrand** with a refreshed public-facing UI,
+  consistent branding and responsive tree-detail presentation.
+- ✅ **Modern Docker deployment** for the historical OTM application, including
+  PostgreSQL/PostGIS, Redis, Celery, Gunicorn and the isolated legacy
+  Windshaft/Mapnik tiler.
+- ✅ **Mobile-optimized API path** with compact paginated tree inventory,
+  lazy-loaded full tree details and stable mobile metadata.
+- ✅ **Extended tree metadata for mobile clients**, including scalar UDFs,
+  latest-update information, author when available and a public detail URL.
+- ✅ **Improved Naples address/geocoding workflow**, including OpenStreetMap
+  Nominatim integration, handling of approximate matches and preservation of a
+  manually entered civic number when the geocoder cannot resolve it exactly.
+- ✅ **Monumental-tree support** with dedicated status/metadata and map styling;
+  Android includes dedicated marker, badge and filter behaviour.
+- ✅ **Shared botanical-image system**: WordPress/Media Library is the source of
+  the species-image manifest consumed by both the OTN web interface and the
+  Android app, with caching and fallback handling.
+- ✅ **Botanical image fallback hierarchy**:
+  real tree photo → representative species image → OpenTreeNap placeholder.
+- ✅ **Measurement metadata/UDF infrastructure** for method, status, quality,
+  survey date, circumference and estimated-error fields.
+- ✅ **Python 3 compatibility fixes** in legacy UDF serialization paths required
+  by the richer mobile detail API.
+
+### Modern Android client
+
+OpenTreeNap includes a new Android client that replaces the obsolete build and
+networking stack of the historical OTM Android application while preserving
+API-v4/HMAC compatibility during development.
+
+- ✅ **Fast map startup** with cache-first loading, background refresh and
+  paginated inventory retrieval.
+- ✅ **Google Maps clustering** with OpenTreeNap rendering and visual treatment
+  for clusters containing monumental trees.
+- ✅ **Material 3 OpenTreeNap UI**, bottom sheets, guided add/edit flows,
+  edge-to-edge layout and inline API/error handling.
+- ✅ **OTN account login and real instance permissions** for adding and editing
+  trees from the phone.
+- ✅ **Complete tree detail actions** including botanical sheet, structured
+  data, directions, sharing and locally generated QR code.
+- ✅ **Tree details on demand** rather than loading heavy metadata for the whole
+  inventory.
+- ✅ **Manual dendrometric entry** for height and circumference at 1.30 m, with
+  DBH-equivalent derivation where appropriate.
+- 🧪 **Smartphone height measurement prototype** using CameraX and orientation
+  sensors as a clinometer, three repeated measurements, median, dispersion,
+  confirmation before saving and measurement-quality metadata.
+- 🧪 **Clinometer calibration/field validation** is currently active; assisted
+  measurements are still treated as prototype data until validated against
+  known references and professional instruments.
+- 🛠️ **ARCore-guided height measurement** is planned to replace manual distance
+  entry on compatible devices.
+- 🛠️ **ARCore Depth / point-cloud circumference measurement at 1.30 m** is under
+  development, with robust section fitting and explicit quality controls.
+
+### Botanical, educational and field-work roadmap
+
+- 🛠️ **Assisted species recognition** from one or more photos, with BioCLIP as
+  the planned self-hosted primary model, candidates restricted to the local OTN
+  species catalogue and mandatory human confirmation.
+- 🛠️ **Scientific botanical sheets** linked across OTN, Android and the public
+  OpenTreeNap site.
+- 🛠️ **Front/back children's botanical cards** and an educational collection /
+  game concept using the same species identity.
+- 🛠️ **Dedicated monumental-tree experiences**, including richer MASAF data,
+  history, images and thematic routes.
+- 🛠️ **Botanical routes, nearby-tree discovery, advanced search and special
+  area layers**, including work focused on Capodimonte.
+- 🛠️ **Expanded ecosystem-benefit presentation**, with evaluation of modern
+  i-Tree-compatible workflows for the Naples inventory.
+- 🛠️ **Public-release hardening** for the Android client: client-safe
+  authentication, removal of embedded HMAC secrets, rate limiting, offline
+  behaviour, crash reporting and Play Store release preparation.
+
+Features marked as prototype or planned are deliberately distinguished from
+validated functionality. In particular, smartphone dendrometric measurements
+will not be presented as authoritative until field-validation targets have
+been met.
+
+---
+
 ## 📘 Installation guide
 
 The complete, VPS-tested Italian installation procedure is available in **[INSTALL_IT.md](INSTALL_IT.md)**. It covers Ubuntu 24.04, Docker, environment configuration, Google Maps, instance creation and the Bulk Uploader.
