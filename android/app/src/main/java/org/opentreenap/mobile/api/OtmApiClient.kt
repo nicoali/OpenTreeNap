@@ -247,18 +247,44 @@ class OtmApiClient(
         username: String,
         password: String
     ): TreeMarker {
-        val tree = JSONObject()
+        // Persist the core dendrometric values first using the same path as
+        // the already-tested tree editor. This way a problem in a new UDF
+        // cannot roll back height/DBH together with the measurement metadata.
+        if (height != null || circumferenceCm != null) {
+            val coreTree = JSONObject()
 
-        height?.let {
-            tree.put("height", it)
+            height?.let {
+                coreTree.put("height", it)
+            }
+
+            circumferenceCm?.let {
+                coreTree.put(
+                    "diameter",
+                    it / Math.PI
+                )
+            }
+
+            val corePayload =
+                JSONObject()
+                    .put("tree", coreTree)
+
+            request(
+                method = "PUT",
+                path = "/api/v4/instance/$instance/plots/$plotId",
+                body =
+                    corePayload.toString()
+                        .toByteArray(
+                            StandardCharsets.UTF_8
+                        ),
+                username = username,
+                password = password
+            )
         }
 
+        val metadataTree = JSONObject()
+
         circumferenceCm?.let {
-            tree.put(
-                "diameter",
-                it / Math.PI
-            )
-            tree.put(
+            metadataTree.put(
                 "udf:Circonferenza 1,30 m",
                 it
             )
@@ -267,7 +293,7 @@ class OtmApiClient(
         heightMethod
             ?.takeIf { it.isNotBlank() }
             ?.let {
-                tree.put(
+                metadataTree.put(
                     "udf:Metodo misura altezza",
                     it
                 )
@@ -276,7 +302,7 @@ class OtmApiClient(
         circumferenceMethod
             ?.takeIf { it.isNotBlank() }
             ?.let {
-                tree.put(
+                metadataTree.put(
                     "udf:Metodo misura circonferenza",
                     it
                 )
@@ -285,7 +311,7 @@ class OtmApiClient(
         heightStatus
             ?.takeIf { it.isNotBlank() }
             ?.let {
-                tree.put(
+                metadataTree.put(
                     "udf:Stato misura altezza",
                     it
                 )
@@ -294,7 +320,7 @@ class OtmApiClient(
         circumferenceStatus
             ?.takeIf { it.isNotBlank() }
             ?.let {
-                tree.put(
+                metadataTree.put(
                     "udf:Stato misura circonferenza",
                     it
                 )
@@ -303,42 +329,47 @@ class OtmApiClient(
         quality
             ?.takeIf { it.isNotBlank() }
             ?.let {
-                tree.put(
+                metadataTree.put(
                     "udf:Qualità misura",
                     it
                 )
             }
 
-        tree.put(
-            "udf:Data rilievo",
-            localDate()
-        )
+        if (metadataTree.length() > 0) {
+            metadataTree.put(
+                "udf:Data rilievo",
+                localDate()
+            )
 
-        val payload =
-            JSONObject()
-                .put("tree", tree)
+            val metadataPayload =
+                JSONObject()
+                    .put("tree", metadataTree)
 
-        val raw = request(
-            method = "PUT",
-            path = "/api/v4/instance/$instance/plots/$plotId",
-            body =
-                payload.toString()
-                    .toByteArray(
-                        StandardCharsets.UTF_8
-                    ),
-            username = username,
-            password = password
-        )
+            try {
+                request(
+                    method = "PUT",
+                    path = "/api/v4/instance/$instance/plots/$plotId",
+                    body =
+                        metadataPayload.toString()
+                            .toByteArray(
+                                StandardCharsets.UTF_8
+                            ),
+                    username = username,
+                    password = password
+                )
+            } catch (error: Throwable) {
+                throw IllegalStateException(
+                    "Altezza/DBH salvati, ma i metadati della misura non sono stati salvati: " +
+                        (
+                            error.message
+                                ?: error.javaClass.simpleName
+                            ),
+                    error
+                )
+            }
+        }
 
-        parsePlot(
-            JSONObject(raw)
-        ) ?: error(
-            "Misure inviate ma risposta non valida"
-        )
-
-        // Read the plot back from the server before declaring success.
-        // This catches permission levels that create pending edits and any
-        // backend path that returned HTTP 2xx without persisting the value.
+        // Always read back from OTN before showing success.
         val saved =
             fetchPlot(plotId)
 
@@ -346,7 +377,7 @@ class OtmApiClient(
             val actual =
                 saved.height
                     ?: error(
-                        "Il server ha accettato la richiesta ma l'altezza non risulta salvata."
+                        "Il server ha risposto senza errore, ma l'altezza non risulta salvata."
                     )
 
             if (kotlin.math.abs(actual - expected) > 0.05) {
@@ -373,7 +404,7 @@ class OtmApiClient(
                     ?.replace(',', '.')
                     ?.toDoubleOrNull()
                     ?: error(
-                        "Il server ha accettato la richiesta ma la circonferenza non risulta salvata."
+                        "DBH salvato, ma la circonferenza originale non risulta nei dati OpenTreeNap."
                     )
 
             if (kotlin.math.abs(actual - expected) > 0.1) {
