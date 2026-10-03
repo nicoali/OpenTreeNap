@@ -9,7 +9,9 @@ data class ReverseGeocodeResult(
     val street: String?,
     val city: String?,
     val postalCode: String?,
-    val formatted: String?
+    val formatted: String?,
+    val provider: String? = null,
+    val attribution: String? = null
 )
 
 data class TreeMarker(
