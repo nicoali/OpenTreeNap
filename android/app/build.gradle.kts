@@ -23,8 +23,8 @@ android {
         applicationId = "org.opentreenap.mobile"
         minSdk = 24
         targetSdk = 36
-        versionCode = 13
-        versionName = "0.7.2"
+        versionCode = 14
+        versionName = "0.7.3"
 
         manifestPlaceholders["MAPS_API_KEY"] = localProperty("MAPS_API_KEY")
         buildConfigField("String", "OTM_BASE_URL", quotedBuildConfig(localProperty("OTM_BASE_URL")))
