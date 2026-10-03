@@ -330,12 +330,17 @@ class OtmApiClient(
             password = password
         )
 
+        parsePlot(
+            JSONObject(raw)
+        ) ?: error(
+            "Misure inviate ma risposta non valida"
+        )
+
+        // Read the plot back from the server before declaring success.
+        // This catches permission levels that create pending edits and any
+        // backend path that returned HTTP 2xx without persisting the value.
         val saved =
-            parsePlot(
-                JSONObject(raw)
-            ) ?: error(
-                "Misure inviate ma risposta non valida"
-            )
+            fetchPlot(plotId)
 
         height?.let { expected ->
             val actual =
