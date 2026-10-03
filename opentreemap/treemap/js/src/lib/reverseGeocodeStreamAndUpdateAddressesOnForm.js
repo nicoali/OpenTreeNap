@@ -19,6 +19,15 @@ module.exports = function(triggerStream, formSelector) {
         _.each(updates, function(value, key) {
             $form.find("input[name$='" + key + "']").val(value);
         });
+
+        if (geocode._attribution) {
+            var $attribution = $form.find('.otn-geocode-attribution');
+            if ($attribution.length === 0) {
+                $attribution = $('<div class="otn-geocode-attribution small text-muted"></div>');
+                $form.append($attribution);
+            }
+            $attribution.text('Indirizzo: ' + geocode._attribution);
+        }
     });
 
     return reverseGeocodeStream;
