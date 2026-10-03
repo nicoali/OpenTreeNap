@@ -53,7 +53,7 @@ class OtmApiClient(
                 setRequestProperty("X-Signature", signature)
                 setRequestProperty(
                     "platform-ver-build",
-                    "OpenTreeNap-Android/0.7.2"
+                    "OpenTreeNap-Android/0.7.3"
                 )
             }
 
@@ -201,26 +201,31 @@ class OtmApiClient(
         latitude: Double,
         longitude: Double
     ): ReverseGeocodeResult? {
-        val location =
-            URLEncoder.encode(
-                "${longitude},${latitude}",
-                "UTF-8"
-            )
-
-        val url =
-            URL(
-                "https://geocode.arcgis.com/arcgis/rest/services/" +
-                    "World/GeocodeServer/reverseGeocode" +
-                    "?location=" + location +
-                    "&distance=200&outSR=4326&f=json&forStorage=true"
-            )
+        val requestUrl =
+            baseUrl +
+                "/geocode/reverse-geocode" +
+                "?lat=" +
+                URLEncoder.encode(
+                    latitude.toString(),
+                    "UTF-8"
+                ) +
+                "&lng=" +
+                URLEncoder.encode(
+                    longitude.toString(),
+                    "UTF-8"
+                ) +
+                "&distance=200"
 
         val connection =
-            (url.openConnection() as HttpURLConnection).apply {
+            (URL(requestUrl).openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
                 connectTimeout = 10_000
                 readTimeout = 15_000
                 setRequestProperty("Accept", "application/json")
+                setRequestProperty(
+                    "platform-ver-build",
+                    "OpenTreeNap-Android/0.7.3"
+                )
             }
 
         try {
@@ -241,9 +246,15 @@ class OtmApiClient(
                 return null
             }
 
-            val address =
+            val root =
                 JSONObject(body)
-                    .optJSONObject("address")
+
+            if (root.has("error")) {
+                return null
+            }
+
+            val address =
+                root.optJSONObject("address")
                     ?: return null
 
             fun firstValue(vararg keys: String): String? =
@@ -636,7 +647,7 @@ class OtmApiClient(
             readTimeout = 30_000
             setRequestProperty("Accept", "application/json")
             setRequestProperty("X-Signature", signature)
-            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.7.2")
+            setRequestProperty("platform-ver-build", "OpenTreeNap-Android/0.7.3")
 
             if (username != null && password != null) {
                 val credentials = "$username:$password"
