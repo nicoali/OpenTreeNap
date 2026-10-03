@@ -114,11 +114,27 @@ function init(options) {
             reverseGeocodeStreamAndUpdateAddressesOnForm(markerMoveStream, formSelector);
 
     reverseGeocodeStream.onValue(function (response) {
-        var a = response.address,
-            street = a.Address,
-            rest = a.City + ' ' + a.Region + ' ' + a.Postal;
-        $addressInput.val(street + ' ' + rest);
-        $summaryAddress.html(street + '<br/>' + rest);
+        var a = response.address || {},
+            street = a.Address || '',
+            rest = [a.City, a.Region, a.Postal]
+                .filter(function (part) {
+                    return part !== undefined &&
+                           part !== null &&
+                           String(part).trim() !== '';
+                })
+                .join(' '),
+            fullAddress = [street, rest]
+                .filter(function (part) {
+                    return part !== undefined &&
+                           part !== null &&
+                           String(part).trim() !== '';
+                })
+                .join(' ');
+
+        $addressInput.val(fullAddress);
+        $summaryAddress.html(
+            rest ? street + '<br/>' + rest : street
+        );
     });
     reverseGeocodeStream.onError($addressInput, 'val', '');
 
