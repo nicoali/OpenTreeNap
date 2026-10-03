@@ -155,4 +155,5 @@
     <string name="measure_quality_clinometer">Clinometro smartphone · dispersione %1$.2f m</string>
     <string name="measure_already_complete">Le misure principali risultano già presenti.</string>
     <string name="measure_current_circumference">Circonferenza: %1$s cm</string>
+    <string name="measure_save_error_title">Salvataggio misure</string>
 </resources>
