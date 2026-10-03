@@ -454,6 +454,10 @@ NOMINATIM_REVERSE_URL = os.environ.get(
     'OTN_NOMINATIM_REVERSE_URL',
     'https://nominatim.openstreetmap.org/reverse'
 )
+NOMINATIM_SEARCH_URL = os.environ.get(
+    'OTN_NOMINATIM_SEARCH_URL',
+    'https://nominatim.openstreetmap.org/search'
+)
 NOMINATIM_USER_AGENT = os.environ.get(
     'OTN_NOMINATIM_USER_AGENT',
     'OpenTreeNap/0.7 (+https://opentreenap.altervista.org/)'
