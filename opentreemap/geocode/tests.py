@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 from unittest import skipIf
 from unittest.mock import patch
 
+from django.conf import settings
 from django.http import HttpResponse
 from django.test.client import RequestFactory
 
@@ -88,6 +89,52 @@ class GeocodeTest(OTMTestCase):
         response_json = json.loads(res.content)
         self.assertIn('error', response_json,
                       'The response body should have an "error" property')
+
+
+    @patch('geocode.views.settings.NOMINATIM_SEARCH_URL',
+           'https://nominatim.example/search')
+    @patch('geocode.views.settings.NOMINATIM_USER_AGENT',
+           'OpenTreeNap-Test/1.0')
+    @patch('geocode.views.requests.get')
+    def test_free_form_civic_number_uses_nominatim_fallback(
+            self, requests_get):
+        class MockResponse(object):
+            status_code = 200
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return [{
+                    'lat': '40.8780000',
+                    'lon': '14.2970000',
+                    'display_name': 'Via della Stadera, Napoli, Italia',
+                    'address': {
+                        'road': 'Via della Stadera',
+                        'city': 'Napoli',
+                        'state': 'Campania',
+                        'postcode': '80143',
+                    },
+                }]
+
+        requests_get.return_value = MockResponse()
+        request = self.factory.get('/geocode', {
+            'address': 'Via della Stadera 86, 80143',
+        })
+
+        response = geocode(request)
+
+        self.assertEqual(40.878, response['lat'])
+        self.assertEqual(14.297, response['lng'])
+        self.assertEqual(
+            'Via della Stadera, 86',
+            response['address']['Address']
+        )
+        self.assertTrue(response['approximate'])
+        self.assertEqual(
+            'OpenStreetMap Nominatim',
+            response['_provider']
+        )
 
 
 class ReverseGeocodeTest(OTMTestCase):
