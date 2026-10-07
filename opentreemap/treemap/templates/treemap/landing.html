@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}OpenTreeNap · {% trans "Urban trees, shared knowledge" %}{% endblock %}
+{% block viewport %}<meta name="viewport" content="width=device-width, initial-scale=1.0">{% endblock %}
+{% block outermost_atts %}id="otn-home"{% endblock %}
+{% block head_extra %}
+<meta name="description" content="{% trans 'Discover OpenTreeNap: urban tree maps, open data and citizen participation. Choose Naples or Milan and explore their green heritage.' %}">
+<link rel="stylesheet" href="{{ STATIC_URL }}css/opentreenap-home.css?v=1">
+{% endblock %}
+
+{% block instancetopnav %}
+<li class="active"><a href="/" aria-current="page">Home</a></li>
+{% endblock %}
+
+{% block header %}
+<div class="otn-home-brand-bar">
+  <a class="otn-home-brand" href="/" aria-label="OpenTreeNap Home">
+    <img src="{{ STATIC_URL }}img/opentreenap-logo.png" alt="" width="48" height="48">
+    <span><strong>OpenTreeNap</strong><small>{% trans "Urban tree mapping" %}</small></span>
+  </a>
+  <a class="otn-home-header-link" href="#city-maps">{% trans "Choose a city" %} <span aria-hidden="true">↘</span></a>
+</div>
+{% endblock %}
+
+{% block content %}
+<main class="otn-home-main">
+  <section class="otn-home-hero" aria-labelledby="home-title">
+    <div class="otn-home-intro">
+      <p class="otn-home-eyebrow">{% trans "Open data · Trees · Community" %}</p>
+      <h1 id="home-title">{% trans "Every tree has a story." %}<br><span>{% trans "Let's map it together." %}</span></h1>
+      <p class="otn-home-lead">{% trans "OpenTreeNap connects maps, tree inventories and citizen participation to help us discover and care for urban trees." %}</p>
+      <p class="otn-home-description">{% trans "Born in Naples and growing to include new cities, the project brings together open data and local contributions. Explore tree records, discover species and help improve our shared knowledge of urban green spaces." %}</p>
+      <div class="otn-home-actions">
+        <a class="otn-home-button" href="#city-maps">{% trans "Explore the city maps" %} <span aria-hidden="true">↓</span></a>
+        <a class="otn-home-text-link" href="{{ settings.PROJECT_WEBSITE_URL }}">{% trans "Discover the project" %} <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="otn-home-principles" aria-label="{% trans 'Project values' %}">
+        <span><i class="icon-leaf" aria-hidden="true"></i> {% trans "Urban nature" %}</span>
+        <span><i class="icon-map" aria-hidden="true"></i> {% trans "Open knowledge" %}</span>
+        <span><i class="icon-users" aria-hidden="true"></i> {% trans "Citizen participation" %}</span>
+      </div>
+    </div>
+    <figure class="otn-home-map" aria-labelledby="italy-map-title">
+      <div class="otn-home-map-heading"><span>{% trans "The project on the map" %}</span><span class="otn-home-map-country">{% trans "Italy" %}</span></div>
+      {% include 'treemap/partials/home_italy_map.html' %}
+      <figcaption id="italy-map-title">{% trans "Select a city on the map to explore its trees." %}</figcaption>
+    </figure>
+  </section>
+
+  <section class="otn-home-cities" id="city-maps" aria-labelledby="cities-title">
+    <div class="otn-home-section-heading">
+      <div><p class="otn-home-eyebrow">{% trans "Explore the territory" %}</p><h2 id="cities-title">{% trans "Two cities. One shared project." %}</h2></div>
+      <p>{% trans "Choose where to start exploring." %}</p>
+    </div>
+    <div class="otn-home-city-grid">
+      {% for city in home_cities %}
+      <article class="otn-home-city otn-home-city-{{ city.slug }}" aria-labelledby="city-{{ city.slug }}-title">
+        <div class="otn-home-city-top">
+          <span class="otn-home-city-region">{% if city.slug == 'napoli' %}Campania{% else %}Lombardia{% endif %}</span>
+          <span class="otn-home-status {% if not city.is_public %}otn-home-status-reserved{% endif %}"><span aria-hidden="true"></span>{% if not city.available %}{% trans "Coming soon" %}{% elif city.is_public %}{% trans "Public map" %}{% else %}{% trans "Restricted access" %}{% endif %}</span>
+        </div>
+        <h3 id="city-{{ city.slug }}-title">{{ city.name }}</h3>
+        <p>{{ city.description }}</p>
+        {% if city.available %}
+        <a class="otn-home-city-link" href="{{ city.url }}">{% trans "Open the map" %}<span class="otn-home-sr-only"> · {{ city.name }}</span><span aria-hidden="true">→</span></a>
+        {% else %}
+        <span class="otn-home-city-pending">{% trans "The map is being prepared." %}</span>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="otn-home-about" aria-labelledby="about-title">
+    <div><p class="otn-home-eyebrow">{% trans "A living map" %}</p><h2 id="about-title">{% trans "Knowing trees is the first step to caring for them." %}</h2></div>
+    <div><p>{% trans "A tree inventory becomes more useful when people can explore it, understand it and contribute. OpenTreeNap makes urban trees easier to discover through maps, species information, photographs and measurements." %}</p><a class="otn-home-text-link" href="{{ settings.PROJECT_WEBSITE_URL }}">{% trans "Learn more and take part" %} <span aria-hidden="true">↗</span></a></div>
+  </section>
+</main>
+{% endblock %}

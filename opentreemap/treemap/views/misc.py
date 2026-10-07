@@ -65,6 +65,38 @@ def edits(request, instance):
                       **params)
 
 
+def landing_page_context(request):
+    # Only advertise the project's two known cities. Do not enumerate private
+    # instances or count trees while an import may still be running.
+    instances = {
+        row['url_name']: row
+        for row in Instance.objects.filter(
+            url_name__in=('napoli', 'milano')
+        ).values('url_name', 'is_public')
+    }
+    cities = []
+    for slug, name, x, y, description in (
+        ('napoli', 'Napoli', 250, 264,
+         _('The city where OpenTreeNap began: discover its urban trees '
+           'and help document its green heritage.')),
+        ('milano', 'Milano', 102, 84,
+         _("Explore Milan's tree inventory and discover the green heritage "
+           'of its streets, gardens and parks.')),
+    ):
+        instance = instances.get(slug)
+        cities.append({
+            'slug': slug,
+            'name': name,
+            'map_x': x,
+            'map_y': y,
+            'description': description,
+            'available': instance is not None,
+            'is_public': bool(instance and instance['is_public']),
+            'url': reverse('map', kwargs={'instance_url_name': slug}),
+        })
+    return {'home_cities': cities}
+
+
 def index(request, instance):
     return HttpResponseRedirect(reverse('map', kwargs={
         'instance_url_name': instance.url_name}))

@@ -451,3 +451,175 @@ msgstr "Reputazione:"
 #: templates/treemap/user.html:11
 msgid "Instance:"
 msgstr "Caso:"
+
+#. OpenTreeNap project gateway
+msgid "Urban trees, shared knowledge"
+msgstr "Alberi urbani, conoscenza condivisa"
+
+#. OpenTreeNap project gateway
+msgid ""
+"Discover OpenTreeNap: urban tree maps, open data and citizen participation. "
+"Choose Naples or Milan and explore their green heritage."
+msgstr ""
+"Scopri OpenTreeNap: mappe degli alberi urbani, dati aperti e partecipazione."
+" Scegli Napoli o Milano ed esplora il loro patrimonio verde."
+
+#. OpenTreeNap project gateway
+msgid "Choose a city"
+msgstr "Scegli una città"
+
+#. OpenTreeNap project gateway
+msgid "Open data · Trees · Community"
+msgstr "Dati aperti · Alberi · Comunità"
+
+#. OpenTreeNap project gateway
+msgid "Every tree has a story."
+msgstr "Ogni albero ha una storia."
+
+#. OpenTreeNap project gateway
+msgid "Let's map it together."
+msgstr "Mappiamola insieme."
+
+#. OpenTreeNap project gateway
+msgid ""
+"OpenTreeNap connects maps, tree inventories and citizen participation to "
+"help us discover and care for urban trees."
+msgstr ""
+"OpenTreeNap unisce mappe, censimenti e partecipazione per conoscere e "
+"valorizzare gli alberi delle nostre città."
+
+#. OpenTreeNap project gateway
+msgid ""
+"Born in Naples and growing to include new cities, the project brings "
+"together open data and local contributions. Explore tree records, discover "
+"species and help improve our shared knowledge of urban green spaces."
+msgstr ""
+"Nato a Napoli e aperto a nuove città, il progetto raccoglie dati aperti e "
+"contributi dal territorio. Esplora le schede degli alberi, scopri le specie "
+"e contribuisci alla conoscenza del verde urbano."
+
+#. OpenTreeNap project gateway
+msgid "Explore the city maps"
+msgstr "Esplora le mappe"
+
+#. OpenTreeNap project gateway
+msgid "Discover the project"
+msgstr "Scopri il progetto"
+
+#. OpenTreeNap project gateway
+msgid "Project values"
+msgstr "Valori del progetto"
+
+#. OpenTreeNap project gateway
+msgid "Urban nature"
+msgstr "Natura urbana"
+
+#. OpenTreeNap project gateway
+msgid "Open knowledge"
+msgstr "Conoscenza aperta"
+
+#. OpenTreeNap project gateway
+msgid "Citizen participation"
+msgstr "Partecipazione"
+
+#. OpenTreeNap project gateway
+msgid "The project on the map"
+msgstr "Il progetto sulla mappa"
+
+#. OpenTreeNap project gateway
+msgid "Italy"
+msgstr "Italia"
+
+#. OpenTreeNap project gateway
+msgid "Select a city on the map to explore its trees."
+msgstr "Seleziona una città sulla mappa per esplorare i suoi alberi."
+
+#. OpenTreeNap project gateway
+msgid "Explore the territory"
+msgstr "Esplora il territorio"
+
+#. OpenTreeNap project gateway
+msgid "Two cities. One shared project."
+msgstr "Due città. Un progetto condiviso."
+
+#. OpenTreeNap project gateway
+msgid "Choose where to start exploring."
+msgstr "Scegli da dove iniziare a esplorare."
+
+#. OpenTreeNap project gateway
+msgid "Coming soon"
+msgstr "In preparazione"
+
+#. OpenTreeNap project gateway
+msgid "Public map"
+msgstr "Mappa pubblica"
+
+#. OpenTreeNap project gateway
+msgid "Restricted access"
+msgstr "Accesso riservato"
+
+#. OpenTreeNap project gateway
+msgid "Open the map"
+msgstr "Apri la mappa"
+
+#. OpenTreeNap project gateway
+msgid "The map is being prepared."
+msgstr "La mappa è in preparazione."
+
+#. OpenTreeNap project gateway
+msgid "A living map"
+msgstr "Una mappa che cresce"
+
+#. OpenTreeNap project gateway
+msgid "Knowing trees is the first step to caring for them."
+msgstr "Conoscere gli alberi è il primo passo per prendersene cura."
+
+#. OpenTreeNap project gateway
+msgid ""
+"A tree inventory becomes more useful when people can explore it, understand "
+"it and contribute. OpenTreeNap makes urban trees easier to discover through "
+"maps, species information, photographs and measurements."
+msgstr ""
+"Un censimento diventa più utile quando le persone possono esplorarlo, "
+"comprenderlo e arricchirlo. OpenTreeNap rende il verde urbano accessibile "
+"attraverso mappe, informazioni sulle specie, fotografie e misurazioni."
+
+#. OpenTreeNap project gateway
+msgid "Learn more and take part"
+msgstr "Approfondisci e partecipa"
+
+#. OpenTreeNap project gateway
+msgid "Italy: Naples and Milan tree maps"
+msgstr "Italia: le mappe degli alberi di Napoli e Milano"
+
+#. OpenTreeNap project gateway
+msgid ""
+"Milan is in northern Italy and Naples is in southern Italy. Use the city "
+"markers or the links below to open their maps."
+msgstr ""
+"Milano si trova nel nord Italia e Napoli nel sud. Usa i segnaposto delle "
+"città o i collegamenti sottostanti per aprire le mappe."
+
+#. OpenTreeNap project gateway
+msgid "Tyrrhenian Sea"
+msgstr "Mar Tirreno"
+
+#. OpenTreeNap project gateway
+msgid "Adriatic Sea"
+msgstr "Mar Adriatico"
+
+#. OpenTreeNap project gateway
+msgid ""
+"The city where OpenTreeNap began: discover its urban trees and help document"
+" its green heritage."
+msgstr ""
+"La città da cui nasce OpenTreeNap: scopri gli alberi urbani e contribuisci a"
+" documentare il suo patrimonio verde."
+
+#. OpenTreeNap project gateway
+msgid ""
+"Explore Milan's tree inventory and discover the green heritage of its "
+"streets, gardens and parks."
+msgstr ""
+"Esplora il censimento degli alberi di Milano e scopri il patrimonio verde di"
+" strade, giardini e parchi."
