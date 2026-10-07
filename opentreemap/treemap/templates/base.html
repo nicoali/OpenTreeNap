@@ -12,7 +12,7 @@
   <head>
     <meta charset="utf-8">
     <title>{% block title %}OpenTreeNap{% block instance_title %}{% endblock %}{% block page_title %}{% endblock %}{% endblock title %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    {% block viewport %}<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">{% endblock viewport %}
     <link rel="icon" type="image/svg+xml" href="{{ STATIC_URL }}img/opentreenap-favicon.svg" />
     {% block application_css %}
     {% render_bundle 'js/treemap/base' 'css' %}
