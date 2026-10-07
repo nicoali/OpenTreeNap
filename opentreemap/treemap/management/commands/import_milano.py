@@ -116,11 +116,11 @@ class Command(BaseCommand):
         existing = {}
         if instance:
             for tree in Tree.objects.filter(instance=instance).iterator(chunk_size=500):
-                key = tree.udfs.get(SOURCE_ID)
+                key = tree.udfs.get(SOURCE_ID, None)
                 if key:
                     if key in existing:
                         raise CommandError('Duplicate database source ID: '+key)
-                    existing[key] = tree.udfs.get(FINGERPRINT)
+                    existing[key] = tree.udfs.get(FINGERPRINT, None)
             if set(existing)-seen:
                 raise CommandError('Existing source IDs are absent from this dataset; manual review required.')
         for row in rows():
