@@ -15,6 +15,7 @@ from treemap.models import InstanceUser, Plot, Species, Tree, User
 from treemap.udf import UserDefinedFieldDefinition
 from treemap.units import get_storage_value
 from treemap.lib.object_caches import clear_caches
+from treemap.milano_catalog import resolve_species
 
 
 SOURCE_ID = 'ID censimento Milano'
@@ -211,11 +212,7 @@ class Command(BaseCommand):
                         # Local codes deliberately do not invent i-Tree mappings.
                         code = 'MILANO_LOCAL_'+module.digest(taxon)[:24]
                         if code not in species_cache:
-                            species = Species.objects.filter(instance=instance,otm_code=code).first()
-                            if species is None:
-                                species = Species(instance=instance,otm_code=code,
-                                    common_name=' '.join(v for v in taxon.values() if v),**taxon)
-                                species.save_with_user(user)
+                            species = resolve_species(Species,instance,user,taxon,code)
                             species_cache[code] = species
                         species = species_cache[code]
                     point = Point(*row['coordinates'],srid=4326)
