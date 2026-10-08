@@ -46,9 +46,8 @@ Il pacchetto contiene:
 validate. Le combinazioni genere/specie/varietà richiedono revisione botanica;
 le specie non determinate rimangono a livello di genere o senza assegnazione.
 I codici `MILANO_LOCAL_*` conservano questa distinzione senza inventare un
-abbinamento i-Tree. L'attivazione dei benefici richiede una mappatura e un
-modello/area di calcolo adatti a Milano. Le vecchie stime restano snapshot
-non validati, senza entrare nei benefici OTN correnti.
+abbinamento i-Tree. Le vecchie stime restano snapshot storici distinti dal
+censimento 2024; non vengono presentate come un nuovo calcolo i-Tree.
 
 `diam_tronc` è importato in cm; `h_m` e `diam_chiom` in m. Il comando usa la
 conversione OTN per le unità di database, normalmente pollici/piedi.
@@ -75,10 +74,6 @@ python3 -m unittest discover -s scripts -p test_prepare_milano.py -v
 
 Le istruzioni assumono il repository `/opt/OpenTreeNap`, il Compose esistente
 `docker-compose.modern-v4.1.yml`, e un amministratore OTN già presente.
-Prima del caricamento usare una copia di staging del database per verificare
-il comando Django; l'ambiente di preparazione non dispone di Django/PostGIS
-né di una connessione amministrativa al VPS. Test sul database e pubblicazione
-live **non sono stati eseguiti**.
 
 Portare nel checkout del server i file della PR e ricostruire le immagini web
 e worker secondo la procedura di deploy abituale. Evitare di sostituire
@@ -123,11 +118,51 @@ import incompleto Milano resta privata. Nessuna cancellazione massiva viene
 eseguita. L'API custom `/public-api/napoli/trees/` continua a riguardare Napoli;
 Milano usa le rotte e le tile native multi-istanza di OTN.
 
+## Benefici ecosistemici storici
+
+`import_milano_benefits` espone nella scheda albero i risultati i-Tree Eco
+presenti nell'Excel storico, solo per i **183.968** alberi collegati al censimento
+2024 dal merge spaziale e tassonomico verificato. Non interpola gli alberi senza
+match e non ricalcola i benefici con misure o meteo 2024. Le schede riportano
+sempre `Comune di Milano / i-Tree Eco, archivio storico` e il riferimento
+`Studio 2018; dati ambientali ARPA Lombardia 2011`.
+
+I campi sono: carbonio immagazzinato e sequestrato, deflusso evitato, inquinanti
+rimossi, relativi valori monetari, valore strutturale e benefici annuali totali.
+Il totale annuo è verificato per ogni record come somma delle tre componenti
+monetarie annuali. Per il sottoinsieme abbinato risultano 1.424.679,1 kg/anno di
+carbonio sequestrato, 71.183,3 m3/anno di deflusso evitato, 60,58 t/anno di
+inquinanti rimossi e 3.817.661,21 EUR/anno. Questi sono totali dello snapshot
+storico sul sottoinsieme abbinato, non una stima dell'intero patrimonio 2024.
+
+Verifica senza scritture:
+
+```bash
+docker compose --env-file .env.modern-v4.1 -f docker-compose.modern-v4.1.yml \
+  exec -T web python manage.py import_milano_benefits --user nicoali
+```
+
+Importazione riprendibile in background:
+
+```bash
+nohup docker compose --env-file .env.modern-v4.1 \
+  -f docker-compose.modern-v4.1.yml exec -T web \
+  python -u manage.py import_milano_benefits --user nicoali \
+  --apply --batch-size 250 \
+  > /root/otn-backups/milano-benefits.log 2>&1 < /dev/null &
+```
+
+Il comando convalida prima tutti i match, crea i campi OTN con unità e
+descrizioni, conserva l'audit nativo e salva per batch. Può essere rilanciato:
+i record completi vengono verificati e saltati. Il riepilogo completo viene
+anche salvato nella configurazione dell'istanza per una successiva vista
+aggregata. L'importazione non richiede più i file ZIP nel container, perché usa
+lo snapshot storico già conservato in ogni albero abbinato.
+
 ## Verifiche svolte
 
-Cinque test unitari: identificativi riassegnati, ambiguità in entrambe le
+Otto test unitari: identificativi riassegnati, ambiguità in entrambe le
 direzioni, tassonomia/posizioni discordanti, decimali/null e impronta/ordine
-coordinate. Verifica completa dei 247.779 record e dei conteggi/abbinamenti
-prima della consegna; compilazione Python del comando. Le verifiche Django
-e PostGIS restano da svolgere sul server/staging, non sono simulate dai test
-della trasformazione.
+coordinate; mapping, provenienza e rifiuto di valori beneficio mancanti,
+negativi, non finiti o incoerenti. Verifica completa dei 247.779 record, dei
+183.968 snapshot e dei rispettivi totali; compilazione Python dei comandi.
