@@ -44,6 +44,10 @@ class MilanoBenefitsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.parse_historical_benefits(payload(total_annu='99'))
 
+    def test_json_null_is_not_a_benefit_payload(self):
+        with self.assertRaisesRegex(ValueError, 'must be an object'):
+            module.parse_historical_benefits('null')
+
 
 if __name__ == '__main__':
     unittest.main()

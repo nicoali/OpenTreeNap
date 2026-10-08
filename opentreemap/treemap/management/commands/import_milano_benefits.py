@@ -64,7 +64,12 @@ class Command(BaseCommand):
                 cursor.execute('SELECT pg_advisory_unlock(20240331, 2484)')
 
     def rows(self, instance):
+        # The inventory importer stores canonical JSON for every source row.
+        # Unmatched trees therefore contain the literal HStore value ``null``;
+        # exclude those while retaining strict validation for every real payload.
+        absent_lookup = {'udfs__'+LEGACY_FIELD: 'null'}
         return (Tree.objects.filter(instance=instance, udfs__has_key=LEGACY_FIELD)
+                .exclude(**absent_lookup)
                 .select_related('instance').iterator(chunk_size=500))
 
     def inspect(self, instance):
@@ -72,7 +77,7 @@ class Command(BaseCommand):
         sums = {name: 0.0 for _, name in BENEFIT_FIELDS}
         for tree in self.rows(instance):
             raw = stored_value(tree, LEGACY_FIELD)
-            if not raw:
+            if raw is None or raw == 'null':
                 continue
             eligible += 1
             try:
