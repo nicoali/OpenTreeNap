@@ -63,41 +63,56 @@ class Command(BaseCommand):
             with connection.cursor() as cursor:
                 cursor.execute('SELECT pg_advisory_unlock(20240331, 2484)')
 
-    def rows(self, instance):
+    def matched_trees(self, instance):
         # The inventory importer stores canonical JSON for every source row.
         # Unmatched trees therefore contain the literal HStore value ``null``;
         # exclude those while retaining strict validation for every real payload.
         absent_lookup = {'udfs__'+LEGACY_FIELD: 'null'}
         return (Tree.objects.filter(instance=instance, udfs__has_key=LEGACY_FIELD)
-                .exclude(**absent_lookup)
-                .select_related('instance').iterator(chunk_size=500))
+                .exclude(**absent_lookup))
+
+    def rows(self, instance):
+        return (self.matched_trees(instance).select_related('instance')
+                .iterator(chunk_size=500))
+
+    def inspection_rows(self, instance):
+        # Project only the relevant HStore keys. Loading complete Tree objects
+        # also transfers the large original/quality snapshots and made the
+        # read-only validation unnecessarily slow on the production database.
+        fields = ['pk'] + ['udfs__'+name
+                           for name in [LEGACY_FIELD] + DISPLAY_FIELDS]
+        return (self.matched_trees(instance).values_list(*fields)
+                .iterator(chunk_size=2000))
 
     def inspect(self, instance):
         eligible = complete = 0
         sums = {name: 0.0 for _, name in BENEFIT_FIELDS}
-        for tree in self.rows(instance):
-            raw = stored_value(tree, LEGACY_FIELD)
+        for row in self.inspection_rows(instance):
+            tree_id, raw = row[:2]
+            present = list(row[2:])
             if raw is None or raw == 'null':
                 continue
             eligible += 1
             try:
                 values = parse_historical_benefits(raw)
             except (ValueError, TypeError, json.JSONDecodeError) as error:
-                raise CommandError('Tree %s: %s' % (tree.pk, error))
-            present = [stored_value(tree, name) for name in DISPLAY_FIELDS]
+                raise CommandError('Tree %s: %s' % (tree_id, error))
             if any(value is not None for value in present):
                 if not all(value is not None for value in present):
-                    raise CommandError('Tree %s has a partial historical benefit import.' % tree.pk)
+                    raise CommandError('Tree %s has a partial historical benefit import.' % tree_id)
+                current_values = dict(zip(DISPLAY_FIELDS, present))
                 for name, expected in values.items():
-                    current = stored_value(tree, name)
+                    current = current_values[name]
                     if isinstance(expected, float):
                         if abs(float(current)-expected) > 0.000001:
-                            raise CommandError('Tree %s has changed benefit %s.' % (tree.pk, name))
+                            raise CommandError('Tree %s has changed benefit %s.' % (tree_id, name))
                     elif current != expected:
-                        raise CommandError('Tree %s has changed benefit provenance.' % tree.pk)
+                        raise CommandError('Tree %s has changed benefit provenance.' % tree_id)
                 complete += 1
             for _, name in BENEFIT_FIELDS:
                 sums[name] += values[name]
+            if eligible % 25000 == 0:
+                self.stdout.write('Validated %d historical benefit records...' % eligible)
         if eligible != EXPECTED_MATCHED:
             raise CommandError('Expected 183968 verified historical matches; found %d.' % eligible)
         return eligible, complete, sums
