@@ -82,4 +82,12 @@ class DotDict(dict):
         return DotDict(deepcopy(dict(self), memo))
 
     __setattr__ = __setitem__
-    __getattr__ = __getitem__
+
+    def __getattr__(self, key):
+        # Python attribute probes (including Django's resolve_expression
+        # check on UPDATE values) require AttributeError for missing names.
+        # Dictionary indexing still raises KeyError as before.
+        try:
+            return self[key]
+        except KeyError as error:
+            raise AttributeError(key) from error
