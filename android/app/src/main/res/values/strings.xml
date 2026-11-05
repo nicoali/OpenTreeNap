@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OpenTreeNap</string>
+    <string name="status_ready">OpenTreeNap · Napoli</string>
+    <string name="status_loading">Caricamento alberi…</string>
+    <string name="refresh">Aggiorna</string>
+    <string name="config_missing">Configura local.properties per collegare l’istanza OpenTreeNap.</string>
+</resources>
